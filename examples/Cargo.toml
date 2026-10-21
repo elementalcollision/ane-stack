@@ -14,4 +14,8 @@ mil_spec = { path = "../vendor/mil_spec" }
 name = "compile_ir_fixed"
 path = "compile_ir_fixed.rs"
 
+[[example]]
+name = "sched_corpus"
+path = "sched_corpus.rs"
+
 [workspace]
