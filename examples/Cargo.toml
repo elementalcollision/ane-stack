@@ -19,3 +19,7 @@ name = "sched_corpus"
 path = "sched_corpus.rs"
 
 [workspace]
+
+[[example]]
+name = "gen_big"
+path = "gen_big.rs"
