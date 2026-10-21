@@ -82,5 +82,14 @@ echo "orig" > "$scratch/vendor/mil_spec/src/main.rs.orig"
 assert_rc 0 "target/*.rej/*.orig do not trip the guard" \
   "$scratch/scripts/vendor-guard.sh" --verify
 
+echo "-- generate refuses over uncommitted vendored changes (when git present)"
+# Reproduce the repo layout: a .git at scratch root plus a dirty vendored file.
+(cd "$scratch" && git init -q 2>/dev/null && git add -A 2>/dev/null && git commit -qm base 2>/dev/null)
+echo "dirty" >> "$scratch/vendor/mil_spec/src/main.rs"
+assert_rc 1 "--generate refuses a dirty vendor tree" \
+  "$scratch/scripts/vendor-guard.sh" --generate
+assert_grep "uncommitted changes" "refusal names the cause" \
+  "$scratch/scripts/vendor-guard.sh" --generate
+
 echo
 if [ "$fails" -eq 0 ]; then echo "all TOOL-4 tests passed"; exit 0; else echo "$fails TOOL-4 test(s) failed"; exit 1; fi

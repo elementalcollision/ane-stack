@@ -48,6 +48,19 @@ mode="${1:-}"
 case "$mode" in
   --generate)
     [ -d "$vendor" ] || { echo "no vendored tree at $vendor" >&2; exit 2; }
+    # The manifest is the CI baseline: it must describe the COMMITTED tree, not
+    # a possibly-dirty or stale working tree. Refuse to generate over uncommitted
+    # changes to the vendored tree so the baseline can't silently absorb (or
+    # drop) another lane's in-flight edits. See docs/evidence/0006.
+    if [ -d "$root/.git" ]; then
+      dirty="$(git -C "$root" status --porcelain -- "vendor/mil_spec" 2>/dev/null || true)"
+      if [ -n "$dirty" ]; then
+        echo "ERROR: vendor/mil_spec has uncommitted changes; generate the manifest" >&2
+        echo "only from a clean tree that matches HEAD, then commit. Offending:" >&2
+        echo "$dirty" | sed 's/^/  /' >&2
+        exit 1
+      fi
+    fi
     hash_tree > "$manifest"
     n=$(wc -l < "$manifest" | tr -d ' ')
     echo "wrote $manifest ($n entries)"
