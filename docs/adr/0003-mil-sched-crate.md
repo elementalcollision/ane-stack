@@ -1,8 +1,15 @@
 # ADR 0003 — Add the `mil_sched` crate to the workspace
 
-**Status:** proposed (2026-10-21)
+**Status:** accepted (2026-10-21)
 **Author:** L-SCHED
 **Blocks:** SCHED-1, and transitively SCHED-2, SCHED-3, SCHED-4
+
+> **Accepted 2026-10-21** by the project owner on claim + filing. The workspace
+> `Cargo.toml` change is authorised; the crate is not yet added, because
+> SCHED-1's next step (characterising the `--vs-lint` disagreement, see
+> `docs/evidence/SCHED-1-vs-lint-disagreement.md`) requires no new crate —
+> only existing, tracked `milc plan` output. `crates/mil_sched` gets added when
+> there is code to put in it.
 
 ## Context
 
