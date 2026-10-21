@@ -102,7 +102,7 @@ ANE dialect), so the IR is the gap, not the encoder.
 compiles via `coremlc`, and runs correctly against a reference.
 *Owner:* L-IR. **Effort:** M. **Depends on:** nothing. **Unblocks:** RUN-3.
 
-**IR-3 — IR → type-shape verification for all state ops**
+**IR-3 — IR → type-shape verification for all state ops** — *done (L-IR)* — patch `0008-ir-state-contract`, evidence `docs/evidence/0008-ir-state-contract.md`.
 Generalise IR-1: every op that touches a `state<T>` should validate the full
 contract (one `read_state` per state, `write_state` after each `slice_update`,
 exact shapes). Mirrors `ANE_FRONTEND_SPEC.md`'s state contract at the IR level so

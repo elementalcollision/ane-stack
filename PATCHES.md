@@ -13,13 +13,9 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0005 | `milc-run-mlmodelc` | `milc run <x.mlmodelc>` failed with `model.mlmodel: No such file` — compiled artifacts carry the spec as `model.mil` text, not protobuf. Detect the `.mlmodelc` and parse its `func main` signature instead | open |
 | 0006 | `milc-json-diagnostics` | no machine-readable failures — agents grepped stderr. Top-level `--json` / `MILC_JSON=1` emits a `{ok, command, ...}` envelope with `{stage, code, message, path}` errors for `check`/`run`/`plan` | open |
 | 0007 | `ir-slice-update` | `mil_spec::ir` had no `slice_update`; an incremental KV-cache write was inexpressible. Adds `Block::slice_update` + IR form with full validation (region-shape rule, rank/bounds checks). Unblocks `RUN-2` (stateful e5rt). | open |
+| 0008 | `ir-state-contract` | `mil_spec::ir` had no state-level contract checks. Adds per-state read/slice_update/write counters validated in `finish()`: one read_state per state, write_state after each slice_update (counts match). Mirrors ANE_FRONTEND_SPEC.md's state contract at the IR level. | open |
 
-**Note on 0007:** the original patch file was header-only (no `---`/`+++`/`@@`
-hunks), so `apply-patches.sh --check` and CI failed with "Only garbage was
-found in the patch input". The patch body was reconstructed from the committed
-tree (byte-identical to it); content is L-IR's, unchanged.
-
-All seven patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All eight patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
 ## Evidence

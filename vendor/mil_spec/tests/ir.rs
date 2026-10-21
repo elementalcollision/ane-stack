@@ -268,6 +268,7 @@ fn slice_update_whole_state_write() {
          cur = read_state(kv)\n\
          merged = add(cur, step)\n\
          su = slice_update(kv, begin=[0,0,0,0], end=[1,8,64,64], update=merged)\n\
+         write_state(kv, su)\n\
          output su",
     );
     assert_eq!(p.types["su"].shape, vec![1, 8, 64, 64]);
@@ -288,6 +289,7 @@ fn slice_update_region_write() {
         "state kv: fp16[4,8,64,64]\n\
          input row: fp16[1,8,64,64]\n\
          su = slice_update(kv, begin=[3,0,0,0], end=[4,8,64,64], update=row)\n\
+         write_state(kv, su)\n\
          output su",
     );
     assert_eq!(p.types["su"].shape, vec![4, 8, 64, 64]);
@@ -338,4 +340,62 @@ fn slice_update_range_invalid_is_rejected() {
          output su2",
     );
     assert!(e.message.contains("invalid for dim"));
+}
+
+// IR-3 — state contract: one read_state per state.
+#[test]
+fn state_double_read_rejected() {
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[1,8,64,64]\n\
+         a = read_state(kv)\n\
+         b = read_state(kv)\n\
+         tmp = add(a, b)\n\
+         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
+         write_state(kv, su)\n\
+         output su",
+    );
+    assert!(
+        e.message.contains("at most one read_state per state"),
+        "expected double-read rejection, got: {}",
+        e.message
+    );
+}
+
+// IR-3 — state contract: write_state after each slice_update.
+#[test]
+fn state_slice_update_without_write_rejected() {
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[4,8,64,64]\n\
+         cur = read_state(kv)\n\
+         tmp = add(cur, row)\n\
+         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
+         output su",
+    );
+    assert!(
+        e.message.contains("slice_update(s) but 0 write_state(s)"),
+        "expected missing-write rejection, got: {}",
+        e.message
+    );
+}
+
+// IR-3 — state contract: write_state count must match slice_update count.
+#[test]
+fn state_write_slice_count_mismatch_rejected() {
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[4,8,64,64]\n\
+         cur = read_state(kv)\n\
+         tmp = add(cur, row)\n\
+         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
+         write_state(kv, su)\n\
+         write_state(kv, su)\n\
+         output su",
+    );
+    assert!(
+        e.message.contains("1 slice_update(s) but 2 write_state(s)"),
+        "expected count-mismatch rejection, got: {}",
+        e.message
+    );
 }

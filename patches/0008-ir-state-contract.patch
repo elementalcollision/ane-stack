@@ -1,0 +1,170 @@
+diff --git a/vendor/mil_spec/src/ir.rs b/vendor/mil_spec/src/ir.rs
+index ae8c881..daaca3e 100644
+--- a/vendor/mil_spec/src/ir.rs
++++ b/vendor/mil_spec/src/ir.rs
+@@ -119,6 +119,11 @@ struct Compiler {
+     inputs: Vec<Feature>,
+     outputs: Vec<Feature>,
+     states: Vec<Feature>,
++    /// Per-state usage counts, for the state contract (IR-3):
++    /// one read_state per state, write_state back after each slice_update.
++    state_reads: BTreeMap<String, usize>,
++    state_slice_updates: BTreeMap<String, usize>,
++    state_writes: BTreeMap<String, usize>,
+ }
+ 
+ impl Compiler {
+@@ -129,6 +134,9 @@ impl Compiler {
+             inputs: vec![],
+             outputs: vec![],
+             states: vec![],
++            state_reads: BTreeMap::new(),
++            state_slice_updates: BTreeMap::new(),
++            state_writes: BTreeMap::new(),
+         }
+     }
+ 
+@@ -627,6 +635,7 @@ impl Compiler {
+                         ),
+                     );
+                 }
++                *self.state_slice_updates.entry(args[0].to_string()).or_default() += 1;
+                 self.block.slice_update(args[0], &begin, &end, update_name, &region, name);
+                 Ok(Ty {
+                     dtype: st.dtype,
+@@ -819,6 +828,7 @@ impl Compiler {
+                         message: format!("undefined state {}", args[0]),
+                     })?;
+                 let shape = st.shape.clone();
++                *self.state_reads.entry(args[0].to_string()).or_default() += 1;
+                 self.block.read_state(args[0], &shape, name);
+                 Ok(Ty {
+                     dtype: st.dtype,
+@@ -840,6 +850,7 @@ impl Compiler {
+         if parts.len() != 2 {
+             return err(n, "write_state(state, value)");
+         }
++        *self.state_writes.entry(parts[0].to_string()).or_default() += 1;
+         let st = self
+             .states
+             .iter()
+@@ -881,6 +892,37 @@ impl Compiler {
+         if self.outputs.is_empty() {
+             return err(0, "program declares no outputs");
+         }
++        // IR-3 — state contract (mirrors ANE_FRONTEND_SPEC.md):
++        // 1. one read_state per state (a state is read once, then updated
++        //    N times via slice_update + write_state round-trips).
++        // 2. write_state after each slice_update: writes == slice_updates
++        //    for every state that is updated at all.
++        // 3. exact shapes — enforced per-op at declaration time (IR-1/IR-2).
++        for st in &self.states {
++            let name = &st.name;
++            let reads = self.state_reads.get(name).copied().unwrap_or(0);
++            let su = self.state_slice_updates.get(name).copied().unwrap_or(0);
++            let writes = self.state_writes.get(name).copied().unwrap_or(0);
++            // Clause 1: at most one reader per state.
++            if reads > 1 {
++                return err(
++                    0,
++                    format!(
++                        "state contract: {name} read {reads} times (at most one read_state per state)",
++                    ),
++                );
++            }
++            // Clause 2: every slice_update must be written back exactly once.
++            if su > 0 && writes != su {
++                return err(
++                    0,
++                    format!(
++                        "state contract: {name} has {su} slice_update(s) but {writes} write_state(s)",
++                    ),
++                );
++            }
++        }
++
+         let fn_inputs = self
+             .inputs
+             .iter()
+diff --git a/vendor/mil_spec/tests/ir.rs b/vendor/mil_spec/tests/ir.rs
+index c085101..dde2394 100644
+--- a/vendor/mil_spec/tests/ir.rs
++++ b/vendor/mil_spec/tests/ir.rs
+@@ -268,6 +268,7 @@ fn slice_update_whole_state_write() {
+          cur = read_state(kv)\n\
+          merged = add(cur, step)\n\
+          su = slice_update(kv, begin=[0,0,0,0], end=[1,8,64,64], update=merged)\n\
++         write_state(kv, su)\n\
+          output su",
+     );
+     assert_eq!(p.types["su"].shape, vec![1, 8, 64, 64]);
+@@ -288,6 +289,7 @@ fn slice_update_region_write() {
+         "state kv: fp16[4,8,64,64]\n\
+          input row: fp16[1,8,64,64]\n\
+          su = slice_update(kv, begin=[3,0,0,0], end=[4,8,64,64], update=row)\n\
++         write_state(kv, su)\n\
+          output su",
+     );
+     assert_eq!(p.types["su"].shape, vec![4, 8, 64, 64]);
+@@ -339,3 +341,61 @@ fn slice_update_range_invalid_is_rejected() {
+     );
+     assert!(e.message.contains("invalid for dim"));
+ }
++
++// IR-3 — state contract: one read_state per state.
++#[test]
++fn state_double_read_rejected() {
++    let e = compile_err(
++        "state kv: fp16[4,8,64,64]\n\
++         input row: fp16[1,8,64,64]\n\
++         a = read_state(kv)\n\
++         b = read_state(kv)\n\
++         tmp = add(a, b)\n\
++         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
++         write_state(kv, su)\n\
++         output su",
++    );
++    assert!(
++        e.message.contains("at most one read_state per state"),
++        "expected double-read rejection, got: {}",
++        e.message
++    );
++}
++
++// IR-3 — state contract: write_state after each slice_update.
++#[test]
++fn state_slice_update_without_write_rejected() {
++    let e = compile_err(
++        "state kv: fp16[4,8,64,64]\n\
++         input row: fp16[4,8,64,64]\n\
++         cur = read_state(kv)\n\
++         tmp = add(cur, row)\n\
++         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
++         output su",
++    );
++    assert!(
++        e.message.contains("slice_update(s) but 0 write_state(s)"),
++        "expected missing-write rejection, got: {}",
++        e.message
++    );
++}
++
++// IR-3 — state contract: write_state count must match slice_update count.
++#[test]
++fn state_write_slice_count_mismatch_rejected() {
++    let e = compile_err(
++        "state kv: fp16[4,8,64,64]\n\
++         input row: fp16[4,8,64,64]\n\
++         cur = read_state(kv)\n\
++         tmp = add(cur, row)\n\
++         su = slice_update(kv, begin=[0,0,0,0], end=[4,8,64,64], update=tmp)\n\
++         write_state(kv, su)\n\
++         write_state(kv, su)\n\
++         output su",
++    );
++    assert!(
++        e.message.contains("1 slice_update(s) but 2 write_state(s)"),
++        "expected count-mismatch rejection, got: {}",
++        e.message
++    );
++}
