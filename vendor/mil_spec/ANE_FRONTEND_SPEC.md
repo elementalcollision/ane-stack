@@ -55,8 +55,17 @@ TensorType}], LiveOutputList}]`. Errors: `ErrorList` of
   int32/bool/string tensors, const outputs, or multi-output tuples
   containing non-float → `InvalidMILProgram`. Returning an input param is
   legal; dead compute ops are tolerated (semantic stage, not parse).
-- `state<T>` params + `read_state`/`write_state` work (ios18+);
-  `write_state(data=X, input=st)` accepts any tensor X of matching type.
+- `state<T>` params + `read_state`/`write_state` work (ios18+).
+  **CORRECTED:** this line previously read "accepts any tensor X of matching
+  type", which contradicts the state contract two bullets below and is wrong —
+  it does not even hold on the same `aned` build it was written about. Measured
+  on h17 with `mil_infer/examples/probe_run2_state.rs` (5 cases):
+  `write_state(data=<bare read_state result>)` is **rejected**
+  (`e5_compiler_compile → 11`), and so is a `read_state` result written while a
+  live `slice_update` exists. Even a pure passthrough with no `slice_update` in
+  the program at all is rejected, so there is **no** "any tensor" case: `data`
+  must be the **terminal `slice_update` output**. See the state contract below.
+  Evidence: `docs/evidence/RUN-2-state-lifecycle.md` §3.
 - **State contract (verified):** per state, exactly one `read_state`;
   every `slice_update` on state-derived data must be followed by a
   `write_state` to that state — chained `slice_update`s (su on su output)
@@ -278,9 +287,12 @@ Working today:
 Verified grammar (ANECCompile + ANECValidate, ios18 only — ios19 rejects
 state params):
 
-- `write_state(data=X, input=st)` accepts **only** state-derived X:
-  the `read_state` result or a `slice_update`/`slice_by_index` chain on
-  it. Writing an arbitrary computed tensor → `InvalidMILProgram`.
+- `write_state(data=X, input=st)` accepts **only** state-derived X, and in
+  practice only the **terminal `slice_update` output**: the bare `read_state`
+  result is also refused on h17 (measured, `probe_run2_state.rs` cases 1 and 5).
+  Writing an arbitrary computed tensor → `InvalidMILProgram`. This matches the
+  state contract earlier in this document; the earlier "accepts any tensor X"
+  line was a contradiction and has been corrected.
 - `slice_update` on state requires the FULL arg list
   (`begin`,`begin_mask`,`end`,`end_mask`,`squeeze_mask`,`stride`,
   `update`,`x`); minimal form is rejected. `update` may be a const blob

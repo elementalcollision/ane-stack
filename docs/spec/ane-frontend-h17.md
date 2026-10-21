@@ -188,7 +188,7 @@ MIL spellings preserved in `docs/spec/h17-findings/`.
    program had no `const()` wrapper, the splice was a silent no-op and the
    (valid) program was misreported as an unexpected acceptance. The splice now
    falls back to a guaranteed-hit keyword (`func main→frob`) when the chosen
-   target is absent — `vendor/mil_spec/crates/mil_infer/src/fuzz.rs`, patch 0010.
+   target is absent — `vendor/mil_spec/crates/mil_infer/src/fuzz.rs`, patch 0011.
    Result: all 4 UnexpectedAccepts are now the single documented func-name
    laxity; the fuzzer's finding count is honest.
 
@@ -208,6 +208,27 @@ MIL spellings preserved in `docs/spec/h17-findings/`.
    original 00376 (an `ew_chain` base with no `const()` to mutate). **This is a
    genuine new finding of PROBE-1** — the only laxity h17 actually exhibits is
    unchecked function names.
+
+### Correction (documentation review, cross-lane)
+
+Two defects in this document were found and fixed during a documentation
+review, both confirmed against the tree rather than assumed:
+
+1. **Stale patch number.** Both references to the fuzz-splice fix said
+   `patch 0010`, but `0010` is `ir-for-loop` (L-IR's bounded-loop work). The
+   splice fix is **`patch 0011`**, `fuzz-noop-splice`, whose `PATCHES.md` row
+   reads "Found by PROBE-1". Corrected in both places. The drift appeared when
+   patch numbers were assigned across lanes after this document was written.
+
+2. **The `const(` claim was re-verified, not just re-asserted.** Section 2 above
+   says an unclosed `const(` is rejected on h17. Re-run directly on hardware
+   during the review: the well-formed control validates (`status=0x0 rc=0`) and
+   the unclosed form is rejected (`status=0x1 rc=1`, `InvalidMILProgram`), which
+   matches this document. So this document was *right* and the upstream spec is
+   what carries the error — recorded here so the two are not read as competing
+   claims.
+
+Found by L-RUN during an L-PROBE documentation review; content is L-PROBE's.
 
 ---
 
@@ -236,7 +257,7 @@ MIL spellings preserved in `docs/spec/h17-findings/`.
 ## Next Steps
 
 1. ✅ **Done: fixed the `const()→const(` splice no-op** in `gen_mutation`
-   (patch 0010) — falls back to a guaranteed-hit keyword when the target is
+   (patch 0011) — falls back to a guaranteed-hit keyword when the target is
    absent. Findings are now honest.
 2. **Upstream note (optional):** the spec's "unclosed-paren `const(` is
    tolerated" does not reproduce on h17 — it is rejected. The only laxity h17

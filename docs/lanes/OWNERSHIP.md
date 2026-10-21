@@ -78,6 +78,15 @@ docs/spec/**
 *Owns the `ANE_FRONTEND_SPEC.md` extension document; does not edit upstream's copy
 in `vendor/` — writes alongside it in `docs/spec/`.*
 
+**Clarification (2026-10-21): extensions vs corrections.** "Does not edit
+upstream's copy" means *no hand-edits* — our **extensions** belong in
+`docs/spec/`. A **correction to an upstream claim that is measurably wrong** is
+a different thing and goes through the normal patch mechanism like every other
+upstream change (patch `0015` does exactly this for the `write_state`
+contradiction, following patch `0001`'s precedent). The test: an extension adds
+a verdict upstream never made; a correction fixes one it got wrong, cites a
+reproduction, and can be reverted by dropping the patch.
+
 ## L-LINT — placement prediction
 
 ```

@@ -1,0 +1,72 @@
+From: ane-stack
+Subject: [PATCH 0015] ANE_FRONTEND_SPEC: correct the write_state contradiction
+
+The document contradicted itself on what `write_state` accepts:
+
+  line 59  : "write_state(data=X, input=st) accepts any tensor X of matching
+              type"
+  line ~281: "write_state(data=X, input=st) accepts ONLY state-derived X"
+
+Measured on h17 with mil_infer/examples/probe_run2_state.rs (5 independent
+cases), the strict reading wins and the lax one is simply wrong — it does not
+even hold on the same aned build it was written about:
+
+  case 1  write_state(data = bare read_state result)        REJECTED
+  case 2  full-arg slice_update -> write su                 ACCEPTED
+  case 3  same, output the pre-write read_state (readback)  ACCEPTED
+  case 4  two states, one triple each                       ACCEPTED
+  case 5  write_state(data = read_state) with live su       REJECTED
+
+So there is no "any tensor" case at all: data must be the terminal
+slice_update output. Even a pure passthrough with no slice_update in the
+program is refused.
+
+Both bullets now state the same rule. The corrections are marked inline
+rather than silently rewritten, so a reader arriving from the old text can see
+what changed and why, and each carries a pointer to
+docs/evidence/RUN-2-state-lifecycle.md section 3.
+
+Doc-only change; no code references these lines (searched).
+
+Found during RUN-2 (L-RUN), patched at the lane owner's direction.
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+diff --git a/ANE_FRONTEND_SPEC.md b/ANE_FRONTEND_SPEC.md
+index 92c5401..c09c137 100644
+--- a/ANE_FRONTEND_SPEC.md
++++ b/ANE_FRONTEND_SPEC.md
+@@ -55,8 +55,17 @@ TensorType}], LiveOutputList}]`. Errors: `ErrorList` of
+   int32/bool/string tensors, const outputs, or multi-output tuples
+   containing non-float → `InvalidMILProgram`. Returning an input param is
+   legal; dead compute ops are tolerated (semantic stage, not parse).
+-- `state<T>` params + `read_state`/`write_state` work (ios18+);
+-  `write_state(data=X, input=st)` accepts any tensor X of matching type.
++- `state<T>` params + `read_state`/`write_state` work (ios18+).
++  **CORRECTED:** this line previously read "accepts any tensor X of matching
++  type", which contradicts the state contract two bullets below and is wrong —
++  it does not even hold on the same `aned` build it was written about. Measured
++  on h17 with `mil_infer/examples/probe_run2_state.rs` (5 cases):
++  `write_state(data=<bare read_state result>)` is **rejected**
++  (`e5_compiler_compile → 11`), and so is a `read_state` result written while a
++  live `slice_update` exists. Even a pure passthrough with no `slice_update` in
++  the program at all is rejected, so there is **no** "any tensor" case: `data`
++  must be the **terminal `slice_update` output**. See the state contract below.
++  Evidence: `docs/evidence/RUN-2-state-lifecycle.md` §3.
+ - **State contract (verified):** per state, exactly one `read_state`;
+   every `slice_update` on state-derived data must be followed by a
+   `write_state` to that state — chained `slice_update`s (su on su output)
+@@ -278,9 +287,12 @@ Working today:
+ Verified grammar (ANECCompile + ANECValidate, ios18 only — ios19 rejects
+ state params):
+ 
+-- `write_state(data=X, input=st)` accepts **only** state-derived X:
+-  the `read_state` result or a `slice_update`/`slice_by_index` chain on
+-  it. Writing an arbitrary computed tensor → `InvalidMILProgram`.
++- `write_state(data=X, input=st)` accepts **only** state-derived X, and in
++  practice only the **terminal `slice_update` output**: the bare `read_state`
++  result is also refused on h17 (measured, `probe_run2_state.rs` cases 1 and 5).
++  Writing an arbitrary computed tensor → `InvalidMILProgram`. This matches the
++  state contract earlier in this document; the earlier "accepts any tensor X"
++  line was a contradiction and has been corrected.
+ - `slice_update` on state requires the FULL arg list
+   (`begin`,`begin_mask`,`end`,`end_mask`,`squeeze_mask`,`stride`,
+   `update`,`x`); minimal form is rejected. `update` may be a const blob
