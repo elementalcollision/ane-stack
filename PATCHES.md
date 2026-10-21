@@ -14,6 +14,11 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0006 | `milc-json-diagnostics` | no machine-readable failures — agents grepped stderr. Top-level `--json` / `MILC_JSON=1` emits a `{ok, command, ...}` envelope with `{stage, code, message, path}` errors for `check`/`run`/`plan` | open |
 | 0007 | `ir-slice-update` | `mil_spec::ir` had no `slice_update`; an incremental KV-cache write was inexpressible. Adds `Block::slice_update` + IR form with full validation (region-shape rule, rank/bounds checks). Unblocks `RUN-2` (stateful e5rt). | open |
 
+**Note on 0007:** the original patch file was header-only (no `---`/`+++`/`@@`
+hunks), so `apply-patches.sh --check` and CI failed with "Only garbage was
+found in the patch input". The patch body was reconstructed from the committed
+tree (byte-identical to it); content is L-IR's, unchanged.
+
 All seven patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
