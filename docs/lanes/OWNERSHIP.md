@@ -3,6 +3,18 @@
 **Rule: if a path is not yours, read it and open a `request:` item. Do not edit it.**
 This is what keeps parallel agent work from colliding.
 
+## Claimed lanes
+
+Lanes currently in flight. Add yourself here before starting work; do not start
+on an unclaimed lane without claiming it.
+
+| Lane | Agent | Since | Active items |
+|---|---|---|---|
+| **L-TOOL** | dave (initiator) | 2026-10-21 | TOOL-4 (guard) → TOOL-2 → TOOL-3 |
+
+Unclaimed: **L-IR · L-SCHED · L-RUN · L-PROBE · L-LINT · L-TEST**
+(L-TEST has veto authority over every lane's tests regardless of claim status.)
+
 ## L-TOOL — CLI, packaging, build hygiene
 
 ```
@@ -14,6 +26,9 @@ FORK.md
 NOTICE
 ```
 *May read:* everything. *Owns no library internals.*
+**Note:** TOOL-4 (the vendored-tree guard) is *written* by L-TOOL but *reviewed*
+by L-TEST, because it is the mechanism that enforces every other lane's
+patch discipline. Ownership stays with L-TOOL; correctness is jointly held.
 
 ## L-IR — validated text IR
 
