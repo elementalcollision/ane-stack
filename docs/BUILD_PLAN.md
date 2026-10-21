@@ -79,7 +79,10 @@ assert on failures in tests instead of grepping stderr.
 **TOOL-4 — Vendored-tree CI guard**
 A script that asserts `vendor/mil_spec/` matches "pristine upstream + `patches/`"
 byte-for-byte. Prevents silent hand-edits that never became patches.
-*Accept:* mutate a vendored file → guard fails naming the file.
+*Accept:* mutate a vendored file → guard fails naming the file. ✅ **done**
+(`scripts/vendor-guard.sh` + `vendor/manifest.sha256` + `tests/vendor-guard.bats.sh`,
+evidence `docs/evidence/0005-vendor-guard.md`. First act was catching a stray
+`src/ir.rs.orig`.)
 *Owner:* L-TOOL. **Effort:** S. **Prevents:** the #1 fork rot.
 
 ### L-IR

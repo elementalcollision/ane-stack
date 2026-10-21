@@ -1,0 +1,30 @@
+name: vendor-guard
+
+# Guard that vendor/mil_spec/ always equals "pristine upstream + patches/".
+# A hand edit with no numbered patch fails this job. See docs/evidence/0005.
+on:
+  push:
+  pull_request:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: vendor tree matches baseline
+        run: ./scripts/vendor-guard.sh --verify
+
+      - name: patches apply cleanly to pristine upstream
+        run: |
+          set -e
+          work="$(mktemp -d)"
+          git clone --quiet https://github.com/savageAZfck/mil_spec.git "$work/up"
+          (cd "$work/up" && git checkout --quiet 20f097fb34969cd577342a4d7996fbf5464998c8)
+          for p in patches/[0-9]*.patch; do
+            patch -d "$work/up" -p1 --forward -i "$PWD/$p"
+          done
+          echo "all patches apply to pristine upstream"
+
+      - name: guard regression test
+        run: bash tests/vendor-guard.bats.sh
