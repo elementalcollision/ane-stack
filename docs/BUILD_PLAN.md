@@ -164,7 +164,12 @@ volatile /tmp artifacts). Evidence: `docs/evidence/0008-evidence-harness.md`.
 Audit for tests that silently no-op without hardware (upstream's `ops_e2e` returns
 `None` when `coremlc` is missing). Replace silent skips with explicit, logged skips
 and a `--require-hw` flag that turns a skip into a failure.
-*Accept:* CI run without hardware reports N skipped, not N passed.
+*Accept:* CI run without hardware reports N skipped, not N passed. ✅ **done**
+(patch 0009: 27 runtime gates across 10 files routed through `mil_compile::hw_gate`
+— loud `SKIP:` line by default, hard failure under `MIL_REQUIRE_HW=1`. CI job
+`hw-skip-discipline.yml` simulates no-hardware on a macOS runner via a shadowed
+`xcrun` and asserts skips fire with zero failures. Linux cannot be used for this —
+`mil_infer` does not compile there. Evidence: `docs/evidence/0009-test-hw-gate.md`.)
 *Owner:* L-TEST. **Effort:** S.
 
 ---
