@@ -1,0 +1,36 @@
+From: ane-stack
+Subject: [PATCH 0004] milc: stop routing every .mlpackage to the shard loader
+
+cmd_run decided "is this a shard bundle?" with `path.join("manifest.json").exists()`.
+Every CoreML .mlpackage contains `Manifest.json` (capital M). macOS APFS is
+case-insensitive by default, so the test matched ordinary packages too, and
+
+  milc run model.mlpackage --units ane
+
+failed with `infer manifest: kind is not "milshards"`. The package path now
+also requires the absence of `Data/com.apple.CoreML/model.mlmodel`, which no
+shard bundle has.
+
+Verified after the fix: a stateful IR-compiled package compiles through
+coreml.framework and runs on cpu+ane (3 steps, median 99.42us).
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/crates/milc/src/main.rs
++++ b/crates/milc/src/main.rs
+@@ -1514,7 +1514,15 @@
+         eprintln!("milc run: needs <pkg.mlpackage>");
+         return ExitCode::from(2);
+     };
+-    if path.join("manifest.json").exists() {
++    // FORK(ane-stack): a shard bundle carries a lowercase `manifest.json`,
++    // while every CoreML `.mlpackage` carries `Manifest.json`. macOS APFS is
++    // case-insensitive by default, so the bare existence test matched the
++    // package too and sent every plain package down the shard loader
++    // ("infer manifest: kind is not \"milshards\""). Match the exact name.
++    // Upstream: 20f097f.
++    if path.join("manifest.json").exists()
++        && !path.join("Data/com.apple.CoreML/model.mlmodel").exists()
++    {
+         return run_sharded(&path, units, steps);
+     }
+     let spec_path = path.join("Data/com.apple.CoreML/model.mlmodel");

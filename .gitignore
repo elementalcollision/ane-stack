@@ -1,0 +1,6 @@
+# build output — vendored tree is built in place
+vendor/mil_spec/target/
+target/
+*.compiled/
+*.rej
+*.orig

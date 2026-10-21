@@ -1,0 +1,23 @@
+From: ane-stack
+Subject: [PATCH 0003] mil_verify: correct the stateful-kv conformance fixture
+
+The conformance battery's "stateful-kv" valid case encoded the same shape bug
+as 0001. Corrected so the battery keeps testing a legal stateful graph.
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/crates/mil_verify/src/lib.rs	2026-10-21 09:21:10
++++ b/crates/mil_verify/src/lib.rs	2026-10-21 09:20:03
+@@ -863,7 +863,12 @@
+         },
+         Case {
+             name: "stateful-kv",
+-            ir: "input x: fp16[1,4,1,1]\nstate kv: fp16[1,4,1,64]\nr = read_state(kv)\nc = concat([r, x], 3)\nwrite_state(kv, c)\noutput c",
++            // FORK(ane-stack): the fixture concatenated a [1,4,1,1] input onto
++            // a [1,4,1,64] state and wrote the [1,4,1,65] result back — a shape
++            // the state cannot hold. It only passed because write_state checked
++            // dtype alone. Whole-state additive write is the legal form.
++            // Upstream: 20f097f.
++            ir: "input x: fp16[1,4,1,64]\nstate kv: fp16[1,4,1,64]\nr = read_state(kv)\nc = add(r, x)\nwrite_state(kv, c)\noutput c",
+             valid_ir: true,
+             valid_spec: true,
+         },

@@ -1,0 +1,333 @@
+# mil_spec
+
+> **Status: beta.** Op coverage is the subset a stateful LLM graph needs —
+> the wire format itself is stable and verified by `coremlc`.
+
+**Write Apple CoreML `.mlpackage` programs in pure Rust. No Python, no
+coremltools, no protoc.**
+
+`mil_spec` emits the protobuf `model.mlmodel` spec, `weight.bin` v2 weight
+blobs, and the `Manifest.json` package layout by hand — Apple documents the
+schema ([`mlmodel/format`](https://github.com/apple/coremltools), BSD-3) but
+the only writer most people have ever used is coremltools. This is the
+other one.
+
+```rust
+use mil_spec::*;
+
+let mut b = Block::new();
+let y = b.mul("x", "x", &[1, 4, 1, 1], "y");
+b.outputs = vec![y];
+
+let inputs  = [Feature { name: "x".into(), shape: vec![1, 4, 1, 1],
+                       dtype: DType::Fp16, is_state: false }];
+let outputs = [Feature { name: "y".into(), shape: vec![1, 4, 1, 1],
+                       dtype: DType::Fp16, is_state: false }];
+let fn_inputs = [NVT { name: "x".into(),
+    ty: ValueType::Tensor(TensorType::f16(&[1, 4, 1, 1])) }];
+
+let spec = encode_model(&inputs, &outputs, &[], &b, &fn_inputs,
+                        &ModelMeta::new(10, "CoreML9"));
+write_mlpackage("model.mlpackage".as_ref(), &spec, None).unwrap();
+```
+
+Compile with `xcrun coremlc compile model.mlpackage .` and you have a real
+`.mlmodelc`.
+
+## What it writes
+
+| Piece | API |
+|---|---|
+| Elementwise (`mul`/`add`/`sub`, `real_div`/`floor_div`/`modulo`, `pow`, `maximum`/`minimum`, `exp`/`exp2`/`log`, `sqrt`/`rsqrt`/`square`, `abs`/`floor`/`ceil`/`round`/`neg`/`sign`, `sin`/`cos`/`tan`/`asin`/`acos`/`atan`, `sinh`/`cosh`/`tanh`/`atanh`, `erf`, `inverse`, `clip`/`threshold`, `select`) | [`Block`] builder helpers |
+| Activations (`sigmoid`, `relu`, `relu6`, `leaky_relu`, `elu`, `gelu`, `softplus`, `softsign`, `sigmoid_hard`, `clamped_relu`, `prelu`, `softmax`, `log_softmax`) | [`Block`] builder helpers |
+| Reductions (`reduce_sum`/`mean`/`max`/`min`/`prod`, `reduce_l1_norm`/`l2_norm`/`sum_square`/`log_sum`/`log_sum_exp`, `reduce_argmax`/`argmin`, `cumsum`) | [`Block`] builder helpers |
+| Indexing (`gather`, `gather_along_axis`, `gather_nd`, `scatter`, `scatter_along_axis`, `scatter_nd`, `topk`, `argsort`, `one_hot`) | [`Block`] builder helpers |
+| Shape/layout (`reshape`, `transpose`, `expand_dims`, `squeeze`, `slice`, `slice_by_size`, `concat`, `split`, `tile`, `pad`, `broadcast_to`, `flatten2d`, `stack`, `reverse`, `sliding_windows`, `cast`) | [`Block`] builder helpers |
+| Normalization (`rms_norm`, `layer_norm`, `batch_norm`, `instance_norm`, `group_norm`, `l2_norm`, `local_response_norm`) | [`Block`] builder helpers |
+| Pooling & upsample (`avg_pool`, `max_pool`, `avg_pool_global`, `max_pool_global`, `upsample_nearest`, `upsample_bilinear`) | [`Block`] builder helpers |
+| Space transforms (`depth_to_space`, `space_to_depth`, `pixel_shuffle`) | [`Block`] builder helpers |
+| Conv & linear (`conv` N-D, `conv_transpose`, `conv1x1`, `linear`, `matmul`) | [`Block`] builder helpers |
+| Raw ops with full control | [`Block::op`], [`bind`], [`bind_many`], [`bind_const`] |
+| Stateful graphs (KV caches) | [`Feature::is_state`], [`Block::read_state`], [`Block::write_state`] |
+| Weight-only int8 (`constexpr_blockwise_shift_scale`) | [`Block::konst_q8`] |
+| `weight.bin` v2, file-backed | [`BlobWriter`] |
+| `weight.bin` v2, in-memory | [`WeightBin`] |
+| `.mlpackage` + `Manifest.json` | [`write_mlpackage`] |
+| RMSNorm peephole (fp16-safe prescaling) | [`Block::rms_norm`] |
+| Validated IR front-end (text → checked graph) | [`ir::compile`] |
+
+`ModelMeta` carries `spec_version` + `opset` — e.g. `(8, "CoreML5")`,
+`(10, "CoreML9")` — the Function's block specialization and the
+specification version move together.
+
+## The IR front-end
+
+`mil_spec::ir` is a compiler: a line-oriented SSA text form that lowers
+onto the typed `Block` helpers and **validates before it emits** — names
+must resolve, shapes must check out (broadcast, reshape element counts,
+matmul inner dims, permutations, concat ranks, state reads/writes), and
+declared outputs must be defined.
+
+```text
+input  x: fp16[1,4,1,1]
+k    = const_f16(2.0)
+y    = mul(x, k)
+z    = reshape(y, [4,1,1,1])
+output z
+```
+
+```rust
+let prog = mil_spec::ir::compile(src)?;          // parse + lower + validate
+let spec = mil_spec::encode_model(&prog.inputs, &prog.outputs, &prog.states,
+                                  &prog.block, &prog.fn_inputs, &meta);
+mil_spec::write_mlpackage(dir, &spec, weights)?;
+```
+
+See `examples/compile_ir.rs` for a stateful KV-cache program.
+
+## The workspace
+
+`mil_spec` is the core of a full native-Rust CoreML pipeline — the pieces
+`coremltools` monopolizes, split into focused crates:
+
+| Crate | Job |
+|---|---|
+| **`mil_convert`** | safetensors *and* GGUF → `.mlpackage`. Streams HF checkpoints or llama.cpp files (all ggml quant types, split shards, Q/K un-permute, embedded tokenizer export to `tokenizer.json`) into fat single-graph decoders: packed-KV state (`slice_update` at runtime `pos`), GQA attention, per-channel int8 or fp16 conv weights. Optional **LoRA bake-in** (`--lora`): MLX/PEFT adapters from safetensors or `.npz`, fused as `W + scale·(B @ A)` in f32 before quantization. Config-driven — Qwen2/Qwen3/Llama-class today. |
+| **`mil_passes`** | Optimizer over `Block`: const dedup (the helpers emit ~5 identical consts per conv — this is the big spec shrinker), constant folding, no-op elimination, dead code, fixpoint. Deterministic, reports every change. |
+| **`mil_lint`** | The differentiator — static **ANE-placement analysis**. Predicts per-op execution unit (ANE/GPU/CPU) with a stated rule *before* you compile, flags CPU islands and fp32 regions, and estimates dispatch count — the number that decides whether a graph lives or dies on the ANE. coremltools can't do this at all. |
+| **`mil_compile`** | `.mlpackage` → `.mlmodelc`. Two backends: in-process `MLModel compileModelAtURL:` via the Objective-C runtime (no `xcrun`, no subprocess), and an `xcrun coremlc` driver with structured errors and `.mlmodelc` discovery. |
+| **`mil_verify`** | Reads specs back: generic protobuf decoder, structural diff (`milc diff` shows why `coremlc` rejected your graph), name-resolution validation, `weight.bin` integrity, and a conformance battery — valid graphs must pass, planted-invalid controls must fail, or the verifier itself is broken. |
+| **`mil_onnx`** | ONNX → `.mlpackage` with a hand-rolled proto2 reader (no prost, no Python): static-shape lowering of the ONNX op set onto MIL fp16 ops, `weight.bin` streaming for large initializers, symbolic dims bound at conversion time (`--dim batch=2`), and sklearn-style classical ML (GLMs, tree ensembles) via a small JSON schema or `ai.onnx.ml` nodes. |
+| **`mil_infer`** | Sovereign ANE backend + runtime: **native HWX Mach-O emitter** (`hwx` — emits precompiled ANE binaries directly in Rust with zero Apple codegen, 69/69 byte-identical on the mixed-shape conv chain corpus and 0 ULP bit-exact across 10 core op families), **multi-op MIL DAG graph compiler** (`graph` — currency-aware layout adapter insertion, `Q8_0`/`Q4_0`/`palette4` compile-time dequant folding, op fusion, and `SharedSurface` + MRU residency paging), direct **Espresso** (`_ANEClient` / `IOSurface`) and **e5rt** execution, plus in-process `CoreML.framework` inference. |
+| **`milc`** | The CLI over all of it: `convert`, `onnx`, `gguf`, `lint`, `inspect`, `diff`, `compile` (including `--target ane --emit-hwx`), `ane` (`lower`, `validate`, `compile`, `run --emit-hwx`, `decode`, `decompile` — HWX Mach-O → MIL + weights), `verify`, `check`, plus package surgery (`fuse-lora`, `requant`, `graft`, `reshape`) and `attest`. |
+
+```bash
+cargo build --release -p milc
+milc convert Qwen3-0.6B -o drafter.mlpackage --seq 1 --max-kv 2048
+milc convert model.gguf -o drafter.mlpackage   # GGUF auto-detected by magic
+milc convert Qwen3-0.6B -o tuned.mlpackage --lora adapters/dream  # LoRA bake-in (MLX/PEFT, safetensors or npz)
+milc gguf model.gguf --tokenizer tok.json     # inspect + tokenizer export
+milc onnx model.onnx -o m.mlpackage --dim batch=1   # ONNX (symbolic dims bound with --dim)
+milc onnx glm.json -o m.mlpackage                   # classical-ML JSON (or --classical)
+milc convert model -o s.milshards --shard 8 --head-shards 4   # ANE-sized bundle (see below)
+milc lint drafter.mlpackage     # per-op ANE/GPU/CPU + dispatch estimate
+milc plan drafter.mlpackage [--units ane] [--vs-lint]  # real placement from MLComputePlan
+milc compile drafter.mlpackage  # via CoreML.framework, in-process
+milc verify                     # conformance battery
+```
+
+## Getting real models onto the Neural Engine
+
+The ANE execution-plan builder has a hard size limit — measured here,
+a monolithic program fails `Model::load` with CoreML error **-14**
+somewhere between 3,164 and 3,284 ops (~51 MB of fp16 weights at
+d=576; it's op count, not weight bytes — an int8 variant at 29 MB
+still fails). Anything past ~26 SmolLM2-sized layers simply will not
+load on `cpuAndNeuralEngine` or `all` — though it runs fine on CPU and
+GPU. `milc convert` warns when a package crosses the line.
+
+`--shard N` is the fix — the layout Bad Apple's production converter
+measured on real hardware:
+
+```bash
+milc convert SmolLM2-135M -o s.milshards --seq 5 --max-kv 64 --fp16 --shard 8 --head-shards 4
+milc run s.milshards --units ane
+```
+
+The bundle is a directory: `layer_AA-BB.mlpackage` per N-layer group
+(each with its own packed-KV state over its local rows), `head_vLO-HI.mlpackage`
+per vocab slice (final RMSNorm + a slice of the projection), and
+`manifest.json`. `mil_infer::ShardedModel` compiles every member,
+loads them on the requested `ComputeUnits`, threads hidden state
+through the layer shards and concatenates the head logits.
+`milc run <bundle>` works directly. Every member package carries full
+provenance, so `milc attest` applies per package.
+
+Measured on SmolLM2-135M fp16 (`--shard 8 --head-shards 4`, seq 5):
+all members load and predict on **every** unit set — under
+`cpuAndNeuralEngine` the plan places **84% of ops on the ANE** (535 of
+634, 65% of estimated cost; `milc plan` output), and top-1 agrees with
+the reference at all positions on all units. The ANE is an approximate
+engine: same-package `CpuOnly`-vs-`CpuAndNeuralEngine` logits diverge
+(cosine ~0.99 on 2–16 layer models, worse at later sequence positions
+where the KV-state path compounds); expect correct tokens, not
+bit-faithful logits. Sharded bundles are fixed-`--seq` only
+(`--seq-lens`/`--seq-range` + `--shard` is rejected for now).
+
+`--embed` emits the token-embedding gather into the graph — the
+package then takes `ids (1,S) int32` instead of `x`, verified against
+the host-side embed path end-to-end.
+
+`milc plan` reads CoreML's own `MLComputePlan` (no heuristics): per-op
+device assignment and estimated cost, plus a device summary.
+`--vs-lint` diffs it against `mil_lint`'s predictions — on a layer
+shard they agree on 93% of ops; disagreements are small elementwise
+ops the scheduler leaves on CPU to avoid transfer cost.
+
+## Package surgery
+
+`mil_convert::surgery` is a generic editor over a built `.mlpackage`:
+decode the spec, index every weight group (raw fp16 consts, int8 and
+Q4-block `constexpr_blockwise_shift_scale`, palette4
+`constexpr_lut_to_dense`), stage blob replacements, and rewrite spec +
+`weight.bin` in one pass — with op-binding validation before a byte
+lands on disk. The CLI commands are thin shells over it:
+
+```bash
+milc fuse-lora drafter.mlpackage --lora adapters/dream -o tuned.mlpackage
+milc requant   drafter.mlpackage --to int8|fp16|palette4 [-o out.mlpackage]
+milc graft     donor.mlpackage --layers 0..4 --onto base.mlpackage -o out.mlpackage
+milc reshape   flex.mlpackage --seq-lens 2,8,32 [-o out.mlpackage]
+milc reshape   flex.mlpackage --seq-range 1..32 [-o out.mlpackage]   # enumerated <-> range
+```
+
+- **fuse-lora** fuses adapter deltas into an existing package's weight
+  blobs. The packaged-const → HF-tensor mapping is *verifiable* because
+  `mil_convert` names conv weight consts deterministically
+  (`l{L}_{wq,wk,wv,wo,wg,wu,wd}`, `lm_w`); each target is decoded to
+  f32, fused through the same `W + scale·(B @ A)` path as
+  `convert --lora`, and re-emitted in its original encoding (int8 stays
+  int8 with fresh scales). An adapter for the wrong checkpoint is a
+  hard error before anything is written.
+- **requant** re-encodes conv weights in place. fp16 → int8/palette4,
+  int8 → fp16/palette4, palette4 → fp16 — decoded through f32, emitted
+  deterministically. Norm weights and biases stay fp16, matching the
+  converter's own policy. Without `-o` the package is rewritten
+  atomically in place (temp dir + rename).
+- **graft** splices `l{N}_*` layer weight groups from a donor package
+  into a same-architecture base — op stream and model description must
+  match exactly or it refuses, and payloads are copied losslessly
+  (same encoding, same shape).
+- **reshape** rewrites the sequence flexibility of a flexible-shape package
+  in either direction (`--seq-lens a,b,c` enumerated shapes, or
+  `--seq-range LO..HI` shape range): every varying dim must track the
+  same old list/range, and the new set (or range) rebinds those dims with
+  `seq_lens[0]` / `LO` as the default. Fixed-shape packages are refused.
+
+`milc convert --seq-range LO..HI` emits the same flexible-seq program with
+a `ShapeRange` (`ArrayFeatureType.shapeRange`, field 31) instead of
+`EnumeratedShapes` (field 21): any length in `LO..=HI` (`HI <= --max-kv`,
+unbounded rejected). Apple recommends enumerated shapes for performance
+and range-flexible models may not run on the Neural Engine; measured on
+Qwen3-0.6B fp16 here, the range package runs ~19% slower than a fixed
+package on `ComputeUnits::All` — prefer
+`--seq-lens` for ANE workloads, or `--shard` for monoliths past the
+ANE plan-builder limit.
+
+**Known limitation — flexible packages and compute units.** Measured
+with corrected `MLComputeUnits` mapping on a converted package:
+
+| | cpu | cpu+gpu | all | cpu+ane |
+|---|---|---|---|---|
+| fixed `--seq` | ok | ok | ok | ok |
+| `--seq-lens` (EnumeratedShapes) | ok | **-14** | **-14** | ok |
+| `--seq-range` (ShapeRange) | ok | **-14** | **-14** | **-14** |
+
+EnumeratedShapes reaches the ANE (as Apple's docs recommend) but the
+GPU/scheduler path rejects dynamic dims, so `cpu+gpu` and `all` fail
+to plan. ShapeRange only plans on CPU — matching Apple's own caveat
+that range-flexible models may not use the Neural Engine. For ANE
+workloads use fixed `--seq` (or `--shard` for big models); for
+enumerated flexibility pick `--units cpu` or `--units ane`. Reproduce
+with `cargo test -p mil_convert --release --test enum_shapes_e2e --
+--ignored cpu_only_flex_matrix`.
+
+## Provenance (`milc attest`)
+
+Every `mil_convert` package now carries a provenance block in
+`description.metadata.userDefined` — the real CoreML key/value map, no
+fake fields. Keys are `mil.prov.*`: toolchain + version, unix
+timestamp, SHA-256 of the canonical config and options, SHA-256 of
+`weight.bin`, and a `name size sha256` fingerprint per source weight
+file in deterministic order.
+
+```bash
+milc attest drafter.mlpackage                    # re-hashes weight.bin
+milc attest drafter.mlpackage --source Qwen3-0.6B  # + source fingerprints
+```
+
+Tampered `weight.bin` or a mismatched source file exits nonzero;
+packages without provenance (older conversions, foreign tools) are
+reported, not failed. Package surgery refreshes `mil.prov.weights` so
+a legitimately-edited package still attests — that's the provenance
+describing what the package *contains*.
+
+`mil.prov.program` is the SHA-256 of the canonical spec: `model.mlmodel` with
+the `userDefined` map removed (so the op graph, inline constants and feature
+descriptions are covered, which is what protects packages with no
+`weight.bin`). A mismatch reports `TAMPERED program` and exits nonzero;
+provenance from before this key existed reports `spec not covered` and is
+not a failure. Package surgery refreshes it.
+
+`--source` takes a directory or a single file (`milc attest m.mlpackage
+--source model.onnx`); fingerprints match on file name. `milc onnx`
+packages carry the same keys minus `mil.prov.config`. When every ONNX
+weight is inlined (no `weight.bin`), `mil.prov.weights` is `none`: attest
+then checks that no blob has appeared, and the source fingerprint is the
+content anchor.
+
+## ONNX and classical ML (`milc onnx`)
+
+```bash
+milc onnx model.onnx -o m.mlpackage [--dim name=N]... [--inline-max BYTES]
+milc onnx glm.json   -o m.mlpackage          # classical-ML JSON (or --classical)
+```
+
+All float tensors lower to fp16. Shapes are static, but a symbolic
+`dim_param` (the usual torch.onnx.export batch/sequence dim) is bound at
+conversion time with `--dim batch=2` (or `ConvertOptions::dims` from the
+library). An unbound dim errors with `bind it with --dim batch=N`; a
+binding that names no dim in the graph (a typo) errors listing the real
+ones. The command prints inputs/outputs with shapes, an op histogram, the
+`weight.bin` size and the bound dims, and embeds provenance so
+`milc attest` works afterwards.
+
+## On-chip Neural Engine training (`mil_infer::graph`) vs. CoreML `mlProgram`
+
+CoreML's legacy updatable-model machinery (`NeuralNetwork.updatable`)
+only exists on the old neural-network proto; Apple's `mlProgram`
+wrapper bakes weights as read-only constants (`convert --updatable
+a,b,c` records a `mil.updatable` metadata marker for `mlProgram`
+packages).
+
+On the **sovereign native HWX path (`mil_infer::graph` + `espresso`)**,
+weights do not have to be baked constants: a `[1, R, 1, K]` weight
+matrix can live inside a persistent `SharedSurface` `IOSurface` buffer
+on the Neural Engine, and `compile_graph` lowers the full training loop
+to native HWX kernels:
+- **Forward:** `y = matmul(x = x, y = W, transpose_y = true)` (`emit_avw`)
+- **Backward:** `dx = matmul(x = dy, y = W, transpose_x = true)` (`emit_attn_v`, with automatic bidirectional `Contig <-> Strided` layout adaptation)
+- **Weight gradient:** `dW = matmul(x = neg_lr_dy, y = x, transpose_x = true)` (`emit_outer_t`)
+- **In-place weight update:** `W_new = add(x = W, y = dW)` (`emit_add4d`, aliased in-place onto `W`'s `SharedSurface`)
+
+Verified on hardware in `graph::tests::ane_onchip_backprop_training_exec`
+(2-layer MLP forward + backprop + in-place SGD executing 100% on the
+ANE, MSE `0.076198 -> 0.000096` in 16 steps, 0 mismatches vs. CPU
+backprop reference).
+
+## Why a hand-rolled writer
+
+- **No toolchain.** coremltools drags in Python, protobuf codegen, and a
+  version matrix. `mil_spec` is `cargo add` and `std`.
+- **Ops coremltools won't emit for you.** Stateful KV models,
+  `constexpr_blockwise_shift_scale` weight-only int8, fused
+  `scaled_dot_product_attention` under the CoreML9 opset — the things that
+  put a whole model on the Neural Engine.
+- **Deterministic.** The same graph produces the same bytes. When `coremlc`
+  rejects a model you want to diff the spec, not re-run a conversion
+  pipeline and hope.
+
+This writer was extracted from a production converter that runs a 4B model
+at ~100% runtime-op Neural Engine placement — the encoding is battle-tested
+against the real `coremlc`, not just the schema.
+
+## Scope
+
+Emits `mlprogram` (not NeuralNetwork protos). Shapes are static. The op
+helpers cover the transformer-layer surface; anything else goes through
+`Block::op` with raw `Op`/`Argument`/`Value` — the whole wire layer is
+public for exactly that reason.
+
+## License
+
+MIT OR Apache-2.0, your choice.

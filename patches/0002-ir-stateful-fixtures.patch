@@ -1,0 +1,60 @@
+From: ane-stack
+Subject: [PATCH 0002] tests: correct the stateful fixtures that encoded bug 0001
+
+Companion to 0001. The IR has no slice_update, so a stateful program can only
+write a whole state; both fixtures are rewritten to a same-shape additive
+write, and a new regression test asserts the shape rejection.
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/tests/ir.rs	2026-10-21 09:21:10
++++ b/tests/ir.rs	2026-10-21 09:19:44
+@@ -135,21 +135,46 @@
+ 
+ #[test]
+ fn stateful_roundtrip() {
++    // FORK(ane-stack): the original form concatenated a [1,8,1,64] step onto a
++    // [1,8,64,64] state and wrote the [1,8,65,64] result back — a shape the
++    // state can never hold. It only "passed" because write_state validated
++    // dtype and nothing else; coremlc rejected the encoded program. The IR has
++    // no slice_update, so a same-shape whole-state write is the only legal
++    // form here. Upstream: 20f097f.
+     let p = compile_ok(
+         "state kv: fp16[1,8,64,64]\n\
+-         input step: fp16[1,8,1,64]\n\
++         input step: fp16[1,8,64,64]\n\
+          cur = read_state(kv)\n\
+-         merged = concat([cur, step], 2)\n\
++         merged = add(cur, step)\n\
+          write_state(kv, merged)\n\
+          output merged",
+     );
+     assert_eq!(p.states.len(), 1);
+-    assert_eq!(p.types["merged"].shape, vec![1, 8, 65, 64]);
++    assert_eq!(p.types["merged"].shape, vec![1, 8, 64, 64]);
+     // fn_inputs must include the state as a State value type
+     assert_eq!(p.fn_inputs.len(), 2);
+ }
+ 
+ #[test]
++fn write_state_shape_mismatch_rejected() {
++    // Regression: a value whose shape differs from the state's declared shape
++    // must fail at compile time, not at coremlc.
++    let e = compile_err(
++        "state kv: fp16[1,8,64,64]\n\
++         input step: fp16[1,8,1,64]\n\
++         cur = read_state(kv)\n\
++         merged = concat([cur, step], 2)\n\
++         write_state(kv, merged)\n\
++         output merged",
++    );
++    assert!(
++        e.message.contains("write_state shape mismatch"),
++        "expected a shape mismatch, got: {}",
++        e.message
++    );
++}
++
++#[test]
+ fn undeclared_state_rejected() {
+     let e = compile_err("v = read_state(missing)\noutput v");
+     assert!(e.message.contains("undefined state"));

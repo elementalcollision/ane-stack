@@ -1,0 +1,37 @@
+# PATCHES.md — our diff against upstream mil_spec
+
+Upstream: `mil_spec@20f097fb34969cd577342a4d7996fbf5464998c8` (v0.4.2)
+
+Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · `wontfix`
+
+| # | Patch | Fixes | Status |
+|---|---|---|---|
+| 0001 | `ir-write-state-shape` | `mil_spec::ir` validated dtype only for `write_state`; a value whose shape ≠ the state's passed validation and produced a package `coremlc` rejected | open |
+| 0002 | `ir-stateful-fixtures` | `tests/ir.rs::stateful_roundtrip` **encoded bug 0001 as correct behaviour**; corrected to a legal whole-state write + new regression test | open |
+| 0003 | `mil-verify-stateful-fixture` | conformance case `stateful-kv` encoded the same bug; corrected | open |
+| 0004 | `milc-run-shard-dispatch` | `milc run` sent **every** `.mlpackage` to the shard loader (case-insensitive `manifest.json` vs `Manifest.json`), so `milc run <pkg>` never worked on a plain package | open |
+
+All four apply cleanly to pristine upstream (`patch -p1 --dry-run` verified) and
+are applied in order by `scripts/apply-patches.sh`.
+
+## Evidence
+
+- 0001/0002/0003: `docs/evidence/0001-write-state-shape.md`
+- 0004: `docs/evidence/0004-milc-run-dispatch.md`
+
+## Test delta
+
+Upstream baseline for `-p mil_spec -p mil_lint -p mil_passes -p mil_verify`:
+all green. After patches: **all green, +1 test** (`write_state_shape_mismatch_rejected`).
+The two fixture corrections change *what* two existing tests assert (they now
+assert a legal program) — deliberately, because the previous assertion was the bug.
+
+## Not fixing (upstream debt we inherit)
+
+- The HWX deploy lane is closed at the OS level (Apple's own artifacts fail too).
+  See `docs/adr/0002-deploy-lane-closed.md`. Not a code bug.
+- Perf-counter instrumentation needs a compile-time switch inside Apple's compiler.
+- `mil_spec::ir` has **no `slice_update`**, so an incremental KV-cache write is not
+  expressible in the IR at all — only a whole-state write. Tracked as work item
+  `IR-2` in `docs/BUILD_PLAN.md`.
+- `units_e2e` timing assertions are `#[ignore]`d and suspect (see `patches/0005` note).

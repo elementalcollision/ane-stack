@@ -1,0 +1,36 @@
+ANE Stack
+Copyright 2026 <operator>
+
+This product includes software developed by Adam Clark
+(https://github.com/savageAZfck), used under the following licences.
+
+--------------------------------------------------------------------------------
+mil_spec — https://github.com/savageAZfck/mil_spec
+Vendored at commit 20f097fb34969cd577342a4d7996fbf5464998c8 (v0.4.2, 2026-10-19)
+Licensed under MIT OR Apache-2.0. Full texts in vendor/mil_spec/LICENSE-MIT and
+vendor/mil_spec/LICENSE-APACHE.
+
+  Copyright (c) 2026 Adam Clark
+
+  This fork elects the MIT licence for all vendored files. See FORK.md for the
+  per-file change log required by Apache-2.0 §4(b) where applicable.
+
+--------------------------------------------------------------------------------
+coyote — https://github.com/savageAZfck/coyote
+NOT VENDORED. Referenced for design only; no code copied.
+Licensed under MIT.
+
+  Copyright (c) 2026 Adam Clark
+
+  Design patterns adopted (reimplemented, not copied):
+    - seed pre-scaling so a folded SGD weight update is one packed add
+    - compile-time capability / determinism / secrecy (taint) checking
+  See docs/adr/0004-borrowed-design.md.
+
+--------------------------------------------------------------------------------
+Apple frameworks
+
+This software interoperates with private Apple frameworks (ANECompiler,
+Espresso, aned) and with the public CoreML toolchain. Those frameworks are
+governed by Apple's own licence terms and are NOT covered by the licences
+above. See docs/LEGAL.md before distributing anything built here.

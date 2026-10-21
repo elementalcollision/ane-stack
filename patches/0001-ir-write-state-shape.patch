@@ -1,0 +1,41 @@
+From: ane-stack
+Subject: [PATCH 0001] ir: reject write_state whose value shape != state shape
+
+mil_spec::ir validated dtype only when binding a value to write_state, so a
+graph like `state kv: fp16[1,8,64,64]` + a [1,8,65,64] concat passed
+compilation and produced a package coremlc rejected with:
+
+  Unable to parse ML Program: in operation kv_write_state:
+  Unexpected type for the data parameter.
+
+A state is always written whole, so the value shape must equal the state's
+declared shape. Two upstream fixtures had encoded the bug as correct
+behaviour (tests/ir.rs::stateful_roundtrip and the mil_verify conformance
+case "stateful-kv"); both are corrected to a legal whole-state write, and a
+regression test asserts the rejection.
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/src/ir.rs
++++ b/src/ir.rs
+@@ -811,6 +811,21 @@
+                 ),
+             );
+         }
++        // FORK(ane-stack): a state is written whole, so the value must match
++        // its declared shape exactly. Upstream checked dtype only, which let
++        // `state kv: fp16[1,8,64,64]` + a [1,8,65,64] concat through to
++        // coremlc, which then rejected the encoded program with
++        // "write_state: Unexpected type for the data parameter".
++        // Upstream: 20f097f.
++        if v.shape != st.shape {
++            return err(
++                n,
++                format!(
++                    "write_state shape mismatch: state {:?} vs value {:?}",
++                    st.shape, v.shape
++                ),
++            );
++        }
+         self.block.write_state(parts[0], parts[1]);
+         Ok(())
+     }
