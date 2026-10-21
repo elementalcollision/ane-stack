@@ -127,7 +127,12 @@ and the 500-case fuzzer against `h17` and diff against `ANE_FRONTEND_SPEC.md`.
 **This is the highest-value new knowledge available to us** — nobody has published
 the `h17` dialect.
 *Accept:* a diff document `docs/spec/ane-frontend-h17.md` listing ops that changed
-verdict, plus a machine-readable matrix.
+verdict, plus a machine-readable matrix. ✅ **done** — 500 cases, seed 31337.
+Family-level behavior identical to h16g (336/160/4/0/0); no verdict changed; first
+published h17 matrix. Two verified findings: the spec's laxity count overstates
+(3 func-name + 1 fuzzer no-op, fixed in patch 0011), and its "unclosed-paren
+`const(` tolerated" claim does NOT reproduce on h17. Artifacts:
+`docs/spec/ane-frontend-h17.md` + `ane-frontend-h17-matrix.jsonl` + `h17-findings/`.
 *Owner:* L-PROBE. **Effort:** M. **Depends on:** nothing.
 
 **PROBE-2 — Decode the deploy-gate error codes**
