@@ -207,25 +207,38 @@ impl AneLoadError {
     /// for the newer one:
     ///
     /// * macOS 26.x — `…error:: Program load failure (0x170004)`. The code is
-    ///   in parentheses at the end, and is the only hex token.
+    ///   a terminal parenthesised token, and the only hex token present.
     /// * macOS 27.x — `…error:: Program load failed — bad program image (model
-    ///   may be corrupt or incompatible) (underlying=0x13)`. The code is
-    ///   introduced by `underlying=` and is the *nested* value.
+    ///   may be corrupt or incompatible) (underlying=0x13)`. The code follows
+    ///   `underlying=` and is a *nested* value; it may be preceded by other
+    ///   parenthesised text.
     ///
-    /// So prefer `underlying=0x…` when present (it is unambiguous), then fall
-    /// back to a parenthesised `(0x…)`, then to the first hex token. An
-    /// unparseable token yields `None` rather than a bogus value.
+    /// So the locate rules are tried in a deliberate precedence order, most
+    /// specific first: `underlying=` (unambiguous marker), then the terminal
+    /// parenthesised token, then the first hex token as a last resort.
     ///
-    /// Measured on macOS 27.0 with `examples/raw_err_dp.rs`: the naive
-    /// first-token rule returned `Some(19)` for `(underlying=0x13)` and
-    /// classified a real deploy refusal as `Unrecognised`. Both message shapes
-    /// are asserted in tests, because the two shapes are indistinguishable by
-    /// inspection without OS-specific provenance.
+    /// Measured on macOS 27.0: the previous first-token-only rule returned
+    /// `Some(19)` for `(underlying=0x13)` and classified a real deploy refusal
+    /// as `Unrecognised`, silently dropping the code. Both message shapes are
+    /// asserted in tests — they are indistinguishable by inspection without
+    /// OS-specific provenance, so neither may be removed.
     fn take_code(raw: &str) -> Option<u32> {
-        if let Some(pos) = raw.find("underlying=") {
-            // Skip past `underlying=0x` — otherwise take_while starts on `0`
-            // and stops at the `x`, yielding a bogus zero.
-            let digits: String = raw[pos + "underlying=0x".len()..]
+        // Each locator returns the byte offset where the digit run starts, or
+        // None to fall through. Precedence is most-specific-first — NOT
+        // first-match-wins, which is what the previous implementation did and
+        // why it was wrong on 27.x.
+        let locators: [fn(&str) -> Option<usize>; 3] = [
+            // macOS 27.x: the nested code after an explicit marker.
+            |raw| raw.find("underlying=").map(|p| p + "underlying=0x".len()),
+            // macOS 26.x: the code in trailing parentheses. `rfind` so a
+            // parenthesised hex token earlier in selector text cannot win.
+            |raw| raw.rfind("(0x").map(|p| p + "(0x".len()),
+            // Last resort for an unknown shape.
+            |raw| raw.find("0x").map(|p| p + "0x".len()),
+        ];
+        for locate in locators {
+            let Some(at) = locate(raw) else { continue };
+            let digits: String = raw[at..]
                 .chars()
                 .take_while(|c| c.is_ascii_hexdigit())
                 .collect();
@@ -233,28 +246,7 @@ impl AneLoadError {
                 return u32::from_str_radix(&digits, 16).ok();
             }
         }
-        // Otherwise the code sits in trailing parentheses: `... (0x170004)`.
-        // `rfind` so an earlier `(0x…)` in selector text loses to the terminal
-        // one. Note the +3: skip past `(0x`, so `take_while` starts on the
-        // digits and is not fooled by the `x`.
-        if let Some(open) = raw.rfind("(0x") {
-            let digits: String = raw[open + 3..]
-                .chars()
-                .take_while(|c| c.is_ascii_hexdigit())
-                .collect();
-            if !digits.is_empty() {
-                return u32::from_str_radix(&digits, 16).ok();
-            }
-        }
-        let start = raw.find("0x")?;
-        let digits: String = raw[start + 2..]
-            .chars()
-            .take_while(|c| c.is_ascii_hexdigit())
-            .collect();
-        if digits.is_empty() {
-            return None;
-        }
-        u32::from_str_radix(&digits, 16).ok()
+        None
     }
 
     /// A cause hypothesis for an operator, or `None` when nothing is known.
