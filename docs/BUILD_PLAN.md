@@ -140,7 +140,13 @@ published h17 matrix. Two verified findings: the spec's laxity count overstates
 ObjC exceptions on `H17`. Even if we cannot fix the gate, understanding it decides
 whether ADR-0002 is permanent or version-specific.
 *Accept:* an evidence file mapping each code to a cause hypothesis with a
-reproduction, and a statement of whether any code path deploys.
+reproduction, and a statement of whether any code path deploys. ✅ **done** —
+`docs/evidence/0010-deploy-gate-codes.md` + patch 0012 (probes). **Arch is ruled
+out** (h17 compile fails identically to h16g); the gate is **form-specific, not
+provenance-specific** (`aned`'s own e5 bundle is also refused). No
+externally-presented artifact deploys through `_ANEClient loadModel` on this OS
+build; ADR-0002 is version/OS-specific, not arch-specific, and not fixable by
+emitting different bytes. e5rt lane unaffected.
 *Owner:* L-PROBE. **Effort:** M. **Note:** fork-isolate every probe — ObjC
 exceptions abort the process.
 
@@ -235,7 +241,7 @@ with tests, not a string tweak.
 *Accept:* each observed code maps to a named variant; a table test covers them.
 *Owner:* L-RUN. **Effort:** S–M. **Depends on:** PROBE-2.
 
-**RUN-2 — Stateful programs on e5rt with explicit state lifecycle**
+**RUN-2 — Stateful programs on e5rt with explicit state lifecycle** — *done (L-RUN)* — patch `0013-run2-state-lifecycle`, evidence `docs/evidence/RUN-2-state-lifecycle.md`.
 Upstream verified `state<>` params surface as **inout ports, resident across
 calls**. Formalise: an explicit state handle API (`new_state`, `reset`, `save`,
 `restore`) so KV caches are first-class and testable, rather than implicit.
