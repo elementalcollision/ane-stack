@@ -17,6 +17,7 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0009 | `test-hw-gate` | hardware-gated tests early-`return`ed on missing hardware, so cargo reported them PASSED with no work done (27 sites across 10 files). Routes every gate through `mil_compile::hw_gate`: loud `SKIP:` line by default, hard failure under `MIL_REQUIRE_HW=1`, plus `count_hw_skips` for a CI summary | open |
 | 0010 | `ir-for-loop` | `mil_spec::ir` was straight-line SSA with no iteration construct. Adds bounded `for i in a..b {` fully unrolled at compile time: loop var substituted per iteration, LHS names suffixed with `_<iter>`. Matches the ANE's no-control-flow capability. | open |
 | 0011 | `fuzz-noop-splice` | `gen_mutation`'s `const()→const(` splice silently no-ops when the base has no `const()` wrapper (ew_chain), producing a valid program misreported as an UnexpectedAccept. Falls back to a guaranteed-hit keyword. Found by PROBE-1 | open |
+| 0012 | `deploy-gate-probes` | two fork-isolated probe binaries for the `_ANEClient` deploy gate: `examples/dp3.rs` (reports parse-vs-deploy stage + hex code) and `examples/deploy_probe.rs`. Examples only, no library change. How PROBE-2's codes were measured. **PROBE-2** | open |
 | 0013 | `run2-state-lifecycle` | `e5rt` state was implicit — no way to inspect, reset or snapshot a `state<>` inout port, so a KV cache could not be tested bit-exactly. Adds `reset_states`, `state_f16`, `state_names`, `state_len`, `save_states`, `restore_states` + `StateSnapshot`. Also establishes (by probe) that ANE_FRONTEND_SPEC.md line 59 is wrong and line 281 right: `write_state` data must be the terminal `slice_update` output. **RUN-2** | open |
 | 0014 | `run1-loader-errors` | `_ANEClient loadModel:` refusals were one opaque string, and `dp3.rs` sliced 8 chars from the first `0x`, so a signed code `-0x170004` yielded `-0x17000`. Adds `AneLoadError` (`code`/`kind`/`form`/`raw`) behind `EspError::Load`, with `suggested_cause()` returning `None` for unmeasured codes rather than guessing. Taxonomy is PROBE-2's measured table. **RUN-1** | open |
 
@@ -32,10 +33,11 @@ unchanged, verified byte-identical to committed HEAD.
 reconstructed from the committed tree, byte-identical to HEAD; content is
 L-IR's IR-4 work, unchanged.
 
-**Missing entry — 0012:** `patches/0012-deploy-gate-probes.patch` exists and
-applies cleanly, but has no row in this table and no evidence link. Not
-backfilled here, because it is PROBE-2 work (L-PROBE, in flight) and the
-owner is better placed to describe it. Request to L-PROBE.
+**On 0012:** the row above was added during an L-RUN documentation review.
+The patch and its evidence (`docs/evidence/0010-deploy-gate-codes.md`) both
+existed and applied cleanly; only the table row was absent, so the count
+sentence said fourteen while the table listed thirteen. Row content is
+taken from the patch's own Subject and body, not paraphrased.
 
 **Root cause of the 0007/0008/0010 patch defects (found during RUN-2):** all
 three were authored by writing the prose header and then editing the vendor
@@ -56,6 +58,7 @@ into `patches/`, and confirm with `apply-patches.sh --check`. Used for 0013.
 - 0009: `docs/evidence/0009-test-hw-gate.md`
 - 0010: `docs/evidence/0010-ir-for-loop.md` (L-IR)
 - 0011: `docs/spec/ane-frontend-h17.md` (PROBE-1 findings)
+- 0012: `docs/evidence/0010-deploy-gate-codes.md` (PROBE-2)
 - 0013: `docs/evidence/RUN-2-state-lifecycle.md` (L-RUN)
 - 0014: `docs/evidence/RUN-1-loader-errors.md` (L-RUN)
 
