@@ -15,8 +15,9 @@ on an unclaimed lane without claiming it.
 | **L-TEST** | dave (initiator) | 2026-10-21 | TEST-1 ✅ → TEST-2 ✅ |
 | **L-PROBE** | dave (initiator) | 2026-10-21 | PROBE-1 (re-probe dialect on h17) → PROBE-2 → PROBE-3 |
 | **L-RUN** | dave (initiator) | 2026-10-21 | RUN-2 ✅ (state lifecycle) → RUN-1 ✅ (loader errors) → RUN-3 → RUN-4 |
+| **L-SCHED** | dave (initiator) | 2026-10-21 | SCHED-1 (cost model) → SCHED-2 → SCHED-3 → SCHED-4 |
 
-Unclaimed: **L-SCHED · L-LINT**
+Unclaimed: **L-LINT**
 
 ## L-TOOL — CLI, packaging, build hygiene
 
