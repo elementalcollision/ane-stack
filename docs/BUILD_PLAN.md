@@ -151,7 +151,13 @@ observed behaviour.
 **TEST-1 — Evidence harness**
 Script that runs a work item's evidence commands and captures output verbatim into
 `docs/evidence/<item>.md`, so evidence can never drift from the code.
-*Accept:* regenerate all existing evidence files; diffs are empty.
+*Accept:* regenerate all existing evidence files; diffs are empty. ✅ **done** —
+reframed honestly: prose contains volatile facts (latencies, /tmp paths) by design,
+so the harness re-executes a machine-readable `.spec` per item asserting exit codes
+and stable claim-substrings instead of re-pasting prose. `scripts/evidence-check.sh`
++ `docs/evidence/*.spec` + `scripts/mk-evidence-artifacts.sh`. 8/8 pass on committed
+HEAD; caught three CI-blocking issues on first run (empty patch 0007, stale manifest,
+volatile /tmp artifacts). Evidence: `docs/evidence/0008-evidence-harness.md`.
 *Owner:* L-TEST. **Effort:** S. **Depends on:** TOOL-3.
 
 **TEST-2 — Hardware-conditional test discipline**
