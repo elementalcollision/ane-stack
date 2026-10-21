@@ -48,9 +48,19 @@ jobs:
       - name: MIL_REQUIRE_HW=1 turns a skip into a failure
         run: |
           set -o pipefail
-          if env PATH="$NOXCRUN_DIR:$PATH" MIL_REQUIRE_HW=1 cargo test --manifest-path vendor/mil_spec/Cargo.toml -p mil_infer --test ops_e2e 2>&1 | grep -q "SKIP: hardware required"; then
-            echo "OK: MIL_REQUIRE_HW=1 fails loudly on missing hardware"
-          else
-            echo "::error::MIL_REQUIRE_HW=1 did not produce a hard failure"
+          # Assert on the exit code AND the panic message. The run MUST fail
+          # (cargo test exits non-zero when a test panics); a clean pass would
+          # mean the gate silently passed, which is the bug TEST-2 fixes.
+          # --nocapture surfaces the panic line into the captured stream.
+          out="$(env PATH="$NOXCRUN_DIR:$PATH" MIL_REQUIRE_HW=1 cargo test --manifest-path vendor/mil_spec/Cargo.toml -p mil_infer --test ops_e2e -- --nocapture 2>&1)"
+          rc=$?
+          echo "$out" | grep -iE "SKIP|panicked|test result" | tail -5
+          if [ "$rc" -eq 0 ]; then
+            echo "::error::MIL_REQUIRE_HW=1 run PASSED — the gate silently skipped (rc=0)"
             exit 1
           fi
+          if ! echo "$out" | grep -q "SKIP: hardware required"; then
+            echo "::error::MIL_REQUIRE_HW=1 failed but produced no SKIP reason (rc=$rc)"
+            exit 1
+          fi
+          echo "OK: MIL_REQUIRE_HW=1 failed loudly (rc=$rc) with a SKIP reason"
