@@ -1,0 +1,17 @@
+[package]
+name = "ane-stack-examples"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Our own demonstration code, built against the vendored (patched) mil_spec.
+# This crate is intentionally separate from vendor/mil_spec's workspace.
+
+[dependencies]
+mil_spec = { path = "../vendor/mil_spec" }
+
+[[example]]
+name = "compile_ir_fixed"
+path = "compile_ir_fixed.rs"
+
+[workspace]

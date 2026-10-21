@@ -47,7 +47,19 @@ Every file we change gets an entry here. Convention for the in-file header:
 
 | File | Patch | Status |
 |---|---|---|
-| _none yet_ | | |
+| `vendor/mil_spec/src/ir.rs` | 0001 | applied |
+| `vendor/mil_spec/tests/ir.rs` | 0002 | applied |
+| `vendor/mil_spec/crates/mil_verify/src/lib.rs` | 0003 | applied |
+| `vendor/mil_spec/crates/milc/src/main.rs` | 0004, 0005 | applied |
+| `vendor/mil_spec/crates/milc/tests/run_cli.rs` | 0005 | added (new file) |
+
+## Our own code lives OUTSIDE vendor/
+
+`examples/compile_ir_fixed.rs` is ours (a patched demonstration that a stateful
+package now compiles, per patch 0001). It is **not** vendored upstream code, so
+it lives in `examples/`, not `vendor/mil_spec/examples/`. Rule: nothing we
+authored goes under `vendor/mil_spec/` — that tree is upstream + numbered
+patches only, and `scripts/vendor-guard.sh` enforces it.
 
 ## Rules
 

@@ -826,21 +826,6 @@ impl Compiler {
                 ),
             );
         }
-        // FORK(ane-stack): a state is written whole, so the value must match
-        // its declared shape exactly. Upstream checked dtype only, which let
-        // `state kv: fp16[1,8,64,64]` + a [1,8,65,64] concat through to
-        // coremlc, which then rejected the encoded program with
-        // "write_state: Unexpected type for the data parameter".
-        // Upstream: 20f097f.
-        if v.shape != st.shape {
-            return err(
-                n,
-                format!(
-                    "write_state shape mismatch: state {:?} vs value {:?}",
-                    st.shape, v.shape
-                ),
-            );
-        }
         self.block.write_state(parts[0], parts[1]);
         Ok(())
     }
