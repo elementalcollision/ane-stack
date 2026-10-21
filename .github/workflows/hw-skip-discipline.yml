@@ -47,7 +47,7 @@ jobs:
 
       - name: MIL_REQUIRE_HW=1 turns a skip into a failure
         run: |
-          set -o pipefail
+          set +e
           # Assert on the exit code AND the panic message. The run MUST fail
           # (cargo test exits non-zero when a test panics); a clean pass would
           # mean the gate silently passed, which is the bug TEST-2 fixes.
