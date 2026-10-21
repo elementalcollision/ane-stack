@@ -231,7 +231,7 @@ fn predict(m: &mil_infer::Model, inputs: &[mil_infer::Input]) -> Vec<f32> {
 #[test]
 #[ignore = "e2e: needs coremlc"]
 fn enumerated_shapes_match_fixed_package() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = std::env::temp_dir().join(format!("enum_e2e_{}", std::process::id()));
@@ -346,7 +346,7 @@ fn enumerated_shapes_match_fixed_package() {
 #[test]
 #[ignore = "e2e: needs coremlc"]
 fn enum_prefix_bisect() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     use mil_convert::builder::{self, WeightEmitter};
@@ -677,7 +677,7 @@ fn load(pkg: &Path, work: &Path, units: mil_infer::ComputeUnits) -> mil_infer::M
 #[test]
 #[ignore = "e2e: needs coremlc"]
 fn range_shapes_match_fixed_packages() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("range");
@@ -823,7 +823,7 @@ fn max_abs_diff(a: &[f32], b: &[f32]) -> f32 {
 #[ignore = "e2e: needs coremlc"]
 fn reshape_enum_range_round_trip() {
     use mil_convert::surgery::{reshape_flex, SeqFlex};
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("reshape_rt");
@@ -946,7 +946,7 @@ fn cpu_only_flex_matrix() {
     use mil_convert::{plan, ModelConfig};
     use mil_spec::{Flex, ShapeRange};
     use std::collections::BTreeMap;
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("diag");
@@ -1358,7 +1358,7 @@ fn verdict4(pkg: &Path, work: &Path, s: i64, with_seq: bool) -> String {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn ane_load_matrix() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("anediag");
@@ -1405,7 +1405,7 @@ fn ane_load_matrix() {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn ane_layer_scan() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("anescan");
@@ -1537,7 +1537,7 @@ fn load4(pkg: &Path, work: &Path) -> String {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn ane_shape_scan() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("anesh");
@@ -1602,7 +1602,7 @@ fn ane_shape_scan() {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn ane_const_count_scan() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("aneconst");
@@ -1723,7 +1723,7 @@ fn conv_seq_test(
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn ane_scatter_probe() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = Root::new("anescat");

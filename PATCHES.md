@@ -14,9 +14,15 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0006 | `milc-json-diagnostics` | no machine-readable failures — agents grepped stderr. Top-level `--json` / `MILC_JSON=1` emits a `{ok, command, ...}` envelope with `{stage, code, message, path}` errors for `check`/`run`/`plan` | open |
 | 0007 | `ir-slice-update` | `mil_spec::ir` had no `slice_update`; an incremental KV-cache write was inexpressible. Adds `Block::slice_update` + IR form with full validation (region-shape rule, rank/bounds checks). Unblocks `RUN-2` (stateful e5rt). | open |
 | 0008 | `ir-state-contract` | `mil_spec::ir` had no state-level contract checks. Adds per-state read/slice_update/write counters validated in `finish()`: one read_state per state, write_state after each slice_update (counts match). Mirrors ANE_FRONTEND_SPEC.md's state contract at the IR level. | open |
+| 0009 | `test-hw-gate` | hardware-gated tests early-`return`ed on missing hardware, so cargo reported them PASSED with no work done (27 sites across 10 files). Routes every gate through `mil_compile::hw_gate`: loud `SKIP:` line by default, hard failure under `MIL_REQUIRE_HW=1`, plus `count_hw_skips` for a CI summary | open |
 
-All eight patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All nine patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
+
+**Note on 0008:** the original file used repo-root-relative paths
+(`a/vendor/mil_spec/...`), which `apply-patches.sh` (vendor-relative, `-p1`)
+could not apply. Relabelled to the vendor-relative convention; content
+unchanged, verified byte-identical to committed HEAD.
 
 ## Evidence
 
@@ -25,6 +31,8 @@ verified) and are applied in order by `scripts/apply-patches.sh`.
 - 0005: `docs/evidence/0005-milc-run-mlmodelc.md`
 - 0006: `docs/evidence/0006-milc-json-diagnostics.md`
 - 0007: `docs/evidence/0007-ir-slice-update.md`
+- 0008: `docs/evidence/0008-ir-state-contract.md` (L-IR)
+- 0009: `docs/evidence/0009-test-hw-gate.md`
 
 ## Test delta
 

@@ -51,7 +51,7 @@ fn cosine(a: &[f32], b: &[f32]) -> f64 {
 #[test]
 #[ignore = "diagnostic: needs coremlc + ~/.cache/mil_gguf_test models"]
 fn ane_vs_cpu_truncated_smollm2() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = std::env::temp_dir().join(format!("ane_num_{}", std::process::id()));

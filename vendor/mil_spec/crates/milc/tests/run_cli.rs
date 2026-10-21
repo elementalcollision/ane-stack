@@ -123,8 +123,7 @@ fn write_stateful_pkg(dir: &std::path::Path) -> std::path::PathBuf {
 #[test]
 #[cfg(target_os = "macos")]
 fn run_compiled_mlmodelc_directly() {
-    if !coremlc() {
-        eprintln!("coremlc unavailable — skipping run_compiled_mlmodelc_directly");
+    if !mil_compile::hw_gate("coremlc", coremlc()) {
         return;
     }
     let dir = std::env::temp_dir().join(format!("milc_t2_{}", std::process::id()));

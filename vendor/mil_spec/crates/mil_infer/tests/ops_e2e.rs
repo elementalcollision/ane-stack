@@ -32,8 +32,7 @@ fn run(
     outs: &[(&str, &[i64], DType)],
     feeds: &[Input<'_>],
 ) -> Option<Prediction> {
-    if !coremlc() {
-        eprintln!("coremlc unavailable — skipping {tag}");
+    if !mil_compile::hw_gate(&format!("coremlc ({tag})"), coremlc()) {
         return None;
     }
     let dir = std::env::temp_dir().join(format!("mil_ops_{tag}_{}", std::process::id()));

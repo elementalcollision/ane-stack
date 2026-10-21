@@ -1,0 +1,366 @@
+From: ane-stack
+Subject: [PATCH 0008] test: hardware-conditional test discipline (TEST-2)
+
+A hardware-gated test that runs without hardware had three honest options and
+one dishonest one. The dishonest one — what the suite did at 27 call sites —
+is `return` early, so cargo reports the test as PASSED while it did no work.
+On a CI runner with no Apple hardware, the entire e2e surface was a wall of
+green that meant nothing.
+
+This patch routes every runtime hardware gate through a shared helper,
+`mil_compile::hw_gate(reason, available)`:
+
+- default (hardware absent): prints a loud, greppable `SKIP: hardware
+  unavailable (<reason>)` line and returns — the skip is now visible and
+  machine-countable instead of silent.
+- `MIL_REQUIRE_HW=1`: the skip becomes a hard failure, so CI can assert
+  hardware coverage rather than silently losing it.
+
+Also adds `mil_compile::count_hw_skips(output)` for a CI summary step to turn
+"0 failed" into "N passed, M skipped" honestly.
+
+Shapes converted (27 gates across 10 files): the `if !coremlc() { return; }`,
+`if mil_compile::coremlc_path().is_none() { return; }`, the ops_e2e
+return-None helper, and the lora_e2e compound `!hf.exists() || ...` gate.
+Tests already `#[ignore]`d keep their attribute (cargo counts those correctly
+as "ignored"); this fixes the runtime-skip lie.
+
+Verified on a no-hardware runner (shadowed xcrun): each gated test emits a
+SKIP line and the run passes with 0 failures; with MIL_REQUIRE_HW=1 the same
+run fails loudly. Full suite green on hardware.
+
+Stacking: apply after 0001..0007.
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/crates/mil_compile/src/lib.rs
++++ b/crates/mil_compile/src/lib.rs
+@@ -143,9 +143,65 @@
+         None
+     } else {
+         Some(PathBuf::from(s))
++    }
++}
++
++// FORK(ane-stack): hardware-conditional test discipline (TEST-2).
++//
++// A test that needs hardware but runs without it has three honest options and
++// one dishonest one. The dishonest one — what the suite did — is `return`
++// early, so cargo reports the test as PASSED while it did no work. The honest
++// options: `#[ignore]` (cargo counts it as "ignored"), or a loud, greppable
++// skip line. `#[ignore]` requires opting in with `-- --ignored` on hardware
++// machines, which changes every lane's default workflow; a loud skip line
++// keeps the current workflow and is machine-countable.
++//
++// `hw_gate!` implements the loud skip, plus an escape hatch: set
++// `MIL_REQUIRE_HW=1` and the skip becomes a hard failure, so CI can assert
++// hardware coverage rather than silently losing it. Either way the skip is
++// visible: the line is `SKIP: <test> (<reason>)` on stderr.
++// Upstream: 20f097f.
++
++/// Evaluate a hardware-availability gate in a test. When the gate is closed,
++/// print a loud `SKIP:` line and return from the test (current behavior, but
++/// visible); when `MIL_REQUIRE_HW=1`, panic instead so the absence is a failure.
++///
++/// Usage:
++/// ```ignore
++/// #[test]
++/// fn needs_coremlc() {
++///     if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
++///         return;
++///     }
++///     // ... real work
++/// }
++/// ```
++pub fn hw_gate(reason: &str, available: bool) -> bool {
++    if available {
++        return true;
+     }
++    if std::env::var("MIL_REQUIRE_HW").as_deref() == Ok("1") {
++        panic!("SKIP: hardware required but unavailable ({reason}); MIL_REQUIRE_HW=1");
++    }
++    // thread + test name are not reliably available here; the caller's reason
++    // string is the identifier. eprintln! is captured by cargo unless --nocapture.
++    eprintln!("SKIP: hardware unavailable ({reason})");
++    false
+ }
+ 
++/// Count of tests in a run that reported a hardware skip. Reads the aggregated
++/// SKIP lines a CI step captures from `cargo test -- --nocapture` (or the
++/// per-test stderr when tests run single-threaded). Exposed so a CI summary can
++/// turn "0 failed" into "N passed, M skipped" honestly.
++///
++/// This is a string-scan helper, not a test: it takes captured output.
++pub fn count_hw_skips(test_output: &str) -> usize {
++    test_output
++        .lines()
++        .filter(|l| l.contains("SKIP: hardware unavailable"))
++        .count()
++}
++
+ // ---------- subprocess backend ----------
+ 
+ fn compile_subprocess(pkg: &Path, out_dir: &Path) -> Result<CompiledModel> {
+--- a/crates/mil_convert/tests/ane_kv_probe.rs
++++ b/crates/mil_convert/tests/ane_kv_probe.rs
+@@ -22,7 +22,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn masked_kv_cpu_vs_ane() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let (kvh, max_kv, hd, s) = (3i64, 64i64, 64i64, 5i64);
+@@ -238,7 +238,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn conv_chain_cpu_vs_ane() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = std::env::temp_dir().join(format!("convchain_{}", std::process::id()));
+@@ -348,7 +348,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn attn_out_to_oproj_cpu_vs_ane() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = std::env::temp_dir().join(format!("oproj_{}", std::process::id()));
+--- a/crates/mil_convert/tests/enum_shapes_e2e.rs
++++ b/crates/mil_convert/tests/enum_shapes_e2e.rs
+@@ -231,7 +231,7 @@
+ #[test]
+ #[ignore = "e2e: needs coremlc"]
+ fn enumerated_shapes_match_fixed_package() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = std::env::temp_dir().join(format!("enum_e2e_{}", std::process::id()));
+@@ -346,7 +346,7 @@
+ #[test]
+ #[ignore = "e2e: needs coremlc"]
+ fn enum_prefix_bisect() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     use mil_convert::builder::{self, WeightEmitter};
+@@ -677,7 +677,7 @@
+ #[test]
+ #[ignore = "e2e: needs coremlc"]
+ fn range_shapes_match_fixed_packages() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("range");
+@@ -823,7 +823,7 @@
+ #[ignore = "e2e: needs coremlc"]
+ fn reshape_enum_range_round_trip() {
+     use mil_convert::surgery::{reshape_flex, SeqFlex};
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("reshape_rt");
+@@ -946,7 +946,7 @@
+     use mil_convert::{plan, ModelConfig};
+     use mil_spec::{Flex, ShapeRange};
+     use std::collections::BTreeMap;
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("diag");
+@@ -1358,7 +1358,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn ane_load_matrix() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("anediag");
+@@ -1405,7 +1405,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn ane_layer_scan() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("anescan");
+@@ -1537,7 +1537,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn ane_shape_scan() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("anesh");
+@@ -1602,7 +1602,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn ane_const_count_scan() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("aneconst");
+@@ -1723,7 +1723,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc; prints a matrix"]
+ fn ane_scatter_probe() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = Root::new("anescat");
+--- a/crates/mil_convert/tests/sharded_e2e.rs
++++ b/crates/mil_convert/tests/sharded_e2e.rs
+@@ -162,7 +162,7 @@
+ /// matches the monolithic package's logits.
+ #[test]
+ fn sharded_bundle_matches_monolithic() {
+-    if !coremlc() {
++    if !mil_compile::hw_gate("coremlc", coremlc()) {
+         return;
+     }
+     let root = Root::new("e2e");
+@@ -243,7 +243,7 @@
+ /// reason bundles exist. Printed as a matrix for the record.
+ #[test]
+ fn sharded_members_load_on_ane() {
+-    if !coremlc() {
++    if !mil_compile::hw_gate("coremlc", coremlc()) {
+         return;
+     }
+     let root = Root::new("anemat");
+@@ -301,7 +301,7 @@
+ /// host-side embed + `x` package on the same tokens.
+ #[test]
+ fn embed_package_takes_ids_and_matches() {
+-    if !coremlc() {
++    if !mil_compile::hw_gate("coremlc", coremlc()) {
+         return;
+     }
+     let root = Root::new("embed");
+--- a/crates/mil_convert/tests/surgery_e2e.rs
++++ b/crates/mil_convert/tests/surgery_e2e.rs
+@@ -476,7 +476,7 @@
+ /// logits track the fp16 model's.
+ #[test]
+ fn requant_compile_and_predict() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp("requant_e2e");
+@@ -549,7 +549,7 @@
+ 
+ #[test]
+ fn graft_compile_and_predict() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp("graft_e2e");
+@@ -630,7 +630,7 @@
+ 
+ #[test]
+ fn reshape_compile_and_predict() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp("reshape_e2e");
+@@ -750,7 +750,7 @@
+ 
+ #[test]
+ fn fuse_lora_compile_and_predict() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp("fusing_e2e");
+--- a/crates/mil_infer/tests/ops_e2e.rs
++++ b/crates/mil_infer/tests/ops_e2e.rs
+@@ -32,8 +32,7 @@
+     outs: &[(&str, &[i64], DType)],
+     feeds: &[Input<'_>],
+ ) -> Option<Prediction> {
+-    if !coremlc() {
+-        eprintln!("coremlc unavailable — skipping {tag}");
++    if !mil_compile::hw_gate(&format!("coremlc ({tag})"), coremlc()) {
+         return None;
+     }
+     let dir = std::env::temp_dir().join(format!("mil_ops_{tag}_{}", std::process::id()));
+--- a/crates/mil_infer/tests/units_e2e.rs
++++ b/crates/mil_infer/tests/units_e2e.rs
+@@ -24,7 +24,7 @@
+ #[test]
+ #[ignore = "timing; needs coremlc + GPU"]
+ fn gpu_units_are_faster_than_cpu_on_big_tanh_chain() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     // 16M-element tanh chain: embarrassingly parallel transcendental
+--- a/crates/mil_verify/tests/ane_numerics.rs
++++ b/crates/mil_verify/tests/ane_numerics.rs
+@@ -51,7 +51,7 @@
+ #[test]
+ #[ignore = "diagnostic: needs coremlc + ~/.cache/mil_gguf_test models"]
+ fn ane_vs_cpu_truncated_smollm2() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = std::env::temp_dir().join(format!("ane_num_{}", std::process::id()));
+--- a/crates/mil_verify/tests/lora_e2e.rs
++++ b/crates/mil_verify/tests/lora_e2e.rs
+@@ -557,7 +557,7 @@
+ /// exactly the small fused delta — top-1 unchanged, cosine ≈ 1, but
+ /// provably different from the unfused run.
+ fn fused_logits_case(tag: &str, quant: Quant) {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp(tag);
+@@ -618,7 +618,7 @@
+ fn qwen3_0p6b_lora_fused_logits() {
+     let hf =
+         PathBuf::from(std::env::var("HOME").unwrap()).join(".cache/mil_gguf_test/models/qwen3-hf");
+-    if !hf.exists() || mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("hf+coremlc", hf.exists() && mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = tmp("qwen3");
+--- a/crates/mil_verify/tests/pipeline.rs
++++ b/crates/mil_verify/tests/pipeline.rs
+@@ -190,7 +190,7 @@
+ /// fresh state must reproduce pos=0's logits exactly.
+ #[test]
+ fn stateful_predict_threads_kv() {
+-    if mil_compile::coremlc_path().is_none() {
++    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+         return;
+     }
+     let root = std::env::temp_dir().join(format!("st_{}", std::process::id()));
+--- a/crates/milc/tests/run_cli.rs
++++ b/crates/milc/tests/run_cli.rs
+@@ -123,8 +123,7 @@
+ #[test]
+ #[cfg(target_os = "macos")]
+ fn run_compiled_mlmodelc_directly() {
+-    if !coremlc() {
+-        eprintln!("coremlc unavailable — skipping run_compiled_mlmodelc_directly");
++    if !mil_compile::hw_gate("coremlc", coremlc()) {
+         return;
+     }
+     let dir = std::env::temp_dir().join(format!("milc_t2_{}", std::process::id()));

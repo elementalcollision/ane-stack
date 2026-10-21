@@ -146,6 +146,62 @@ pub fn coremlc_path() -> Option<PathBuf> {
     }
 }
 
+// FORK(ane-stack): hardware-conditional test discipline (TEST-2).
+//
+// A test that needs hardware but runs without it has three honest options and
+// one dishonest one. The dishonest one — what the suite did — is `return`
+// early, so cargo reports the test as PASSED while it did no work. The honest
+// options: `#[ignore]` (cargo counts it as "ignored"), or a loud, greppable
+// skip line. `#[ignore]` requires opting in with `-- --ignored` on hardware
+// machines, which changes every lane's default workflow; a loud skip line
+// keeps the current workflow and is machine-countable.
+//
+// `hw_gate!` implements the loud skip, plus an escape hatch: set
+// `MIL_REQUIRE_HW=1` and the skip becomes a hard failure, so CI can assert
+// hardware coverage rather than silently losing it. Either way the skip is
+// visible: the line is `SKIP: <test> (<reason>)` on stderr.
+// Upstream: 20f097f.
+
+/// Evaluate a hardware-availability gate in a test. When the gate is closed,
+/// print a loud `SKIP:` line and return from the test (current behavior, but
+/// visible); when `MIL_REQUIRE_HW=1`, panic instead so the absence is a failure.
+///
+/// Usage:
+/// ```ignore
+/// #[test]
+/// fn needs_coremlc() {
+///     if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
+///         return;
+///     }
+///     // ... real work
+/// }
+/// ```
+pub fn hw_gate(reason: &str, available: bool) -> bool {
+    if available {
+        return true;
+    }
+    if std::env::var("MIL_REQUIRE_HW").as_deref() == Ok("1") {
+        panic!("SKIP: hardware required but unavailable ({reason}); MIL_REQUIRE_HW=1");
+    }
+    // thread + test name are not reliably available here; the caller's reason
+    // string is the identifier. eprintln! is captured by cargo unless --nocapture.
+    eprintln!("SKIP: hardware unavailable ({reason})");
+    false
+}
+
+/// Count of tests in a run that reported a hardware skip. Reads the aggregated
+/// SKIP lines a CI step captures from `cargo test -- --nocapture` (or the
+/// per-test stderr when tests run single-threaded). Exposed so a CI summary can
+/// turn "0 failed" into "N passed, M skipped" honestly.
+///
+/// This is a string-scan helper, not a test: it takes captured output.
+pub fn count_hw_skips(test_output: &str) -> usize {
+    test_output
+        .lines()
+        .filter(|l| l.contains("SKIP: hardware unavailable"))
+        .count()
+}
+
 // ---------- subprocess backend ----------
 
 fn compile_subprocess(pkg: &Path, out_dir: &Path) -> Result<CompiledModel> {

@@ -476,7 +476,7 @@ fn requant_fp16_to_int8_shrinks_and_roundtrips() {
 /// logits track the fp16 model's.
 #[test]
 fn requant_compile_and_predict() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp("requant_e2e");
@@ -549,7 +549,7 @@ fn graft_splices_donor_layers() {
 
 #[test]
 fn graft_compile_and_predict() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp("graft_e2e");
@@ -630,7 +630,7 @@ fn reshape_rewrites_enumerated_shapes() {
 
 #[test]
 fn reshape_compile_and_predict() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp("reshape_e2e");
@@ -750,7 +750,7 @@ fn fuse_lora_rejects_wrong_checkpoint() {
 
 #[test]
 fn fuse_lora_compile_and_predict() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp("fusing_e2e");

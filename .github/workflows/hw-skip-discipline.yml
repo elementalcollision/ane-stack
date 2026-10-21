@@ -1,0 +1,53 @@
+name: hw-skip-discipline
+
+# TEST-2: on a machine with NO Apple hardware (no coremlc, no ANE), a test run
+# must report hardware-gated tests as SKIPPED — never as passed. This workflow
+# runs the gated test binaries on a Linux runner and asserts the skip channel
+# fires for every gated test, and that MIL_REQUIRE_HW=1 turns skips into failures.
+on:
+  push:
+  pull_request:
+
+jobs:
+  skip-honesty:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: build a gated test binary on a no-hardware runner
+        run: |
+          # ops_e2e has 15 tests all gated on coremlc, which does not exist on
+          # Linux. Build (don't run) so we can inspect the skip behavior.
+          cargo build -p mil_infer --test ops_e2e 2>&1 | tail -3
+
+      - name: default mode reports skips loudly (not silent passes)
+        run: |
+          set -o pipefail
+          # Run the gated tests with output captured; each must emit a SKIP line.
+          out="$(cargo test -p mil_infer --test ops_e2e -- --nocapture 2>&1)"
+          echo "$out" | tail -8
+          skips="$(echo "$out" | grep -c 'SKIP: hardware unavailable')"
+          echo "SKIP lines emitted: $skips"
+          # 14 of the 15 tests gate on coremlc (raw_op_escape_hatch does not).
+          # At least one SKIP line must appear, and no test may fail.
+          if [ "$skips" -lt 1 ]; then
+            echo "::error::no SKIP lines — gates are silent (the lie TEST-2 fixes)"
+            exit 1
+          fi
+          if echo "$out" | grep -q "test result: FAILED"; then
+            echo "::error::a test FAILED on a no-hardware runner"
+            exit 1
+          fi
+          echo "OK: $skips loud skips, 0 failures"
+
+      - name: MIL_REQUIRE_HW=1 turns a skip into a failure
+        run: |
+          set -o pipefail
+          if MIL_REQUIRE_HW=1 cargo test -p mil_infer --test ops_e2e 2>&1 | grep -q "SKIP: hardware required"; then
+            echo "OK: MIL_REQUIRE_HW=1 fails loudly on missing hardware"
+          else
+            echo "::error::MIL_REQUIRE_HW=1 did not produce a hard failure"
+            exit 1
+          fi

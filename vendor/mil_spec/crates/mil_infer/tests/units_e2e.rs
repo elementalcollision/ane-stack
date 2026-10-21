@@ -24,7 +24,7 @@ fn median_ms(m: &Model, ins: &[Input<'_>], runs: usize) -> f64 {
 #[test]
 #[ignore = "timing; needs coremlc + GPU"]
 fn gpu_units_are_faster_than_cpu_on_big_tanh_chain() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     // 16M-element tanh chain: embarrassingly parallel transcendental

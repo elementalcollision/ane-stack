@@ -162,7 +162,7 @@ fn as_inputs<'a>(feeds: &'a [mil_verify::golden::PreparedInput]) -> Vec<Input<'a
 /// matches the monolithic package's logits.
 #[test]
 fn sharded_bundle_matches_monolithic() {
-    if !coremlc() {
+    if !mil_compile::hw_gate("coremlc", coremlc()) {
         return;
     }
     let root = Root::new("e2e");
@@ -243,7 +243,7 @@ fn sharded_bundle_matches_monolithic() {
 /// reason bundles exist. Printed as a matrix for the record.
 #[test]
 fn sharded_members_load_on_ane() {
-    if !coremlc() {
+    if !mil_compile::hw_gate("coremlc", coremlc()) {
         return;
     }
     let root = Root::new("anemat");
@@ -301,7 +301,7 @@ fn sharded_members_load_on_ane() {
 /// host-side embed + `x` package on the same tokens.
 #[test]
 fn embed_package_takes_ids_and_matches() {
-    if !coremlc() {
+    if !mil_compile::hw_gate("coremlc", coremlc()) {
         return;
     }
     let root = Root::new("embed");

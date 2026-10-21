@@ -190,7 +190,7 @@ fn full_pipeline_compiles() {
 /// fresh state must reproduce pos=0's logits exactly.
 #[test]
 fn stateful_predict_threads_kv() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = std::env::temp_dir().join(format!("st_{}", std::process::id()));

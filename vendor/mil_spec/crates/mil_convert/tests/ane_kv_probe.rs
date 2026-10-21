@@ -22,7 +22,7 @@ struct V {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn masked_kv_cpu_vs_ane() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let (kvh, max_kv, hd, s) = (3i64, 64i64, 64i64, 5i64);
@@ -238,7 +238,7 @@ fn masked_kv_cpu_vs_ane() {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn conv_chain_cpu_vs_ane() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = std::env::temp_dir().join(format!("convchain_{}", std::process::id()));
@@ -348,7 +348,7 @@ fn conv_chain_cpu_vs_ane() {
 #[test]
 #[ignore = "diagnostic: needs coremlc; prints a matrix"]
 fn attn_out_to_oproj_cpu_vs_ane() {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = std::env::temp_dir().join(format!("oproj_{}", std::process::id()));

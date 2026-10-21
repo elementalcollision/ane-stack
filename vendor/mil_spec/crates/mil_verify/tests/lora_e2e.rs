@@ -557,7 +557,7 @@ fn argmax(v: &[f32]) -> usize {
 /// exactly the small fused delta — top-1 unchanged, cosine ≈ 1, but
 /// provably different from the unfused run.
 fn fused_logits_case(tag: &str, quant: Quant) {
-    if mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("coremlc", mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp(tag);
@@ -618,7 +618,7 @@ fn fused_logits_int8() {
 fn qwen3_0p6b_lora_fused_logits() {
     let hf =
         PathBuf::from(std::env::var("HOME").unwrap()).join(".cache/mil_gguf_test/models/qwen3-hf");
-    if !hf.exists() || mil_compile::coremlc_path().is_none() {
+    if !mil_compile::hw_gate("hf+coremlc", hf.exists() && mil_compile::coremlc_path().is_some()) {
         return;
     }
     let root = tmp("qwen3");
