@@ -200,13 +200,39 @@ placed **84% of ops on the ANE but only 65% of estimated cost** — i.e. 16% of 
 carried 35% of the work, and the residual is CPU/transfer overhead. Upstream's
 `graph.rs` is a rule-based single-stream compiler. A real scheduler attacks that gap.
 
-**SCHED-1 — Cost model**
+**SCHED-1 — Cost model** — *blocked (L-SCHED)* — see `docs/evidence/SCHED-1-positive-control.md`.
+
 Inputs we already have: `mil_lint`'s per-op unit verdict, `MLComputePlan`'s real
 `preferred`/`cost`, and `milc plan --json`. Output: per-op `(unit, estimated_us,
 transfer_bytes)`.
 *Accept:* predicted per-op cost within a stated tolerance of measured `MLComputePlan`
 cost on a fixed model; disagreement documented rather than hidden.
 *Owner:* L-SCHED. **Effort:** M. **Depends on:** L-LINT (read-only), TOOL-3.
+
+> **Blocked on: `MLComputePlan` produces no usable cost on macOS 26.7.1.**
+> Measured, not theorised (`SCHED-1-positive-control.md`): two CoreML-authored
+> Apple models — `PlanResolutionModel.mlmodelc` (1551 ops) and
+> `ASRRankingModel.mlmodelc` (429 ops) — both plan **100% cpu with 0.00
+> per-op cost**. So the acceptance metric is unavailable by construction: any
+> non-zero predicted cost is infinitely far from a measured 0.00.
+>
+> **What SCHED-1 did deliver, and this is the point:** the finding itself.
+> `milc plan --vs-lint` reports 0/10 agreement against our own corpus
+> (`SCHED-1-vs-lint-disagreement.md`), and the natural reading — "`mil_lint`
+> mis-predicts" — is **wrong**. The plan side is degenerate, not the lint side.
+> Name this before SCHED-2/SCHED-4 build on it, or they will inherit a broken
+> oracle without noticing.
+>
+> **Not blocked:** `mil_lint`'s per-op `Unit` verdicts. Those are unaffected and
+> remain SCHED-2's and SCHED-4's placement input. Only the *cost* half of
+> SCHED-1 is blocked.
+>
+> **Unblock condition:** an OS version (or CoreML path) where `MLComputePlan`
+> attributes non-zero cost and places ops on the ANE, or an owner decision to
+> accept e5rt end-to-end latency per subgraph as the calibration source. The
+> latter is available *today* and measurable, but is a genuine precision loss —
+> e5rt runs one `execute_sync` per graph, so per-op attribution is not
+> recoverable. Decision needed; not silently redefining the item.
 
 **SCHED-2 — Partitioning under the plan-builder limit**
 Upstream found the hard ceiling: **CoreML error -14 between 3,164 and 3,284 ops**

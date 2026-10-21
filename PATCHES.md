@@ -21,8 +21,9 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0013 | `run2-state-lifecycle` | `e5rt` state was implicit — no way to inspect, reset or snapshot a `state<>` inout port, so a KV cache could not be tested bit-exactly. Adds `reset_states`, `state_f16`, `state_names`, `state_len`, `save_states`, `restore_states` + `StateSnapshot`. Also establishes (by probe) that ANE_FRONTEND_SPEC.md line 59 is wrong and line 281 right: `write_state` data must be the terminal `slice_update` output. **RUN-2** | open |
 | 0014 | `run1-loader-errors` | `_ANEClient loadModel:` refusals were one opaque string, and `dp3.rs` sliced 8 chars from the first `0x`, so a signed code `-0x170004` yielded `-0x17000`. Adds `AneLoadError` (`code`/`kind`/`form`/`raw`) behind `EspError::Load`, with `suggested_cause()` returning `None` for unmeasured codes rather than guessing. Taxonomy is PROBE-2's measured table. **RUN-1** | open |
 | 0015 | `spec-write-state-contradiction` | `ANE_FRONTEND_SPEC.md` contradicted itself: line 59 said `write_state` accepts "any tensor X", line ~281 said state-derived only. Measured on h17 (5-case probe) the strict reading wins — data must be the terminal `slice_update` output, and even a bare passthrough is refused. Both bullets now state one rule, corrections marked inline. Doc-only. **RUN-2 / PROBE** | open |
+| 0016 | `milc-vs-lint-degenerate-plan-warning` | `milc plan --vs-lint` printed a lint-vs-plan agreement rate with no context, and on macOS 26.x that number is misleading: `MLComputePlan` places every op on CPU at 0.00 cost (measured against two CoreML-authored Apple models), so a low rate measures the *plan*, not `mil_lint`. Warns only when the plan placed nothing off the CPU. **SCHED-1** | open |
 
-All fifteen patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All sixteen patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
 **Note on 0008:** the original file used repo-root-relative paths
@@ -63,6 +64,7 @@ into `patches/`, and confirm with `apply-patches.sh --check`. Used for 0013.
 - 0013: `docs/evidence/RUN-2-state-lifecycle.md` (L-RUN)
 - 0014: `docs/evidence/RUN-1-loader-errors.md` (L-RUN)
 - 0015: `docs/evidence/RUN-2-state-lifecycle.md` §3 (reproduction) + `docs/spec/ane-frontend-h17.md` §Correction
+- 0016: `docs/evidence/SCHED-1-positive-control.md` (L-SCHED)
 
 ## Test delta
 

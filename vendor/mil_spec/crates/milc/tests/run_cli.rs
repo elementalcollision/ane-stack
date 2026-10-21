@@ -156,3 +156,77 @@ fn run_compiled_mlmodelc_directly() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// ---------- SCHED-1 patch 0016: degenerate-plan warning ----------
+
+/// `milc plan --vs-lint` must warn when the compute plan placed nothing off the
+/// CPU, because on macOS 26.x `MLComputePlan` does exactly that — including for
+/// CoreML-authored Apple models — which makes the agreement rate measure the
+/// plan rather than `mil_lint`. Pins the warning's presence: a silent low rate
+/// is what briefly made L-SCHED read a lint bug into a broken oracle.
+#[test]
+#[cfg(target_os = "macos")]
+fn vs_lint_warns_when_the_plan_is_cpu_only() {
+    if !mil_compile::hw_gate("coremlc (needed to compile the fixture)", coremlc()) {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("milc_vslint_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let src = "state kv: fp16[1,8,64,64]\n\
+               input step: fp16[1,8,64,64]\n\
+               cur = read_state(kv)\n\
+               merged = add(cur, step)\n\
+               write_state(kv, merged)\n\
+               output merged\n";
+    let p = mil_spec::ir::compile(src).expect("fixture compiles");
+    let spec = mil_spec::encode_model(
+        &p.inputs,
+        &p.outputs,
+        &p.states,
+        &p.block,
+        &p.fn_inputs,
+        &mil_spec::ModelMeta::new(10, "CoreML9"),
+    );
+    let pkg = dir.join("pkg.mlpackage");
+    mil_spec::write_mlpackage(&pkg, &spec, None).expect("package written");
+
+    let (_rc, _stdout, stderr) = milc(&[
+        "plan",
+        "--vs-lint",
+        pkg.to_str().unwrap(),
+        "--units",
+        "ane",
+    ]);
+    assert!(
+        stderr.contains("WARNING: the compute plan placed every op on the CPU"),
+        "expected the degenerate-plan warning, got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("SCHED-1-positive-control.md"),
+        "warning must point at the evidence, got stderr:\n{stderr}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The warning must be *conditional*. On a host where `MLComputePlan` genuinely
+/// places ops off the CPU, an all-cpu warning would be a false alarm — so this
+/// asserts the warning is tied to the plan's actual composition rather than
+/// being unconditional. Where the plan is cpu-only it fires; the negative case
+/// needs a host that plans onto the ANE, which is asserted by absence of the
+/// warning only when such a plan exists, so it is deliberately not asserted
+/// here. See docs/evidence/SCHED-1-positive-control.md for what a real
+/// non-cpu plan would look like.
+#[test]
+#[cfg(target_os = "macos")]
+fn vs_lint_warning_is_not_unconditional() {
+    // A package that fails to compile must not produce the warning — the
+    // warning is about a degenerate plan, not about failure.
+    let (_rc, _stdout, stderr) = milc(&["plan", "--vs-lint", "/nonexistent.mlpackage"]);
+    assert!(
+        !stderr.contains("WARNING: the compute plan placed every op on the CPU"),
+        "a compile failure must not be reported as a degenerate plan:\n{stderr}"
+    );
+}

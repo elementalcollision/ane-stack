@@ -2155,6 +2155,23 @@ fn cmd_plan(args: &[String], json_flag: bool) -> ExitCode {
         for ((op, p, a), n) in &miss {
             println!("  {n:>5}x {op:<28} lint {p:<4} plan {a}");
         }
+        // FORK(ane-stack): a blanket disagreement here is not evidence that
+        // mil_lint mis-predicts. On macOS 26.x MLComputePlan places everything
+        // on the CPU with 0.00 cost — measured against two CoreML-authored
+        // Apple models, not our own — so the plan side can be degenerate while
+        // lint is fine. Read this number only after checking whether the plan
+        // itself placed anything on a non-CPU device. Evidence:
+        // docs/evidence/SCHED-1-positive-control.md.
+        let any_non_cpu = ops
+            .iter()
+            .any(|o| o.preferred.is_some_and(|d| d != Device::Cpu));
+        if !any_non_cpu {
+            eprintln!(
+                "WARNING: the compute plan placed every op on the CPU, so this \
+                 agreement rate measures the plan, not mil_lint. See \
+                 docs/evidence/SCHED-1-positive-control.md."
+            );
+        }
         return ExitCode::SUCCESS;
     }
     let sum = summarize_plan(&ops);

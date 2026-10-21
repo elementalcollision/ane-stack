@@ -8,6 +8,13 @@ built yet.
 
 Host: Apple M5 (h17), macOS 26.7.1. All runs via `milc plan ... --vs-lint`.
 
+> **Settled since by `SCHED-1-positive-control.md`:** the 0/10 result below is
+> **not** evidence that `mil_lint` is wrong. Two CoreML-authored Apple models
+> also plan 100% cpu with 0.00 cost, so the plan side of this comparison is
+> degenerate on this host. Read this file for the corpus and the method; read
+> the positive-control file for the conclusion. Patch `0016` now warns at the
+> point where this number is printed.
+
 ---
 
 ## 1. Corpus
