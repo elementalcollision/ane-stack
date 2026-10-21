@@ -24,6 +24,21 @@ patches=("$root"/patches/[0-9]*.patch)
 mode="${1:-}"
 case "$mode" in
   --check)
+    shift
+    # Optional: restrict to a subset of patch numbers (e.g. --check 0001 0002),
+    # so an evidence item can assert on its own patch set without being hostage
+    # to later, separately-owned patches. Default is the whole set.
+    wanted=("$@")
+    if [ ${#wanted[@]} -gt 0 ]; then
+      filtered=()
+      for p in "${patches[@]}"; do
+        for w in "${wanted[@]}"; do
+          case "$(basename "$p")" in "$w"-*) filtered+=("$p"); break ;; esac
+        done
+      done
+      patches=("${filtered[@]}")
+      [ ${#patches[@]} -gt 0 ] || { echo "no matching patches for: ${wanted[*]}" >&2; exit 1; }
+    fi
     # Verify the whole patch set applies, in order, to a PRISTINE clone. Testing
     # each patch independently against the working tree is wrong for stacked
     # patches (later patches assume earlier ones), which is exactly the case we

@@ -1,0 +1,7 @@
+program(1.3)
+{
+    func frob<ios18>(tensor<fp16, [1, 16, 1, 1]> x0) {
+        int32 ax = const()[val = int32(-1)];
+        tensor<fp16, [1, 16, 1, 1]> z = softmax(axis = ax, x = x0)[name = string("z")];
+    } -> (z);
+}

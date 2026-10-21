@@ -1,0 +1,500 @@
+{"id":0,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"8-op elementwise chain on [1, 16, 1, 1]"}
+{"id":1,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":2,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->8 w=4 inline"}
+{"id":3,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 128, 1, 1]: splice \"program(1.3)\" -> \"program(9.9)\""}
+{"id":4,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 64, 16, 1]"}
+{"id":5,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":6,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"7-op elementwise chain on [1, 48, 2, 1]"}
+{"id":7,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":8,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":9,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":10,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":11,"family":"clip","expected":"Valid","class":"AcceptOk","note":"clip(-0.70,1.84) on [1, 4, 1, 1]"}
+{"id":12,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 4, 1, 1]"}
+{"id":13,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":14,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [1, 32, 1, 1]: delete[73..99]"}
+{"id":15,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":16,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 128, 16, 1]"}
+{"id":17,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"13-op elementwise chain"}
+{"id":18,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"7-op elementwise chain on [2, 32, 2, 1]"}
+{"id":19,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 96, 1, 1]: delete[23..53]"}
+{"id":20,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=2 inline"}
+{"id":21,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":22,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"21-op elementwise chain"}
+{"id":23,"family":"clip","expected":"Valid","class":"AcceptOk","note":"clip(-1.21,0.76) on [1, 48, 2, 1]"}
+{"id":24,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [2, 32, 2, 1]"}
+{"id":25,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":26,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [1, 16, 1, 1]: delete[140..168]"}
+{"id":27,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":28,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 3-op elementwise chain on [1, 4, 1, 1]: truncate@178"}
+{"id":29,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":30,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":31,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":32,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":33,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->4 w=4 inline: delete[195..214]"}
+{"id":34,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 32, 1, 1]"}
+{"id":35,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":36,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=1 pad=1 w=4->3"}
+{"id":37,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":38,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->4 w=4 inline"}
+{"id":39,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":40,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 48, 2, 1]"}
+{"id":41,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 16, 1, 1]"}
+{"id":42,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":43,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":44,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":45,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":46,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 128, 1, 1]"}
+{"id":47,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 64, 4, 1]"}
+{"id":48,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 2-op elementwise chain on [1, 96, 1, 1]: delete 41@264"}
+{"id":49,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":50,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->16 w=1 inline"}
+{"id":51,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":52,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 128, 1, 1]"}
+{"id":53,"family":"rsqrt","expected":"Valid","class":"AcceptOk","note":"rsqrt on [1, 64, 1, 1]"}
+{"id":54,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [1, 4, 1, 1]"}
+{"id":55,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":56,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 6-op elementwise chain on [1, 96, 1, 1]: truncate@236"}
+{"id":57,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=2 inline: splice \"program(1.3)\" -> \"program(9.9)\""}
+{"id":58,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":59,"family":"cast","expected":"Valid","class":"AcceptOk","note":"cast fp16->fp32 on [1, 4, 1, 1]"}
+{"id":60,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 3-op elementwise chain on [1, 48, 2, 1]: splice \"main<ios18>\" -> \"main<ios99>\""}
+{"id":61,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":62,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=2 inline"}
+{"id":63,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":64,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 6-op elementwise chain on [1, 64, 1, 1]: delete[570..602]"}
+{"id":65,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 128, 1, 1]"}
+{"id":66,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":67,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}
+{"id":68,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 64, 16, 1]"}
+{"id":69,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=4 inline: truncate@3421"}
+{"id":70,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=0 on [1, 64, 4, 1]: truncate@8"}
+{"id":71,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 64, 64, 1]"}
+{"id":72,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"4-op elementwise chain on [1, 4, 1, 1]"}
+{"id":73,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}
+{"id":74,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=2 inline"}
+{"id":75,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":76,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":77,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":78,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":79,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":80,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 8-op elementwise chain on [1, 64, 1, 1]: delete 91@740"}
+{"id":81,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":82,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":83,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=256 elementwise chain"}
+{"id":84,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":85,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=16 inline weights"}
+{"id":86,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=4 inline"}
+{"id":87,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":88,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 32, 1, 1]"}
+{"id":89,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 48, 2, 1]"}
+{"id":90,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":91,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 4, 1, 1]: splice \"main<ios18>\" -> \"main<ios99>\""}
+{"id":92,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":93,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":94,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 4, 1, 1]"}
+{"id":95,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 4, 1, 1]: delete 41@304"}
+{"id":96,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 7-op elementwise chain on [1, 32, 1, 1]: splice \"program(1.3)\" -> \"program(9.9)\""}
+{"id":97,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":98,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=4 inline"}
+{"id":99,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 64, 16, 1]"}
+{"id":100,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":101,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 4->4 w=1 inline: delete[358..388]"}
+{"id":102,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"10-op elementwise chain on [1, 128, 1, 1]"}
+{"id":103,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":104,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":105,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":106,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=1 on [1, 64, 1, 1]: delete 59@426"}
+{"id":107,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":108,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":109,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":110,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->8 w=2 inline"}
+{"id":111,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":112,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":113,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 64, 1, 1]"}
+{"id":114,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":115,"family":"mutant","expected":"Reject","class":"UnexpectedAccept","note":"mutated reduce_mean(ax=1) on [1, 48, 2, 1]: splice \"func main\" -> \"func frob\""}
+{"id":116,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":117,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":118,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 64, 1, 1]"}
+{"id":119,"family":"cast","expected":"Valid","class":"AcceptOk","note":"cast fp16->fp32 on [1, 96, 1, 1]"}
+{"id":120,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"4-op elementwise chain on [1, 4, 1, 1]"}
+{"id":121,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=4 inline: delete 123@68"}
+{"id":122,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=2 inline"}
+{"id":123,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":124,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [4, 64, 1, 1]"}
+{"id":125,"family":"cast","expected":"Valid","class":"AcceptOk","note":"cast fp16->fp32 on [1, 32, 1, 1]"}
+{"id":126,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 64, 4, 1]"}
+{"id":127,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}
+{"id":128,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 3-op elementwise chain on [1, 128, 1, 1]: delete 34@276"}
+{"id":129,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":130,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [4, 64, 1, 1]"}
+{"id":131,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [4, 64, 1, 1]: truncate@34"}
+{"id":132,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"8-op elementwise chain on [1, 4, 1, 1]"}
+{"id":133,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":134,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=4 inline"}
+{"id":135,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":136,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 128, 1, 1]"}
+{"id":137,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 96, 1, 1]"}
+{"id":138,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 16, 1, 1]"}
+{"id":139,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":140,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":141,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":142,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [2, 32, 2, 1]: truncate@9"}
+{"id":143,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":144,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [4, 64, 1, 1]"}
+{"id":145,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":146,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->8 w=2 inline"}
+{"id":147,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":148,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 4, 1, 1]"}
+{"id":149,"family":"rsqrt","expected":"Valid","class":"AcceptOk","note":"rsqrt on [1, 4, 1, 1]"}
+{"id":150,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [1, 32, 1, 1]: delete 125@313"}
+{"id":151,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":152,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":153,"family":"mutant","expected":"Reject","class":"UnexpectedAccept","note":"mutated conv1x1 8->8 w=4 inline: splice \"func main\" -> \"func frob\""}
+{"id":154,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [1, 64, 4, 1]: truncate@170"}
+{"id":155,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 32, 1, 1]"}
+{"id":156,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [1, 4, 1, 1]"}
+{"id":157,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 4->4 w=2 inline: delete 41@129"}
+{"id":158,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":159,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":160,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 64, 4, 1]"}
+{"id":161,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 128, 1, 1]"}
+{"id":162,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":163,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=16 inline weights"}
+{"id":164,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":165,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":166,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 96, 1, 1]"}
+{"id":167,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 32, 1, 1]"}
+{"id":168,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 128, 64, 1]"}
+{"id":169,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":170,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":171,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":172,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"23-op elementwise chain"}
+{"id":173,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [2, 32, 2, 1]"}
+{"id":174,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 16, 1, 1]"}
+{"id":175,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":176,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":177,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":178,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 128, 1, 1]"}
+{"id":179,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":180,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 8-op elementwise chain on [1, 32, 1, 1]: truncate@398"}
+{"id":181,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":182,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":183,"family":"mutant","expected":"Reject","class":"UnexpectedAccept","note":"mutated softmax(-1) on [1, 16, 1, 1]: splice \"func main\" -> \"func frob\""}
+{"id":184,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":185,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":186,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 64, 1, 1]"}
+{"id":187,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":188,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 64, 16, 1]"}
+{"id":189,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":190,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 64, 1, 1]"}
+{"id":191,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":192,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 9-op elementwise chain on [1, 128, 1, 1]: splice \"main<ios18>\" -> \"main<ios99>\""}
+{"id":193,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=16 inline weights"}
+{"id":194,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=2048 elementwise chain"}
+{"id":195,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":196,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 48, 2, 1]"}
+{"id":197,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 96, 1, 1]"}
+{"id":198,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":199,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"15-op elementwise chain"}
+{"id":200,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":201,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":202,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":203,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 128, 1, 1]"}
+{"id":204,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"2-op elementwise chain on [1, 64, 4, 1]"}
+{"id":205,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":206,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":207,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":208,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 128, 1, 1]"}
+{"id":209,"family":"rsqrt","expected":"Valid","class":"AcceptOk","note":"rsqrt on [1, 64, 4, 1]"}
+{"id":210,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=0 on [1, 96, 1, 1]: truncate@68"}
+{"id":211,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":212,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":213,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=4 inline: truncate@1318"}
+{"id":214,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=1 on [4, 64, 1, 1]: delete[17..52]"}
+{"id":215,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":216,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 9-op elementwise chain on [1, 64, 1, 1]: truncate@714"}
+{"id":217,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=1 dil=2 pad=0 w=4->4"}
+{"id":218,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=4 inline"}
+{"id":219,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":220,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [2, 32, 2, 1]"}
+{"id":221,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 48, 2, 1]"}
+{"id":222,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"27-op elementwise chain"}
+{"id":223,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":224,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":225,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":226,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":227,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":228,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [4, 64, 1, 1]"}
+{"id":229,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":230,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=4 inline"}
+{"id":231,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":232,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 4, 1, 1]"}
+{"id":233,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=1 inline: truncate@996"}
+{"id":234,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 64, 1, 1]"}
+{"id":235,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 32, 1, 1]: delete[24..59]"}
+{"id":236,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->4 w=2 inline"}
+{"id":237,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 4->4 w=4 inline: delete[66..97]"}
+{"id":238,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [4, 64, 1, 1]"}
+{"id":239,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 128, 1, 1]"}
+{"id":240,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [1, 96, 1, 1]"}
+{"id":241,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":242,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":243,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":244,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [4, 64, 1, 1]"}
+{"id":245,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=2 inline: truncate@247"}
+{"id":246,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"8-op elementwise chain on [4, 64, 1, 1]"}
+{"id":247,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":248,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":249,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":250,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":251,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=2 pad=2 w=8->6"}
+{"id":252,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"4-op elementwise chain on [1, 128, 1, 1]"}
+{"id":253,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":254,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=4 inline"}
+{"id":255,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=256 elementwise chain"}
+{"id":256,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":257,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=2 inline: delete 123@67"}
+{"id":258,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":259,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":260,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":261,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->16 w=2 inline: delete 59@362"}
+{"id":262,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [4, 64, 1, 1]"}
+{"id":263,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [2, 32, 2, 1]"}
+{"id":264,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"22-op elementwise chain"}
+{"id":265,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":266,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":267,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":268,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=1 dil=1 pad=2 w=4->8"}
+{"id":269,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":270,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"13-op elementwise chain"}
+{"id":271,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":272,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->8 w=4 inline"}
+{"id":273,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":274,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 128, 1, 1]"}
+{"id":275,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 4, 1, 1]"}
+{"id":276,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"9-op elementwise chain on [1, 4, 1, 1]"}
+{"id":277,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":278,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=2 inline"}
+{"id":279,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 64, 1, 1]: delete 61@168"}
+{"id":280,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [4, 64, 1, 1]"}
+{"id":281,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":282,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":283,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}
+{"id":284,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 3-op elementwise chain on [4, 64, 1, 1]: delete 91@81"}
+{"id":285,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":286,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=0 on [1, 48, 2, 1]: delete[162..173]"}
+{"id":287,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":288,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"7-op elementwise chain on [2, 32, 2, 1]"}
+{"id":289,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"15-op elementwise chain"}
+{"id":290,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->4 w=1 inline"}
+{"id":291,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":292,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 48, 2, 1]"}
+{"id":293,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":294,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":295,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 32, 1, 1]: delete 34@196"}
+{"id":296,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":297,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 128, 16, 1]"}
+{"id":298,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":299,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [2, 32, 2, 1]: delete 41@291"}
+{"id":300,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":301,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":302,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=2 inline"}
+{"id":303,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":304,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":305,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=2 inline: splice \"main<ios18>\" -> \"main<ios99>\""}
+{"id":306,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"8-op elementwise chain on [1, 48, 2, 1]"}
+{"id":307,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=2 pad=2 w=8->6"}
+{"id":308,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":309,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":310,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":311,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 128, 1, 1]"}
+{"id":312,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":313,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":314,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=1 dil=1 pad=0 w=8->8"}
+{"id":315,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=2048 elementwise chain"}
+{"id":316,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 128, 1, 1]"}
+{"id":317,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=4 inline: delete 123@67"}
+{"id":318,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"2-op elementwise chain on [1, 128, 1, 1]"}
+{"id":319,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":320,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"29-op elementwise chain"}
+{"id":321,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":322,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [4, 64, 1, 1]"}
+{"id":323,"family":"clip","expected":"Valid","class":"AcceptOk","note":"clip(-0.55,2.05) on [1, 128, 1, 1]"}
+{"id":324,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"2-op elementwise chain on [1, 128, 1, 1]"}
+{"id":325,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=1 inline: delete 34@128"}
+{"id":326,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":327,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":328,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 4, 1, 1]"}
+{"id":329,"family":"rsqrt","expected":"Valid","class":"AcceptOk","note":"rsqrt on [1, 96, 1, 1]"}
+{"id":330,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 64, 1, 1]"}
+{"id":331,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [4, 64, 1, 1]: delete[72..93]"}
+{"id":332,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 64, 64, 1]"}
+{"id":333,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":334,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":335,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 16, 1, 1]"}
+{"id":336,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":337,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":338,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->4 w=2 inline"}
+{"id":339,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":340,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":341,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":342,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 96, 1, 1]"}
+{"id":343,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=1 pad=2 w=8->6"}
+{"id":344,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->16 w=4 inline"}
+{"id":345,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":346,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 64, 4, 1]"}
+{"id":347,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":348,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"2-op elementwise chain on [1, 4, 1, 1]"}
+{"id":349,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 4->4 w=1 inline: delete 59@713"}
+{"id":350,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=4 inline"}
+{"id":351,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":352,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":353,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 96, 1, 1]"}
+{"id":354,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":355,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":356,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":357,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":358,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 32, 1, 1]"}
+{"id":359,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 32, 1, 1]"}
+{"id":360,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":361,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":362,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=0 on [1, 4, 1, 1]: delete[151..175]"}
+{"id":363,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=1 pad=2 w=8->6"}
+{"id":364,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [2, 32, 2, 1]"}
+{"id":365,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":366,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":367,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":368,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":369,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=1 inline: delete[3292..3321]"}
+{"id":370,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":371,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":372,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"2-op elementwise chain on [1, 4, 1, 1]"}
+{"id":373,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":374,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->4 w=1 inline"}
+{"id":375,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":376,"family":"mutant","expected":"Reject","class":"UnexpectedAccept","note":"mutated 7-op elementwise chain on [1, 48, 2, 1]: splice \"func main\" -> \"func frob\""}
+{"id":377,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [2, 32, 2, 1]"}
+{"id":378,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":379,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":380,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->16 w=1 inline"}
+{"id":381,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":382,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [2, 32, 2, 1]"}
+{"id":383,"family":"cast","expected":"Valid","class":"AcceptOk","note":"cast fp16->fp32 on [1, 48, 2, 1]"}
+{"id":384,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":385,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":386,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":387,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":388,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"20-op elementwise chain"}
+{"id":389,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":390,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"19-op elementwise chain"}
+{"id":391,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 64, 1, 1]: truncate@130"}
+{"id":392,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":393,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=4 vs weight cin=8"}
+{"id":394,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 48, 2, 1]"}
+{"id":395,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 64, 4, 1]: delete 41@11"}
+{"id":396,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=2 dil=1 pad=0 w=4->2"}
+{"id":397,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":398,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=0 on [4, 64, 1, 1]: delete[202..223]"}
+{"id":399,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":400,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":401,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 64, 4, 1]"}
+{"id":402,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 4, 1, 1]"}
+{"id":403,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=16 inline weights"}
+{"id":404,"family":"reject_dyn_slice","expected":"Reject","class":"RejectOk","note":"dynamic slice begin — runtime index"}
+{"id":405,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":406,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [2, 32, 2, 1]: splice \"program(1.3)\" -> \"program(9.9)\""}
+{"id":407,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":408,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 128, 64, 1]"}
+{"id":409,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=8 inline weights"}
+{"id":410,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":411,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":412,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 64, 4, 1]"}
+{"id":413,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 4->4 w=1 inline: delete[639..664]"}
+{"id":414,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 4, 1, 1]"}
+{"id":415,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=8 inline weights"}
+{"id":416,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 128, 64, 1]"}
+{"id":417,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":418,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=0 on [1, 96, 1, 1]"}
+{"id":419,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 4, 1, 1]: splice \"tensor<\" -> \"tensor<<\""}
+{"id":420,"family":"stress_conv_params","expected":"Valid","class":"AcceptOk","note":"conv stride=1 dil=2 pad=1 w=4->6"}
+{"id":421,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":422,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=4 inline"}
+{"id":423,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 48, 2, 1]: delete 93@137"}
+{"id":424,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [2, 32, 2, 1]"}
+{"id":425,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->4 w=2 inline: delete[541..577]"}
+{"id":426,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":427,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}
+{"id":428,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->16 w=2 inline"}
+{"id":429,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":430,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 128, 16, 1]"}
+{"id":431,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"17-op elementwise chain"}
+{"id":432,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":433,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=4 inline: truncate@242"}
+{"id":434,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=4 inline"}
+{"id":435,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":436,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [4, 64, 1, 1]"}
+{"id":437,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [4, 128, 16, 1]"}
+{"id":438,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"9-op elementwise chain on [1, 64, 4, 1]"}
+{"id":439,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 32, 1, 1]: delete[33..52]"}
+{"id":440,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 4-op elementwise chain on [4, 64, 1, 1]: truncate@410"}
+{"id":441,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 8->8 w=4 inline: truncate@172"}
+{"id":442,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [1, 128, 1, 1]"}
+{"id":443,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":444,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [4, 64, 1, 1]"}
+{"id":445,"family":"reject_gather","expected":"Reject","class":"RejectOk","note":"gather — rejected per spec"}
+{"id":446,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 16->16 w=1 inline"}
+{"id":447,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":448,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [2, 32, 2, 1]"}
+{"id":449,"family":"clip","expected":"Valid","class":"AcceptOk","note":"clip(-0.79,0.92) on [1, 64, 4, 1]"}
+{"id":450,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"10-op elementwise chain on [1, 96, 1, 1]"}
+{"id":451,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":452,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":453,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=2 inline"}
+{"id":454,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=2 on [1, 48, 2, 1]"}
+{"id":455,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 48, 2, 1]: splice \"const()\" -> \"const(\""}
+{"id":456,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"7-op elementwise chain on [1, 48, 2, 1]"}
+{"id":457,"family":"stress_mismatch","expected":"Reject","class":"RejectOk","note":"conv cin=8 vs weight cin=12"}
+{"id":458,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->8 w=1 inline"}
+{"id":459,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=8 w=1 inline"}
+{"id":460,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":461,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 64, 1, 1]"}
+{"id":462,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 64, 4, 1]"}
+{"id":463,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated reduce_mean(ax=1) on [1, 64, 1, 1]: delete 93@94"}
+{"id":464,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=1 inline"}
+{"id":465,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=2 8->8"}
+{"id":466,"family":"blobfile_probe","expected":"Reject","class":"RejectOk","note":"BLOBFILE const — rejected on this build"}
+{"id":467,"family":"softmax","expected":"Valid","class":"AcceptOk","note":"softmax(-1) on [1, 64, 1, 1]"}
+{"id":468,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"7-op elementwise chain on [1, 96, 1, 1]"}
+{"id":469,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=4 inline weights"}
+{"id":470,"family":"conv_ns","expected":"Valid","class":"AcceptOk","note":"conv1x1 8->16 w=4 inline"}
+{"id":471,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 32, 1, 1]: delete 123@68"}
+{"id":472,"family":"stress_wide","expected":"Valid","class":"AcceptOk","note":"wide shape [8, 64, 16, 1]"}
+{"id":473,"family":"reject_gelu","expected":"Reject","class":"RejectOk","note":"gelu — rejected on this build"}
+{"id":474,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"3-op elementwise chain on [1, 4, 1, 1]"}
+{"id":475,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 16, 1, 1]: splice \"const()\" -> \"const(\""}
+{"id":476,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated 4-op elementwise chain on [1, 4, 1, 1]: delete 93@256"}
+{"id":477,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":478,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [1, 96, 1, 1]: delete 125@314"}
+{"id":479,"family":"cast","expected":"Valid","class":"AcceptOk","note":"cast fp16->fp32 on [1, 32, 1, 1]"}
+{"id":480,"family":"reject_int_compute","expected":"Reject","class":"RejectOk","note":"int32 add — non-float compute"}
+{"id":481,"family":"stress_grouped","expected":"Valid","class":"AcceptOk","note":"grouped conv groups=4 16->16"}
+{"id":482,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=1024 elementwise chain"}
+{"id":483,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=2 inline"}
+{"id":484,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=512 elementwise chain"}
+{"id":485,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 96, 1, 1]"}
+{"id":486,"family":"stress_longchain","expected":"Valid","class":"AcceptOk","note":"22-op elementwise chain"}
+{"id":487,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated softmax(-1) on [1, 16, 1, 1]: truncate@175"}
+{"id":488,"family":"conv1x1","expected":"Valid","class":"AcceptOk","note":"conv1x1 4->4 w=4 inline"}
+{"id":489,"family":"conv_chain","expected":"Valid","class":"AcceptOk","note":"2-conv chain c0=4 w=1 inline"}
+{"id":490,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated layout op kind=2 on [2, 32, 2, 1]: delete[218..246]"}
+{"id":491,"family":"reduce","expected":"Valid","class":"AcceptOk","note":"reduce_mean(ax=1) on [1, 4, 1, 1]"}
+{"id":492,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"6-op elementwise chain on [1, 128, 1, 1]"}
+{"id":493,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=false ty=true n=4 inline weights"}
+{"id":494,"family":"stress_bigchan","expected":"Valid","class":"AcceptOk","note":"c=2048 elementwise chain"}
+{"id":495,"family":"reject_zero_extent","expected":"Reject","class":"RejectOk","note":"zero-extent slice"}
+{"id":496,"family":"layout","expected":"Valid","class":"AcceptOk","note":"layout op kind=1 on [4, 64, 1, 1]"}
+{"id":497,"family":"mutant","expected":"Reject","class":"RejectOk","note":"mutated conv1x1 16->16 w=2 inline: truncate@1653"}
+{"id":498,"family":"ew_chain","expected":"Valid","class":"AcceptOk","note":"5-op elementwise chain on [1, 96, 1, 1]"}
+{"id":499,"family":"matmul","expected":"Valid","class":"AcceptOk","note":"matmul tx=true ty=false n=16 inline weights"}

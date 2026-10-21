@@ -1,0 +1,106 @@
+From: ane-stack
+Subject: [PATCH 0011] fuzz: fix silent no-op splice producing false UnexpectedAccepts
+
+In gen_mutation's splice arm, `base.mil.replacen(from, to, 1)` is a silent
+no-op when `from` is absent. The `ew_chain` generator uses inline fp16 list
+consts with no `const()` wrapper, so a `const()→const(` splice produced an
+*unchanged valid program*. The frontend correctly accepted it, and the run
+misreported it as an UnexpectedAccept validation hole — inflating the laxity
+count and masking real findings.
+
+The splice now falls back to a guaranteed-hit keyword (`func main→frob`) when
+the chosen target is absent. Adds two regression tests: every mutation must
+change the text, and a const() splice on a constless base must not no-op.
+
+Verified on h17 (500 cases, seed 31337): the 4 UnexpectedAccepts are now
+uniformly the documented func-name laxity; the no-op artifact is gone.
+
+Found by PROBE-1 (docs/spec/ane-frontend-h17.md).
+
+Stacking: apply after 0001..0010.
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- a/crates/mil_infer/src/fuzz.rs	2026-10-21 11:06:29
++++ b/crates/mil_infer/src/fuzz.rs	2026-10-21 11:09:15
+@@ -822,6 +822,14 @@
+         }
+         _ => {
+             // corrupt a guaranteed-present keyword
++            // FORK(ane-stack): `replacen` is a silent no-op when `from` is
++            // absent, and `ew_chain` uses inline fp16 list consts with no
++            // `const()` wrapper — so a `const()→const(` splice produces an
++            // *unchanged valid program* that the frontend correctly accepts,
++            // and the run misreports it as an UnexpectedAccept "hole". Pick a
++            // splice that is guaranteed to hit this base: fall back to a
++            // `func main→frob` splice when the chosen keyword is absent.
++            // Upstream: 20f097f.
+             let (from, to) = *rng.pick(&[
+                 ("func main", "func frob"),
+                 ("program(1.3)", "program(9.9)"),
+@@ -829,6 +837,11 @@
+                 ("main<ios18>", "main<ios99>"),
+                 ("const()", "const("),
+             ]);
++            let (from, to) = if base.mil.contains(from) {
++                (from, to)
++            } else {
++                ("func main", "func frob")
++            };
+             let s = base.mil.replacen(from, to, 1);
+             (s, format!("splice {from:?} -> {to:?}"))
+         }
+@@ -880,3 +893,55 @@
+         (Expected::Reject, false) => Class::RejectOk,
+     }
+ }
++
++// FORK(ane-stack): regression tests for the splice no-op fix (patch 0010).
++// The `const()→const(` splice used to silently no-op on bases with no
++// `const()` wrapper (ew_chain), producing a *valid* program that the frontend
++// accepts and the run misreports as an UnexpectedAccept hole.
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    /// Every mutation case must actually change the program text. A no-op
++    /// splice yields a valid program and a false UnexpectedAccept.
++    #[test]
++    fn mutations_always_change_the_text() {
++        let mut rng = Rng::new(0xF00D);
++        for id in 0..400 {
++            // drive the mutation path directly
++            let case = gen_mutation(&mut rng, id);
++            assert_ne!(
++                case.mil.trim(),
++                // regenerate the un-mutated base for comparison
++                match id % 4 {
++                    0 => gen_ew_chain(&mut Rng::new(0xF00D)).mil,
++                    1 => gen_conv(&mut Rng::new(0xF00D)).mil,
++                    2 => gen_layout(&mut Rng::new(0xF00D)).mil,
++                    _ => gen_softmax_reduce(&mut Rng::new(0xF00D)).mil,
++                }
++                .trim(),
++                "mutation {id} was a no-op (splice found no target)"
++            );
++        }
++    }
++
++    /// The specific regression: an ew_chain base has no `const()` wrapper, so
++    /// a `const()→const(` splice must fall back to a guaranteed-hit keyword
++    /// and still change the text.
++    #[test]
++    fn const_splice_on_constless_base_is_not_a_noop() {
++        // sweep ids that select the ew_chain base (id % 4 == 0) and the splice
++        // arm; assert the result is never byte-identical to the base.
++        for id in (0..200).step_by(4) {
++            let mut rng = Rng::new(id as u64 + 1);
++            let base = gen_ew_chain(&mut Rng::new(id as u64 + 1));
++            let case = gen_mutation(&mut rng, id);
++            if case.note.contains("const()") {
++                assert_ne!(
++                    case.mil, base.mil,
++                    "const() splice on constless base {id} was a no-op"
++                );
++            }
++        }
++    }
++}

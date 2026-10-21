@@ -16,14 +16,19 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0008 | `ir-state-contract` | `mil_spec::ir` had no state-level contract checks. Adds per-state read/slice_update/write counters validated in `finish()`: one read_state per state, write_state after each slice_update (counts match). Mirrors ANE_FRONTEND_SPEC.md's state contract at the IR level. | open |
 | 0009 | `test-hw-gate` | hardware-gated tests early-`return`ed on missing hardware, so cargo reported them PASSED with no work done (27 sites across 10 files). Routes every gate through `mil_compile::hw_gate`: loud `SKIP:` line by default, hard failure under `MIL_REQUIRE_HW=1`, plus `count_hw_skips` for a CI summary | open |
 | 0010 | `ir-for-loop` | `mil_spec::ir` was straight-line SSA with no iteration construct. Adds bounded `for i in a..b {` fully unrolled at compile time: loop var substituted per iteration, LHS names suffixed with `_<iter>`. Matches the ANE's no-control-flow capability. | open |
+| 0011 | `fuzz-noop-splice` | `gen_mutation`'s `const()→const(` splice silently no-ops when the base has no `const()` wrapper (ew_chain), producing a valid program misreported as an UnexpectedAccept. Falls back to a guaranteed-hit keyword. Found by PROBE-1 | open |
 
-All ten patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All eleven patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
 **Note on 0008:** the original file used repo-root-relative paths
 (`a/vendor/mil_spec/...`), which `apply-patches.sh` (vendor-relative, `-p1`)
 could not apply. Relabelled to the vendor-relative convention; content
 unchanged, verified byte-identical to committed HEAD.
+
+**Note on 0010:** same header-only defect as 0007 (no diff hunks). Body
+reconstructed from the committed tree, byte-identical to HEAD; content is
+L-IR's IR-4 work, unchanged.
 
 ## Evidence
 
@@ -33,6 +38,9 @@ unchanged, verified byte-identical to committed HEAD.
 - 0006: `docs/evidence/0006-milc-json-diagnostics.md`
 - 0007: `docs/evidence/0007-ir-slice-update.md`
 - 0008: `docs/evidence/0008-ir-state-contract.md` (L-IR)
+- 0009: `docs/evidence/0009-test-hw-gate.md`
+- 0010: `docs/evidence/0010-ir-for-loop.md` (L-IR)
+- 0011: `docs/spec/ane-frontend-h17.md` (PROBE-1 findings)
 - 0009: `docs/evidence/0009-test-hw-gate.md`
 - 0010: `docs/evidence/0010-ir-for-loop.md`
 
