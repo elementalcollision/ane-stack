@@ -234,7 +234,7 @@ tolerance.
 
 ### L-RUN
 
-**RUN-1 — Loader error decoding** (patch 0004 territory, but bigger)
+**RUN-1 — Loader error decoding** — *done (L-RUN)* — patch `0014-run1-loader-errors`, evidence `docs/evidence/RUN-1-loader-errors.md`.
 Turn opaque `Program load failure (0x170004)` into structured `AneError` variants
 with the code, the failed selector, and a suggested cause. Do it as a proper patch
 with tests, not a string tweak.

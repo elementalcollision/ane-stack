@@ -18,8 +18,9 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0010 | `ir-for-loop` | `mil_spec::ir` was straight-line SSA with no iteration construct. Adds bounded `for i in a..b {` fully unrolled at compile time: loop var substituted per iteration, LHS names suffixed with `_<iter>`. Matches the ANE's no-control-flow capability. | open |
 | 0011 | `fuzz-noop-splice` | `gen_mutation`'s `const()→const(` splice silently no-ops when the base has no `const()` wrapper (ew_chain), producing a valid program misreported as an UnexpectedAccept. Falls back to a guaranteed-hit keyword. Found by PROBE-1 | open |
 | 0013 | `run2-state-lifecycle` | `e5rt` state was implicit — no way to inspect, reset or snapshot a `state<>` inout port, so a KV cache could not be tested bit-exactly. Adds `reset_states`, `state_f16`, `state_names`, `state_len`, `save_states`, `restore_states` + `StateSnapshot`. Also establishes (by probe) that ANE_FRONTEND_SPEC.md line 59 is wrong and line 281 right: `write_state` data must be the terminal `slice_update` output. **RUN-2** | open |
+| 0014 | `run1-loader-errors` | `_ANEClient loadModel:` refusals were one opaque string, and `dp3.rs` sliced 8 chars from the first `0x`, so a signed code `-0x170004` yielded `-0x17000`. Adds `AneLoadError` (`code`/`kind`/`form`/`raw`) behind `EspError::Load`, with `suggested_cause()` returning `None` for unmeasured codes rather than guessing. Taxonomy is PROBE-2's measured table. **RUN-1** | open |
 
-All thirteen patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All fourteen patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
 **Note on 0008:** the original file used repo-root-relative paths
@@ -56,6 +57,7 @@ into `patches/`, and confirm with `apply-patches.sh --check`. Used for 0013.
 - 0010: `docs/evidence/0010-ir-for-loop.md` (L-IR)
 - 0011: `docs/spec/ane-frontend-h17.md` (PROBE-1 findings)
 - 0013: `docs/evidence/RUN-2-state-lifecycle.md` (L-RUN)
+- 0014: `docs/evidence/RUN-1-loader-errors.md` (L-RUN)
 
 ## Test delta
 

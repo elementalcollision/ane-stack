@@ -66,12 +66,218 @@ const COREFOUNDATION: &str = "/System/Library/Frameworks/CoreFoundation.framewor
 type Id = *mut c_void;
 type Sel = *mut c_void;
 
+/// A decoded `_ANEClient loadModel:` refusal.
+///
+/// # Where the codes come from
+///
+/// The NSError description is a selector dump with an opaque code appended:
+///
+/// ```text
+/// loadModel failed: createProgramInstanceForModel:modelToken:…:error::
+///     Program load failure (0x170004)
+/// ```
+///
+/// The `0x1X0004` family clusters by **artifact form**, not by who produced
+/// the artifact — measured in `docs/evidence/0010-deploy-gate-codes.md`
+/// (work item PROBE-2):
+///
+/// | Code | Form | Seen for |
+/// |---|---|---|
+/// | `0x170004` | bare Mach-O | our `ANECCompile` output *and* Apple's |
+/// | `0x130004` | `.espresso.hwx` bundle | Apple bundles shipped in `/System/Library` |
+/// | `0x120004` | `.e5` FlatBuffer bundle | `aned`'s own e5rt cache bundle |
+///
+/// Notably `aned`'s *own* output is refused through this path too, so this is
+/// not a signature check. PROBE-2 concluded the gate is form-specific and sits
+/// in the `_ANEClient` precompiled path — it is neither arch-targeting nor
+/// fixable by emitting different bytes. See `docs/adr/0002-deploy-lane-closed.md`.
+///
+/// # Why this is a heuristic, and says so
+///
+/// The description is a *raw NSError string* — Apple-private, undocumented,
+/// and subject to change. This type decodes the shapes that have actually been
+/// observed and falls back to [`AneLoadError::Unrecognised`] rather than
+/// guessing. It is deliberately **not** an `#[non_exhaustive]`-free exhaustive
+/// claim about the code space; a new code arrives as `Unrecognised` with the
+/// raw text preserved.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AneLoadError {
+    /// The numeric code, when one could be read (`0x170004` → `0x170004`).
+    /// Parsed leniently: a leading `-` (NSInteger-wrapped) is accepted.
+    pub code: Option<u32>,
+    /// What the code means, per the measured table above.
+    pub kind: AneLoadKind,
+    /// The artifact form inferred from the code, when known. This is what the
+    /// code actually discriminates — not the provenance.
+    pub form: Option<ArtifactForm>,
+    /// The complete NSError description, unmodified. Kept so a new or
+    /// unexpected failure is still debuggable.
+    pub raw: String,
+}
+
+/// What a `loadModel:` refusal means.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AneLoadKind {
+    /// `0x170004` — bare Mach-O (`.macho`) rejected.
+    BareMachoRejected,
+    /// `0x130004` — `.espresso.hwx` bundle rejected.
+    EspressoBundleRejected,
+    /// `0x120004` — `.e5` FlatBuffer bundle rejected.
+    E5BundleRejected,
+    /// A code was present but is not in the measured table.
+    Unrecognised,
+    /// No code could be read from the description at all.
+    NoCode,
+}
+
+/// Artifact forms, as discriminated by the `0x1X0004` code family.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArtifactForm {
+    BareMacho,
+    EspressoBundle,
+    E5Bundle,
+}
+
+impl ArtifactForm {
+    /// Infer the form from the path the caller presented.
+    ///
+    /// Used only to make a suggestion in [`AneLoadError::suggested_cause`];
+    /// the authoritative signal is the code, not the path.
+    pub fn from_path(path: &std::path::Path) -> Option<Self> {
+        let p = path.to_string_lossy();
+        if p.contains(".espresso.hwx") || p.ends_with(".hwx") {
+            Some(ArtifactForm::EspressoBundle)
+        } else if p.ends_with(".e5") || p.contains(".bundle/") {
+            Some(ArtifactForm::E5Bundle)
+        } else if p.ends_with(".macho") {
+            Some(ArtifactForm::BareMacho)
+        } else {
+            None
+        }
+    }
+
+    fn from_code(code: u32) -> Option<Self> {
+        match code {
+            0x170004 => Some(ArtifactForm::BareMacho),
+            0x130004 => Some(ArtifactForm::EspressoBundle),
+            0x120004 => Some(ArtifactForm::E5Bundle),
+            _ => None,
+        }
+    }
+}
+
+impl AneLoadError {
+    /// Decode a raw `loadModel:` NSError description.
+    ///
+    /// Lenient by design — see the type docs on why this must not pretend to
+    /// be exhaustive.
+    pub fn decode(raw: impl Into<String>) -> Self {
+        let raw = raw.into();
+        let code = Self::take_code(&raw);
+        let (kind, form) = match code {
+            Some(c) => {
+                let form = ArtifactForm::from_code(c);
+                let kind = match form {
+                    Some(ArtifactForm::BareMacho) => AneLoadKind::BareMachoRejected,
+                    Some(ArtifactForm::EspressoBundle) => AneLoadKind::EspressoBundleRejected,
+                    Some(ArtifactForm::E5Bundle) => AneLoadKind::E5BundleRejected,
+                    None => AneLoadKind::Unrecognised,
+                };
+                (kind, form)
+            }
+            None => (AneLoadKind::NoCode, None),
+        };
+        Self {
+            code,
+            kind,
+            form,
+            raw,
+        }
+    }
+
+    /// Pull the first `0x…` token out of the description.
+    ///
+    /// Lenient in two ways, both deliberate: an optional leading `-` is
+    /// accepted (the code arrives as a signed `NSInteger`), and only the first
+    /// token is read, because the description also contains selector text.
+    /// An unparseable token yields `None` rather than a bogus value.
+    fn take_code(raw: &str) -> Option<u32> {
+        let start = raw.find("0x")?;
+        let digits: String = raw[start + 2..]
+            .chars()
+            .take_while(|c| c.is_ascii_hexdigit())
+            .collect();
+        if digits.is_empty() {
+            return None;
+        }
+        u32::from_str_radix(&digits, 16).ok()
+    }
+
+    /// A cause hypothesis for an operator, or `None` when nothing is known.
+    ///
+    /// Returns `None` for unrecognised codes on purpose: inventing a cause for
+    /// a code we have never measured is worse than admitting ignorance.
+    pub fn suggested_cause(&self) -> Option<&'static str> {
+        match self.kind {
+            AneLoadKind::BareMachoRejected => Some(
+                "bare Mach-O is refused by the _ANEClient precompiled path. \
+                 Not arch-specific: an h17-targeted build fails identically to h16g. \
+                 Use the e5rt lane (`milc ane run model.mil`) instead.",
+            ),
+            AneLoadKind::EspressoBundleRejected => Some(
+                "`.espresso.hwx` bundles are refused even when Apple shipped them \
+                 (measured on /System/Library artifacts), so this is not a signing check.",
+            ),
+            AneLoadKind::E5BundleRejected => Some(
+                "`aned`'s own `.e5` bundle is refused through this path too. \
+                 An e5 bundle is loadable via e5rt (op bind + execute_sync), \
+                 not via _ANEClient loadModel.",
+            ),
+            AneLoadKind::Unrecognised => None,
+            AneLoadKind::NoCode => None,
+        }
+    }
+
+    /// True when the refusal is a known instance of the deploy gate described
+    /// in `docs/adr/0002-deploy-lane-closed.md`, rather than a novel failure.
+    pub fn is_known_deploy_gate(&self) -> bool {
+        self.form.is_some()
+    }
+
+    /// The form the caller appeared to present, for diagnostics.
+    pub fn presented_form(&self, path: &std::path::Path) -> Option<ArtifactForm> {
+        ArtifactForm::from_path(path)
+    }
+}
+
+impl std::fmt::Display for AneLoadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match (self.code, self.kind) {
+            (Some(c), AneLoadKind::Unrecognised) => write!(
+                f,
+                "loadModel refused (unrecognised code 0x{c:06X}): {}",
+                self.raw
+            ),
+            (Some(c), _) => write!(f, "loadModel refused (0x{c:06X}): {}", self.raw),
+            (None, _) => write!(f, "loadModel refused (no code): {}", self.raw),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum EspError {
     FrameworkLoad,
     MissingClass(&'static str),
     MissingSel(&'static str),
     Msg(String),
+    /// `loadModel:` was refused by `_ANEClient`. Carries a decoded
+    /// [`AneLoadError`] instead of a pre-formatted string, so a caller can
+    /// branch on the code rather than grep the message.
+    ///
+    /// The raw NSError text is retained in `raw` because the decode is
+    /// heuristic (see [`AneLoadError::decode`]) and an operator debugging a
+    /// *new* code needs the original bytes.
+    Load(AneLoadError),
 }
 
 impl std::fmt::Display for EspError {
@@ -81,6 +287,7 @@ impl std::fmt::Display for EspError {
             EspError::MissingClass(c) => write!(f, "ObjC class {c} not registered"),
             EspError::MissingSel(s) => write!(f, "symbol {s} failed to resolve"),
             EspError::Msg(s) => write!(f, "{s}"),
+            EspError::Load(e) => write!(f, "{e}"),
         }
     }
 }
@@ -609,7 +816,9 @@ impl EspressoProgram {
                 let msg = err_desc(err);
                 release(model);
                 release(client);
-                return Err(EspError::Msg(format!("loadModel failed: {msg}")));
+                // RUN-1: decode the opaque `0x1X0004` family into a typed
+                // error instead of handing the caller a string to grep.
+                return Err(EspError::Load(AneLoadError::decode(msg)));
             }
             let num_inputs = u64v(model, "numInputs");
             let num_outputs = u64v(model, "numOutputs");
@@ -1627,3 +1836,143 @@ impl Drop for EspressoProgram {
 
 unsafe impl Send for EspressoProgram {}
 unsafe impl Sync for EspressoProgram {}
+
+#[cfg(test)]
+mod run1_tests {
+    use super::{AneLoadError, AneLoadKind, ArtifactForm};
+
+    /// The exact description an `_ANEClient loadModel:error:` refusal produces,
+    /// captured from hardware (PROBE-2 / `examples/raw_err.rs`). Verbatim, not
+    /// paraphrased — the tokenisation depends on the selector text.
+    const REAL_170004: &str = "loadModel failed: createProgramInstanceForModel:modelToken:modelFilePath:qos:isPreCompiled:enablePowerSaving:skipPreparePhase:statsMask:memoryPoolID:enableLateLatch:modelIdentityStr:owningPid:cacheUrlIdentifier:aotCacheUrlIdentifier:optOutOfModelMemoryUnwiring:error:: Program load failure (0x170004)";
+
+    /// The measured code table (docs/evidence/0010-deploy-gate-codes.md):
+    /// code → (kind, form). This is the RUN-1 acceptance table.
+    #[test]
+    fn every_measured_code_decodes_to_a_named_variant() {
+        let table = [
+            (0x170004u32, AneLoadKind::BareMachoRejected, ArtifactForm::BareMacho),
+            (0x130004, AneLoadKind::EspressoBundleRejected, ArtifactForm::EspressoBundle),
+            (0x120004, AneLoadKind::E5BundleRejected, ArtifactForm::E5Bundle),
+        ];
+        for (code, kind, form) in table {
+            let e = AneLoadError::decode(format!("Program load failure (0x{code:06X})"));
+            assert_eq!(e.code, Some(code), "code for 0x{code:06X}");
+            assert_eq!(e.kind, kind, "kind for 0x{code:06X}");
+            assert_eq!(e.form, Some(form), "form for 0x{code:06X}");
+            assert!(
+                e.is_known_deploy_gate(),
+                "0x{code:06X} is a measured deploy-gate code"
+            );
+            assert!(
+                e.suggested_cause().is_some(),
+                "0x{code:06X} must suggest a cause"
+            );
+        }
+    }
+
+    #[test]
+    fn real_captured_description_decodes() {
+        let e = AneLoadError::decode(REAL_170004);
+        assert_eq!(e.code, Some(0x170004));
+        assert_eq!(e.kind, AneLoadKind::BareMachoRejected);
+        assert_eq!(e.form, Some(ArtifactForm::BareMacho));
+        // The raw text is preserved so a new code stays debuggable.
+        assert!(
+            e.raw.contains("createProgramInstanceForModel"),
+            "raw description must be retained verbatim"
+        );
+    }
+
+    /// A code outside the measured table must NOT be silently mapped onto a
+    /// known one. This is the guard against over-claiming a taxonomy.
+    #[test]
+    fn unrecognised_code_is_not_guessed() {
+        let e = AneLoadError::decode("Program load failure (0x1F0004)");
+        assert_eq!(e.code, Some(0x001F0004));
+        assert_eq!(e.kind, AneLoadKind::Unrecognised);
+        assert_eq!(e.form, None, "an unknown code has no known form");
+        assert!(
+            e.suggested_cause().is_none(),
+            "must not invent a cause for an unmeasured code"
+        );
+        assert!(!e.is_known_deploy_gate());
+        // Still debuggable.
+        assert!(e.to_string().contains("unrecognised code"));
+        assert!(e.to_string().contains("0x1F0004"));
+    }
+
+    #[test]
+    fn missing_code_is_reported_as_such() {
+        let e = AneLoadError::decode("loadModel failed: connection invalid");
+        assert_eq!(e.code, None);
+        assert_eq!(e.kind, AneLoadKind::NoCode);
+        assert_eq!(e.form, None);
+        assert!(e.suggested_cause().is_none());
+        assert!(e.to_string().contains("no code"));
+    }
+
+    /// The code arrives as a signed `NSInteger`, so a `-` prefix must not
+    /// defeat the decode. `dp3.rs` originally sliced 8 chars and produced
+    /// "-0x17000" for this case.
+    #[test]
+    fn negative_prefixed_code_still_decodes() {
+        let e = AneLoadError::decode("Program load failure (-0x170004)");
+        assert_eq!(
+            e.code,
+            Some(0x170004),
+            "a leading '-' must not corrupt the code"
+        );
+        assert_eq!(e.kind, AneLoadKind::BareMachoRejected);
+    }
+
+    /// A truncated or malformed token yields no code rather than a wrong one.
+    #[test]
+    fn malformed_token_yields_no_code() {
+        for bad in ["0x", "0xZZZ", "failure (0x)"] {
+            let e = AneLoadError::decode(format!("Program load failure ({bad})"));
+            assert_eq!(e.code, None, "{bad:?} must not parse as a code");
+            assert_eq!(e.kind, AneLoadKind::NoCode);
+        }
+    }
+
+    /// The first `0x` token wins — selector text can contain others.
+    #[test]
+    fn only_the_first_hex_token_is_read() {
+        let e = AneLoadError::decode("model 0xABCDEF failed with (0x170004)");
+        assert_eq!(e.code, Some(0xABCDEF), "first token is the code position");
+    }
+
+    #[test]
+    fn presented_form_is_inferred_from_the_path() {
+        use std::path::Path;
+        assert_eq!(
+            ArtifactForm::from_path(Path::new("/tmp/sig.macho")),
+            Some(ArtifactForm::BareMacho)
+        );
+        assert_eq!(
+            ArtifactForm::from_path(Path::new(
+                "/System/Library/x/cnn_frame_enhancer_192p.H16.espresso.hwx"
+            )),
+            Some(ArtifactForm::EspressoBundle)
+        );
+        assert_eq!(
+            ArtifactForm::from_path(Path::new("/tmp/c/H17C.bundle/H17C.e5")),
+            Some(ArtifactForm::E5Bundle)
+        );
+        assert_eq!(ArtifactForm::from_path(Path::new("/tmp/model.mil")), None);
+    }
+
+    /// Display must always name the code when there is one, and always carry
+    /// the raw text — an operator's only handle on a novel failure.
+    #[test]
+    fn display_never_hides_the_code_or_raw_text() {
+        let e = AneLoadError::decode(REAL_170004);
+        let s = e.to_string();
+        assert!(s.contains("0x170004"), "Display must name the code: {s}");
+        assert!(
+            s.contains("createProgramInstanceForModel"),
+            "Display must carry the raw description: {s}"
+        );
+    }
+}
