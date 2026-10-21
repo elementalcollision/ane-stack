@@ -1525,39 +1525,62 @@ fn cmd_run(args: &[String]) -> ExitCode {
     {
         return run_sharded(&path, units, steps);
     }
-    let spec_path = path.join("Data/com.apple.CoreML/model.mlmodel");
-    let spec = match std::fs::read(&spec_path) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("milc run: {}: {e}", spec_path.display());
-            return ExitCode::FAILURE;
-        }
-    };
-    // compile (or reuse) the .mlmodelc next to the package
-    let comp_dir = path.with_extension("compiled");
-    let stem = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("model")
-        .to_string();
-    let compiled_path = comp_dir.join(format!("{stem}.mlmodelc"));
-    if !compiled_path.exists() {
-        match mil_compile::compile(&path, &comp_dir) {
-            Ok(m) => println!("compiled {} via {}", m.path.display(), m.backend),
+
+    // FORK(ane-stack): accept either a `.mlpackage` (read the spec, compile it,
+    // run) or an already-compiled `.mlmodelc` (read the func signature out of
+    // its `model.mil` and run as-is). Before this only the package path worked;
+    // a compiled dir failed with "model.mlmodel: No such file or directory".
+    // Upstream: 20f097f.
+    let (summary, model_path) = if path.join("model.mil").exists() {
+        // Compiled artifact: spec lives as text, so parse the signature.
+        let mil_text = match std::fs::read_to_string(path.join("model.mil")) {
+            Ok(t) => t,
             Err(e) => {
-                eprintln!("milc run: {e}");
+                eprintln!("milc run: {}: {e}", path.join("model.mil").display());
                 return ExitCode::FAILURE;
             }
-        }
-    }
-    let path = compiled_path;
-    let summary = match mil_verify::summarize(&spec) {
-        Some(s) => s,
-        None => {
-            eprintln!("milc run: could not decode spec");
+        };
+        let Some(summary) = summary_from_model_mil(&mil_text) else {
+            eprintln!("milc run: could not parse signature in model.mil");
             return ExitCode::FAILURE;
+        };
+        (summary, path.clone())
+    } else {
+        let spec_path = path.join("Data/com.apple.CoreML/model.mlmodel");
+        let spec = match std::fs::read(&spec_path) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("milc run: {}: {e}", spec_path.display());
+                return ExitCode::FAILURE;
+            }
+        };
+        // compile (or reuse) the .mlmodelc next to the package
+        let comp_dir = path.with_extension("compiled");
+        let stem = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("model")
+            .to_string();
+        let compiled_path = comp_dir.join(format!("{stem}.mlmodelc"));
+        if !compiled_path.exists() {
+            match mil_compile::compile(&path, &comp_dir) {
+                Ok(m) => println!("compiled {} via {}", m.path.display(), m.backend),
+                Err(e) => {
+                    eprintln!("milc run: {e}");
+                    return ExitCode::FAILURE;
+                }
+            }
         }
+        let summary = match mil_verify::summarize(&spec) {
+            Some(s) => s,
+            None => {
+                eprintln!("milc run: could not decode spec");
+                return ExitCode::FAILURE;
+            }
+        };
+        (summary, compiled_path)
     };
+    let path = model_path;
     let model = match Model::load(&path, units) {
         Ok(m) => m,
         Err(e) => {
@@ -1612,6 +1635,101 @@ fn cmd_run(args: &[String]) -> ExitCode {
         total
     );
     ExitCode::SUCCESS
+}
+
+/// Build a `SpecSummary` for an already-compiled model by parsing the
+/// `func main(...)` signature of its `model.mil`. Compiled artifacts carry the
+/// spec as MIL text, not the protobuf, so we recover exactly the features the
+/// run loop needs: name, shape, dtype, and whether each entry is a state.
+///
+/// Dtypes are mapped to the CoreML protobuf codes `dtype_of` understands
+/// (fp16→16, int32→5, int64→8, fp32→other) so feed synthesis works unchanged.
+/// Only `inputs`/`states` are filled; the rest stay empty — all `cmd_run`
+/// consumes.
+#[cfg(target_os = "macos")]
+fn summary_from_model_mil(text: &str) -> Option<mil_verify::SpecSummary> {
+    use mil_verify::{FeatureInfo, SpecSummary};
+
+    let start = text.find("func main")?;
+    let open = start + text[start..].find('(')?;
+    // find the matching close paren, tracking nesting
+    let mut depth = 0i32;
+    let mut close = None;
+    for (i, c) in text[open..].char_indices() {
+        match c {
+            '(' | '<' | '[' => depth += 1,
+            ')' | '>' | ']' => {
+                depth -= 1;
+                if depth == 0 && c == ')' {
+                    close = Some(open + i);
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    let close = close?;
+    let params = &text[open + 1..close];
+
+    // split on top-level commas (not inside < > or [ ])
+    let mut parts: Vec<&str> = Vec::new();
+    let mut depth = 0i32;
+    let mut last = 0usize;
+    for (i, c) in params.char_indices() {
+        match c {
+            '<' | '[' => depth += 1,
+            '>' | ']' => depth -= 1,
+            ',' if depth == 0 => {
+                parts.push(&params[last..i]);
+                last = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&params[last..]);
+
+    let mut summary = SpecSummary::default();
+    for part in parts {
+        let part = part.trim();
+        if part.is_empty() {
+            continue;
+        }
+        let is_state = part.starts_with("state<");
+        let lt = part.find('<')?;
+        let gt = part.rfind('>')?;
+        let name = part[gt + 1..].trim().to_string();
+        let ty = &part[lt + 1..gt]; // e.g. "tensor<fp16, [1, 8, 64, 64]>"
+        let inner = ty
+            .strip_prefix("tensor<")
+            .and_then(|t| t.strip_suffix('>'))
+            .unwrap_or(ty);
+        let (dt_str, shape_str) = inner.split_once(',')?;
+        let dtype = match dt_str.trim() {
+            "fp16" => 16,
+            "int32" => 5,
+            "int64" => 8,
+            _ => 0, // fp32 and others
+        };
+        let shape: Vec<i64> = shape_str
+            .trim()
+            .trim_start_matches('[')
+            .trim_end_matches(']')
+            .split(',')
+            .filter_map(|s| s.trim().parse::<i64>().ok())
+            .collect();
+        let fi = FeatureInfo {
+            name,
+            shape,
+            dtype,
+            is_state,
+        };
+        if is_state {
+            summary.states.push(fi);
+        } else {
+            summary.inputs.push(fi);
+        }
+    }
+    Some(summary)
 }
 
 /// dtype enum → element dtype for feed synthesis.

@@ -66,7 +66,8 @@ Four patches, apply cleanly to pristine upstream, verified.
 Currently `milc run x.mlmodelc` looks for `Data/com.apple.CoreML/model.mlmodel`
 inside the *compiled* dir and fails. Accept either a package (compile-then-run) or
 a prebuilt `.mlmodelc` (run only).
-*Accept:* `milc run <pkg>` and `milc run <pkg>.compiled/x.mlmodelc` both work.
+*Accept:* `milc run <pkg>` and `milc run <pkg>.compiled/x.mlmodelc` both work. ✅ **done**
+(patch 0005 + `crates/milc/tests/run_cli.rs`; evidence `docs/evidence/0005-milc-run-mlmodelc.md`).
 *Blocks:* nothing. *Owner:* L-TOOL. **Effort:** S.
 
 **TOOL-3 — Structured `milc` diagnostics**
