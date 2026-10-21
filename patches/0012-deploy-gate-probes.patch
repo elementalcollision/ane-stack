@@ -1,0 +1,76 @@
+From: ane-stack
+Subject: [PATCH 0012] mil_infer: deploy-gate decoder probes (PROBE-2)
+
+Two fork-isolated probe binaries used to decode the _ANEClient deploy gate:
+
+- examples/dp3.rs — loads one HWX/Mach-O/bundle through
+  EspressoProgram::load_precompiled and reports which stage failed
+  (modelAtURL parse vs loadModel deploy) plus the hex error code.
+- examples/deploy_probe.rs — same load, prints LOAD_OK / LOAD_FAIL code.
+
+These are how the error codes in docs/evidence/0010-deploy-gate-codes.md were
+measured. Each runs as its own process because ObjC exceptions abort (the
+Apple shipped .H17 bundles crash the loader).
+
+No library code changed — examples only.
+
+Stacking: apply after 0001..0011.
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
+--- /dev/null
++++ b/crates/mil_infer/examples/dp3.rs
+@@ -0,0 +1,18 @@
++// FORK(ane-stack) PROBE-2: separate modelAtURL (parse) from loadModel (deploy).
++use mil_infer::espresso::EspressoProgram;
++use std::path::Path;
++fn main() {
++    let p = std::env::args().nth(1).unwrap();
++    // load_precompiled does modelAtURL then loadModel; the Err message tells us which failed.
++    match EspressoProgram::load_precompiled(Path::new(&p), &[]) {
++        Ok(_) => println!("RESULT: LOAD_OK"),
++        Err(e) => {
++            let s = format!("{e:?}");
++            if s.contains("modelAtURL") { println!("RESULT: FAIL_AT_modelAtURL: {s}"); }
++            else if s.contains("loadModel") {
++                let code = s.find("0x").map(|i| s[i..].chars().take(8).collect::<String>()).unwrap_or("none".into());
++                println!("RESULT: FAIL_AT_loadModel code={code}");
++            } else { println!("RESULT: FAIL_OTHER: {s}"); }
++        }
++    }
++}
+--- /dev/null
++++ b/crates/mil_infer/examples/deploy_probe.rs
+@@ -0,0 +1,34 @@
++// FORK(ane-stack) PROBE-2: deploy-gate decoder.
++// Loads ONE HWX/Mach-O artifact through _ANEClient loadModel (precompiled path)
++// and prints the outcome + error code, so each probe runs fork-isolated.
++// ObjC exceptions abort the process — that IS the signal for some artifacts.
++use mil_infer::espresso::EspressoProgram;
++use std::path::Path;
++
++fn main() {
++    let p = std::env::args().nth(1).expect("usage: deploy_probe <artifact.hwx|.macho>");
++    let path = Path::new(&p);
++    // extra loadModel option keys to probe the perf-stats gate variant
++    let extra: Vec<(&str, u64)> = std::env::args()
++        .skip(2)
++        .filter_map(|kv| {
++            let (k, v) = kv.split_once('=')?;
++            Some((Box::leak(k.to_string().into_boxed_str()) as &'static str, v.parse().ok()?))
++        })
++        .collect();
++    match EspressoProgram::load_precompiled(path, &extra) {
++        Ok(mut prog) => {
++            println!("LOAD_OK {} in={} out={}", path.display(), prog.input_descs.len(), prog.output_descs.len());
++            match prog.eval() {
++                Ok(()) => println!("EVAL_OK {}", path.display()),
++                Err(e) => println!("EVAL_ERR {} {:?}", path.display(), e),
++            }
++        }
++        Err(e) => {
++            // extract the hex code from the error string for stable comparison
++            let s = format!("{e:?}");
++            let code = s.find("0x").map(|i| s[i..].chars().take(8).collect::<String>()).unwrap_or_else(|| "????????".into());
++            println!("LOAD_FAIL {} code={}", path.display(), code);
++        }
++    }
++}
