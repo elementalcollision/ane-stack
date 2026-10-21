@@ -139,9 +139,22 @@ exists and is uncharacterised.
 
 Concrete, ordered, cheapest first:
 
-1. **A real transformer shard, h16g, through `_ANEClient` on 27.0** — `mil_spec`
-   → `ANECompile --arch h16g` → `dp3`/`deploy_probe` on the mini. If a >3k-op
-   model loads, the *scale* caveat falls away.
+1. ~~**A real transformer shard, h16g, through `_ANEClient` on 27.0.**~~
+   **Attempted; blocked one level earlier than expected.**
+   `docs/evidence/ADR-0002-A5-scale-deploy.md`. No supported checkpoint exists
+   on this Mac (the 36-layer Jina is `JinaEmbeddingsV4Model`; the cached models
+   are BERT encoders; every `.gguf` is vocab-only), so the scale axis was tested
+   on the emitter's own input. Result: `ANECCompile` refuses more than ~**320
+   ops** (`MaxLiveInLiveOutExceeded` / compiler-internal) — a frontend sizer
+   limit, **not** the deploy gate, sitting upstream of this question. The 3.2k
+   target is an order of magnitude beyond it.
+
+   Deploy at every *reachable* size (10 / 20 / 160 ops, h16g, on 27.0) →
+   **LOAD_OK**, so no size cliff has been seen — but nothing above 320 ops
+   exists to test, so that is an absence of evidence, stated as such.
+
+   **This item is now blocked on:** getting `ANECCompile` (or
+   `milc convert --shard N`) past ~320 ops.
 2. **Why H16** — diff the accepted vs rejected image headers, or check against a
    non-Apple-compiled h16g bundle. Separates allowlist from capability.
 3. **Class 4 re-run:** `aned`'s own `.e5` bundle. PROBE-2's "even aned's own
