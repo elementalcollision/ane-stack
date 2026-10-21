@@ -1,39 +1,51 @@
 From: ane-stack
 Subject: [PATCH 0017] espresso: decode macOS 27.x's nested loadModel code
 
-Patch 0014's take_code grabbed the first 0x token in the description. That is
-correct on macOS 26.x, where the code is a terminal parenthesised token and the
-only hex token present. It is WRONG on macOS 27.x, whose message shape is:
+Patch 0014 read the FIRST 0x token in the description. Correct on macOS 26.x,
+where the code is a terminal parenthesised token and the only hex token present.
+WRONG on macOS 27.x, whose message shape is:
 
   ...error:: Program load failed — bad program image (model may be corrupt or
   incompatible) (underlying=0x13)
 
-There the code is nested after underlying=. Measured on a real macOS 27.0 box:
-the old rule returned Some(19) and classified a genuine deploy refusal as
-Unrecognised with form=None, i.e. it silently discarded the code.
+There the code is nested after underlying= and may be preceded by other
+parenthesised text. Measured on a real macOS 27.0 box: the old rule returned
+Some(19) and classified a genuine deploy refusal as Unrecognised with
+form=None, silently discarding the code.
 
-Resolution order: underlying=0x... first (unambiguous), then a terminal
-parenthesised (0x...), then the first hex token as a last resort.
+take_code now uses one locator array with explicit precedence, most specific
+first, each returning the digit-run offset:
+  1. underlying=0x...   — macOS 27.x's nested code (unambiguous marker)
+  2. terminal (0x...)   — macOS 26.x, via rfind so selector-text parens lose
+  3. first 0x token     — last resort for an unknown shape
 
-Also corrects a test that encoded the old assumption. only_the_first_hex_
-token_is_read asserted the first token wins; that assumption predates 27.x and
-gets 26.x-style descriptions wrong once an incidental earlier hex token is
-present. Renamed to parenthesised_trailing_code_beats_earlier_hex_token, with
-the reason recorded inline per ENGINEERING.md 3.1 — the original intent
-(selector text must not win) is subsumed by the corrected rule.
+Also corrects a test that encoded the old assumption. only_the_first_hex_token_
+is_read asserted the first token wins, predating 27.x, which gets 26.x-style
+descriptions wrong once an incidental earlier hex token exists. Renamed to
+parenthesised_trailing_code_beats_earlier_hex_token, reason recorded inline per
+ENGINEERING.md 3.1 — the original intent (selector text must not win) is
+subsumed by the corrected rule, and the 27.x shape test is the one that would
+have caught the original bug.
 
-Both message shapes are pinned by tests, since they are indistinguishable
-without OS provenance.
+Both message shapes are pinned by tests; indistinguishable without OS-specific
+provenance, so neither may be dropped.
 
-Regression-checked on macOS 26.7.1: all four previously-measured codes still
-decode (0x170004 x2, 0x130004 x2). On macOS 27.0 the code now reads 0x13.
-Lands on Unrecognised still, because the 27.x cause text is new and not in the
-measured table — deliberate, and documented on the enum.
+Refactored after first landing at the lane owner's direction: the three
+branches duplicated the extract-and-parse logic. First attempt left a dead
+offset table and an unused binding, caught by re-reading the diff rather than
+by the compiler (rustc warns on unused variables, not on a dead `let` that is
+then discarded); removed in the same pass. Verified on hardware on BOTH OSes:
+macOS 26.7.1 still decodes 0x170004 x2 and 0x130004; macOS 27.0 now reads 0x13
+for a real h16g/h17 model pair and Apple's H16/H17 bundles.
+
+27.x refusals still land on Unrecognised, deliberately: the new cause text is
+not in the measured table, and inventing a cause for an unmeasured code is
+worse than admitting ignorance.
 
 Evidence: docs/evidence/PROBE-2-macos27-result.md
 Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
 diff --git a/crates/mil_infer/src/espresso.rs b/crates/mil_infer/src/espresso.rs
-index 450e3df..e6b4c76 100644
+index 450e3df..84f1041 100644
 --- a/crates/mil_infer/src/espresso.rs
 +++ b/crates/mil_infer/src/espresso.rs
 @@ -87,6 +87,12 @@ type Sel = *mut c_void;
@@ -49,7 +61,7 @@ index 450e3df..e6b4c76 100644
  /// Notably `aned`'s *own* output is refused through this path too, so this is
  /// not a signature check. PROBE-2 concluded the gate is form-specific and sits
  /// in the `_ANEClient` precompiled path — it is neither arch-targeting nor
-@@ -195,13 +201,51 @@ impl AneLoadError {
+@@ -195,22 +201,52 @@ impl AneLoadError {
          }
      }
  
@@ -60,53 +72,62 @@ index 450e3df..e6b4c76 100644
 +    /// for the newer one:
 +    ///
 +    /// * macOS 26.x — `…error:: Program load failure (0x170004)`. The code is
-+    ///   in parentheses at the end, and is the only hex token.
++    ///   a terminal parenthesised token, and the only hex token present.
 +    /// * macOS 27.x — `…error:: Program load failed — bad program image (model
-+    ///   may be corrupt or incompatible) (underlying=0x13)`. The code is
-+    ///   introduced by `underlying=` and is the *nested* value.
++    ///   may be corrupt or incompatible) (underlying=0x13)`. The code follows
++    ///   `underlying=` and is a *nested* value; it may be preceded by other
++    ///   parenthesised text.
      ///
 -    /// Lenient in two ways, both deliberate: an optional leading `-` is
 -    /// accepted (the code arrives as a signed `NSInteger`), and only the first
 -    /// token is read, because the description also contains selector text.
 -    /// An unparseable token yields `None` rather than a bogus value.
-+    /// So prefer `underlying=0x…` when present (it is unambiguous), then fall
-+    /// back to a parenthesised `(0x…)`, then to the first hex token. An
-+    /// unparseable token yields `None` rather than a bogus value.
++    /// So the locate rules are tried in a deliberate precedence order, most
++    /// specific first: `underlying=` (unambiguous marker), then the terminal
++    /// parenthesised token, then the first hex token as a last resort.
 +    ///
-+    /// Measured on macOS 27.0 with `examples/raw_err_dp.rs`: the naive
-+    /// first-token rule returned `Some(19)` for `(underlying=0x13)` and
-+    /// classified a real deploy refusal as `Unrecognised`. Both message shapes
-+    /// are asserted in tests, because the two shapes are indistinguishable by
-+    /// inspection without OS-specific provenance.
++    /// Measured on macOS 27.0: the previous first-token-only rule returned
++    /// `Some(19)` for `(underlying=0x13)` and classified a real deploy refusal
++    /// as `Unrecognised`, silently dropping the code. Both message shapes are
++    /// asserted in tests — they are indistinguishable by inspection without
++    /// OS-specific provenance, so neither may be removed.
      fn take_code(raw: &str) -> Option<u32> {
-+        if let Some(pos) = raw.find("underlying=") {
-+            // Skip past `underlying=0x` — otherwise take_while starts on `0`
-+            // and stops at the `x`, yielding a bogus zero.
-+            let digits: String = raw[pos + "underlying=0x".len()..]
+-        let start = raw.find("0x")?;
+-        let digits: String = raw[start + 2..]
+-            .chars()
+-            .take_while(|c| c.is_ascii_hexdigit())
+-            .collect();
+-        if digits.is_empty() {
+-            return None;
++        // Each locator returns the byte offset where the digit run starts, or
++        // None to fall through. Precedence is most-specific-first — NOT
++        // first-match-wins, which is what the previous implementation did and
++        // why it was wrong on 27.x.
++        let locators: [fn(&str) -> Option<usize>; 3] = [
++            // macOS 27.x: the nested code after an explicit marker.
++            |raw| raw.find("underlying=").map(|p| p + "underlying=0x".len()),
++            // macOS 26.x: the code in trailing parentheses. `rfind` so a
++            // parenthesised hex token earlier in selector text cannot win.
++            |raw| raw.rfind("(0x").map(|p| p + "(0x".len()),
++            // Last resort for an unknown shape.
++            |raw| raw.find("0x").map(|p| p + "0x".len()),
++        ];
++        for locate in locators {
++            let Some(at) = locate(raw) else { continue };
++            let digits: String = raw[at..]
 +                .chars()
 +                .take_while(|c| c.is_ascii_hexdigit())
 +                .collect();
 +            if !digits.is_empty() {
 +                return u32::from_str_radix(&digits, 16).ok();
 +            }
-+        }
-+        // Otherwise the code sits in trailing parentheses: `... (0x170004)`.
-+        // `rfind` so an earlier `(0x…)` in selector text loses to the terminal
-+        // one. Note the +3: skip past `(0x`, so `take_while` starts on the
-+        // digits and is not fooled by the `x`.
-+        if let Some(open) = raw.rfind("(0x") {
-+            let digits: String = raw[open + 3..]
-+                .chars()
-+                .take_while(|c| c.is_ascii_hexdigit())
-+                .collect();
-+            if !digits.is_empty() {
-+                return u32::from_str_radix(&digits, 16).ok();
-+            }
-+        }
-         let start = raw.find("0x")?;
-         let digits: String = raw[start + 2..]
-             .chars()
-@@ -1936,11 +1980,27 @@ mod run1_tests {
+         }
+-        u32::from_str_radix(&digits, 16).ok()
++        None
+     }
+ 
+     /// A cause hypothesis for an operator, or `None` when nothing is known.
+@@ -1936,11 +1972,27 @@ mod run1_tests {
          }
      }
  
@@ -137,7 +158,7 @@ index 450e3df..e6b4c76 100644
      }
  
      #[test]
-@@ -1976,3 +2036,62 @@ mod run1_tests {
+@@ -1976,3 +2028,62 @@ mod run1_tests {
          );
      }
  }
