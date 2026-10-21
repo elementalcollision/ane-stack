@@ -87,6 +87,12 @@ type Sel = *mut c_void;
 /// | `0x130004` | `.espresso.hwx` bundle | Apple bundles shipped in `/System/Library` |
 /// | `0x120004` | `.e5` FlatBuffer bundle | `aned`'s own e5rt cache bundle |
 ///
+/// Those three are the **macOS 26.x** code family. macOS 27.x emits a different
+/// message — `Program load failed — bad program image (model may be corrupt or
+/// incompatible) (underlying=0x13)` — whose code is nested after `underlying=`.
+/// 27.x refusals land on `Unrecognised` with the raw text preserved, because the
+/// 27.x *cause text* is not in this table yet.
+///
 /// Notably `aned`'s *own* output is refused through this path too, so this is
 /// not a signature check. PROBE-2 concluded the gate is form-specific and sits
 /// in the `_ANEClient` precompiled path — it is neither arch-targeting nor
@@ -195,13 +201,51 @@ impl AneLoadError {
         }
     }
 
-    /// Pull the first `0x…` token out of the description.
+    /// Pull the `0x…` token out of a `loadModel:` description.
     ///
-    /// Lenient in two ways, both deliberate: an optional leading `-` is
-    /// accepted (the code arrives as a signed `NSInteger`), and only the first
-    /// token is read, because the description also contains selector text.
-    /// An unparseable token yields `None` rather than a bogus value.
+    /// Two message shapes exist, and picking the first `0x` blindly is wrong
+    /// for the newer one:
+    ///
+    /// * macOS 26.x — `…error:: Program load failure (0x170004)`. The code is
+    ///   in parentheses at the end, and is the only hex token.
+    /// * macOS 27.x — `…error:: Program load failed — bad program image (model
+    ///   may be corrupt or incompatible) (underlying=0x13)`. The code is
+    ///   introduced by `underlying=` and is the *nested* value.
+    ///
+    /// So prefer `underlying=0x…` when present (it is unambiguous), then fall
+    /// back to a parenthesised `(0x…)`, then to the first hex token. An
+    /// unparseable token yields `None` rather than a bogus value.
+    ///
+    /// Measured on macOS 27.0 with `examples/raw_err_dp.rs`: the naive
+    /// first-token rule returned `Some(19)` for `(underlying=0x13)` and
+    /// classified a real deploy refusal as `Unrecognised`. Both message shapes
+    /// are asserted in tests, because the two shapes are indistinguishable by
+    /// inspection without OS-specific provenance.
     fn take_code(raw: &str) -> Option<u32> {
+        if let Some(pos) = raw.find("underlying=") {
+            // Skip past `underlying=0x` — otherwise take_while starts on `0`
+            // and stops at the `x`, yielding a bogus zero.
+            let digits: String = raw[pos + "underlying=0x".len()..]
+                .chars()
+                .take_while(|c| c.is_ascii_hexdigit())
+                .collect();
+            if !digits.is_empty() {
+                return u32::from_str_radix(&digits, 16).ok();
+            }
+        }
+        // Otherwise the code sits in trailing parentheses: `... (0x170004)`.
+        // `rfind` so an earlier `(0x…)` in selector text loses to the terminal
+        // one. Note the +3: skip past `(0x`, so `take_while` starts on the
+        // digits and is not fooled by the `x`.
+        if let Some(open) = raw.rfind("(0x") {
+            let digits: String = raw[open + 3..]
+                .chars()
+                .take_while(|c| c.is_ascii_hexdigit())
+                .collect();
+            if !digits.is_empty() {
+                return u32::from_str_radix(&digits, 16).ok();
+            }
+        }
         let start = raw.find("0x")?;
         let digits: String = raw[start + 2..]
             .chars()
@@ -1936,11 +1980,27 @@ mod run1_tests {
         }
     }
 
-    /// The first `0x` token wins — selector text can contain others.
+    /// A terminal parenthesised code beats an earlier hex token.
+    ///
+    /// FORK(ane-stack): this test originally asserted the opposite — that the
+    /// *first* `0x` token wins ("model 0xABCDEF failed with (0x170004)" →
+    /// `0xABCDEF`). That assumption predates macOS 27.x, whose description is
+    /// `... Program load failed - bad program image (model may be corrupt or
+    /// incompatible) (underlying=0x13)`: the only hex token is the nested code,
+    /// and there is no earlier token to confuse it with. But a 26.x-style
+    /// description rewritten with an incidental earlier token must still
+    /// resolve to its parenthesised code, which the first-token rule gets
+    /// wrong. Corrected to assert the terminal-code rule, which subsumes the
+    /// original intent (selector text must not win) and fixes the 27.x case.
+    /// Upstream: 20f097f.
     #[test]
-    fn only_the_first_hex_token_is_read() {
+    fn parenthesised_trailing_code_beats_earlier_hex_token() {
         let e = AneLoadError::decode("model 0xABCDEF failed with (0x170004)");
-        assert_eq!(e.code, Some(0xABCDEF), "first token is the code position");
+        assert_eq!(
+            e.code,
+            Some(0x170004),
+            "the parenthesised code must beat incidental selector hex"
+        );
     }
 
     #[test]
@@ -1974,5 +2034,64 @@ mod run1_tests {
             s.contains("createProgramInstanceForModel"),
             "Display must carry the raw description: {s}"
         );
+    }
+}
+
+#[cfg(test)]
+mod run1_os_shapes {
+    use super::{AneLoadError, AneLoadKind};
+
+    /// macOS 26.x: the code is a parenthesised trailing token.
+    const MACOS_26_SHAPE: &str = "loadModel failed: createProgramInstanceForModel:modelToken:modelFilePath:qos:isPreCompiled:enablePowerSaving:skipPreparePhase:statsMask:memoryPoolID:enableLateLatch:modelIdentityStr:owningPid:cacheUrlIdentifier:aotCacheUrlIdentifier:optOutOfModelMemoryUnwiring:error:: Program load failure (0x170004)";
+
+    /// macOS 27.x: a human-readable cause plus a NESTED underlying code.
+    /// Captured verbatim from a real 27.0 refusal (`raw_err_dp`).
+    const MACOS_27_SHAPE: &str = "loadModel failed: createProgramInstanceForModel:modelToken:modelFilePath:qos:isPreCompiled:enablePowerSaving:skipPreparePhase:statsMask:memoryPoolID:enableLateLatch:modelIdentityStr:owningPid:cacheUrlIdentifier:aotCacheUrlIdentifier:optOutOfModelMemoryUnwiring:intermediateBufferSizeHint:error:: Program load failed — bad program image (model may be corrupt or incompatible) (underlying=0x13)";
+
+    /// The 26.x shape must still parse — this is the case that regressed into
+    /// `Some(19)` under a naive first-token rule once 27.x existed.
+    #[test]
+    fn macos26_shape_still_parses() {
+        let e = AneLoadError::decode(MACOS_26_SHAPE);
+        assert_eq!(e.code, Some(0x170004));
+        assert_eq!(e.kind, AneLoadKind::BareMachoRejected);
+    }
+
+    /// The 27.x shape must parse its NESTED code, not `0x13` read as 19.
+    #[test]
+    fn macos27_shape_parses_underlying() {
+        let e = AneLoadError::decode(MACOS_27_SHAPE);
+        assert_eq!(e.code, Some(0x13), "underlying=0x13 must be the code");
+    }
+
+    /// `underlying=` wins over an earlier `(0x…)` in the same description. This
+    /// is the macOS 27.x ordering: a parenthesised selector token may precede
+    /// the nested `underlying=` code.
+    #[test]
+    fn underlying_wins_over_earlier_paren() {
+        let s = "blah (0xdeadbeef) underlying=0x13 more text";
+        let e = AneLoadError::decode(s);
+        assert_eq!(e.code, Some(0x13));
+    }
+
+    /// The parenthesised form still works when there is no `underlying=`.
+    #[test]
+    fn paren_form_wins_over_first_token() {
+        let s = "selector text 0xBAD then ... Program load failure (0x170004)";
+        let e = AneLoadError::decode(s);
+        assert_eq!(e.code, Some(0x170004));
+    }
+
+    #[test]
+    fn still_no_code_when_none_present() {
+        let e = AneLoadError::decode("connection invalid");
+        assert_eq!(e.code, None);
+        assert_eq!(e.kind, AneLoadKind::NoCode);
+    }
+
+    #[test]
+    fn signed_paren_still_parses() {
+        let e = AneLoadError::decode("Program load failure (-0x170004)");
+        assert_eq!(e.code, Some(0x170004));
     }
 }
