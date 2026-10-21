@@ -27,6 +27,7 @@
 //! m   = matmul(x, y[, transpose_y])
 //! su  = slice_update(x, begin=[...], end=[...], update)
 //! sm  = softmax(x, axis[, fp32])
+//! for i in 0..N { ... }            # bounded, fully unrolled at compile time
 //! cs  = cast(x, to=fp32|fp16|int32)
 //! n   = rms_norm(x, w=gamma, d=64, eps=1e-5)
 //! rd  = read_state(kv)
@@ -106,10 +107,146 @@ pub struct Program {
 /// resolved, all op shapes consistent, all declared outputs defined.
 pub fn compile(source: &str) -> Result<Program> {
     let mut c = Compiler::new();
-    for (i, raw) in source.lines().enumerate() {
+    let lines: Vec<&str> = source.lines().collect();
+    let flat = unroll_loops(&lines)?;
+    for (i, raw) in flat.iter().enumerate() {
         c.line(raw, i + 1)?;
     }
     c.finish()
+}
+
+/// Unroll bounded `for i in a..b { ... }` loops at compile time.
+///
+/// The ANE has no control flow, so loops are fully unrolled: each iteration
+/// is emitted with the loop variable substituted by its concrete value and
+/// every defined name suffixed with `_<iter>` to avoid collisions. Loop
+/// bounds must be integer literals (no variables), and the body must not
+/// reference names defined outside except as read-only inputs.
+fn unroll_loops(lines: &[&str]) -> Result<Vec<String>> {
+    let mut out: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        let raw = lines[i].trim();
+        if let Some((var, start, end, body)) = parse_for_loop(&lines[i..]) {
+            if start >= end {
+                return Err(IrError {
+                    line: i + 1,
+                    message: format!("for loop {var} in {start}..{end} is empty"),
+                });
+            }
+            for iter in start..end {
+                for line in &body {
+                    let unrolled = unroll_line(line, &var, iter)?;
+                    out.push(unrolled);
+                }
+            }
+            i += 2 + body.len(); // for-line + body lines + closing brace
+        } else if raw == "}" {
+            return Err(IrError {
+                line: i + 1,
+                message: "unexpected closing brace outside a for loop".into(),
+            });
+        } else {
+            out.push(raw.to_string());
+            i += 1;
+        }
+    }
+    Ok(out)
+}
+
+/// Parse `for i in a..b {` starting at `lines[0]` -> (var, start, end, body_lines).
+/// The body is everything between the opening `{` on the for-line and the
+/// matching closing `}` (handles nested loops by brace depth).
+fn parse_for_loop<'a>(lines: &'a [&'a str]) -> Option<(String, i64, i64, Vec<&'a str>)> {
+    let first = lines[0].trim();
+    let rest = first.strip_prefix("for ")?;
+    let (var, rest) = rest.split_once(' ')?;
+    let var = var.trim();
+    if !var.chars().all(|c| c.is_alphanumeric() || c == '_') {
+        return None;
+    }
+    let rest = rest.strip_prefix("in ")?;
+    // rest is like "0..2 {" — split range from optional trailing brace.
+    let (range_part, after_brace) = rest.split_once(' ').unwrap_or((rest, ""));
+    let (start_s, end_s) = range_part.split_once("..")?;
+    let start: i64 = start_s.trim().parse().ok()?;
+    let end: i64 = end_s.trim().parse().ok()?;
+    // Opening brace must be on this line (after the range, possibly on "after_brace").
+    if !after_brace.trim_start().starts_with('{') {
+        return None;
+    }
+    // Collect body lines until matching close brace (brace-aware).
+    let mut body: Vec<&str> = Vec::new();
+    let mut depth: i32 = 0;
+    for ch in first.chars() {
+        match ch {
+            '{' => depth += 1,
+            '}' => depth -= 1,
+            _ => {}
+        }
+    }
+    for line in &lines[1..] {
+        let trimmed = line.trim();
+        for ch in trimmed.chars() {
+            match ch {
+                '{' => depth += 1,
+                '}' => depth -= 1,
+                _ => {}
+            }
+        }
+        if depth == 0 {
+            return Some((var.to_string(), start, end, body));
+        }
+        body.push(trimmed);
+    }
+    None // unterminated loop
+}
+
+/// Substitute loop variable `var` with value `iter` in a single line.
+/// Also suffixes defined names (`name = ...`) with `_<iter>` to avoid
+/// collisions across iterations.
+fn unroll_line(line: &str, var: &str, iter: i64) -> Result<String> {
+    let mut result = line.to_string();
+    // Replace standalone occurrences of the loop var with its value:
+    // only where surrounded by non-identifier characters or boundaries.
+    let val = iter.to_string();
+    let mut replaced = String::new();
+    let mut pos = 0;
+    while let Some(found) = result[pos..].find(var) {
+        let abs = pos + found;
+        let before_ok = abs == 0
+            || !matches!(
+                result[abs - 1..abs].chars().next(),
+                Some(c) if c.is_alphanumeric() || c == '_'
+            );
+        let after = abs + var.len();
+        let after_ok = after >= result.len()
+            || !matches!(
+                result[after..after + 1].chars().next(),
+                Some(c) if c.is_alphanumeric() || c == '_'
+            );
+        if before_ok && after_ok {
+            replaced.push_str(&result[pos..abs]);
+            replaced.push_str(&val);
+            pos = after;
+        } else {
+            replaced.push_str(&result[pos..=abs]);
+            pos = abs + var.len();
+        }
+    }
+    replaced.push_str(&result[pos..]);
+    result = replaced;
+
+    // Suffix defined names on the LHS of `name = ...` with `_<iter>`.
+    if let Some((lhs, rhs)) = result.split_once('=') {
+        let lhs = lhs.trim().to_string();
+        let rhs = rhs.to_string();
+        if lhs.chars().all(|c| c.is_alphanumeric() || c == '_') && !lhs.is_empty() {
+            let formatted = format!("{}_{} = {}", lhs, iter, rhs);
+            result = formatted;
+        }
+    }
+    Ok(result)
 }
 
 struct Compiler {

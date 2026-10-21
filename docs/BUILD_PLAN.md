@@ -110,7 +110,7 @@ bad graphs fail at compile time, not inside ANEC/coremlc.
 *Accept:* a negative test per contract clause.
 *Owner:* L-IR. **Effort:** M. **Depends on:** IR-2.
 
-**IR-4 — `while`/loop and indexed control flow**
+**IR-4 — `while`/loop and indexed control flow** — *done (L-IR)* — patch `0010-ir-for-loop`, evidence `docs/evidence/0010-ir-for-loop.md`.
 Any real decode step needs iteration. Currently the IR is straight-line SSA.
 Scope this carefully: prefer *bounded, fully-unrolled* loops (the ANE has no
 control flow) over real control flow — the honest answer is "unroll at compile

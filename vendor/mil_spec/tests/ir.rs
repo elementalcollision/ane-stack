@@ -399,3 +399,45 @@ fn state_write_slice_count_mismatch_rejected() {
         e.message
     );
 }
+
+// IR-4 — bounded loops fully unrolled at compile time.
+#[test]
+fn for_loop_unrolls() {
+    let p = compile_ok(
+        "input x: fp16[1,4,1,1]\n         k = const_f16(2.0)\n         for i in 0..3 {\n             y = mul(x, k)\n         }\n         output y_2",
+    );
+    // Three independent mul ops emitted (one per iteration).
+    assert_eq!(p.types["y_2"].shape, vec![1, 4, 1, 1]);
+    assert_eq!(
+        p.block.ops.iter().filter(|o| o.ty == "mul").count(),
+        3
+    );
+}
+
+#[test]
+fn for_loop_var_substituted() {
+    // Loop var used as a const scalar; substituted per iteration.
+    let p = compile_ok(
+        "for i in 0..2 {\n             c = const_f16(i)\n         }\n         output c_1",
+    );
+    // c_0 = const_f16(0), c_1 = const_f16(1)
+    assert_eq!(p.types["c_1"].shape, vec![]);
+    assert_eq!(
+        p.block.ops.iter().filter(|o| o.ty == "const").count(),
+        2
+    );
+}
+
+#[test]
+fn for_loop_empty_range_rejected() {
+    let e = compile_err("for i in 3..1 {\n    y = mul(x, x)\n}\noutput y_0");
+    assert!(e.message.contains("is empty"));
+}
+
+#[test]
+fn for_loop_output_refs_last_iteration() {
+    let p = compile_ok(
+        "input x: fp16[1,4,1,1]\n         for i in 0..2 {\n             y = mul(x, x)\n         }\n         output y_1",
+    );
+    assert_eq!(p.types["y_1"].shape, vec![1, 4, 1, 1]);
+}

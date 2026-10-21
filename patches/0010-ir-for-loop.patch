@@ -1,0 +1,27 @@
+From: ane-stack
+Subject: [PATCH 0010] ir: bounded `for` loops, fully unrolled at compile time
+
+mil_spec::ir was straight-line SSA with no iteration construct. Since the
+ANE has no control flow, loops belong at compile time: IR-4 adds bounded
+`for i in a..b { ... }` that fully unrolls — each iteration emitted with the
+loop var substituted by its concrete value and every defined name suffixed
+with `_<iter>` to avoid collisions.
+
+Adds (vendor/mil_spec/src/ir.rs):
+- `unroll_loops()` pre-pass on the IR source before compilation.
+- `parse_for_loop()` — parses `for i in a..b {` with brace-depth body
+  collection (handles nesting by depth).
+- `unroll_line()` — substitutes the loop var and suffixes LHS names with
+  `_<iter>`.
+- Grammar doc line for `for i in 0..N { ... }`.
+
+Tests (tests/ir.rs):
+- for_loop_unrolls — N iterations emit N mul ops, output refs last iter.
+- for_loop_var_substituted — loop var const substituted per iteration.
+- for_loop_empty_range_rejected — empty range is an error.
+- for_loop_output_refs_last_iteration — output can name last-iteration value.
+
+Bounds must be integer literals (no variables); only bounded unrolling — no
+real control flow, matching the ANE's capabilities.
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8
