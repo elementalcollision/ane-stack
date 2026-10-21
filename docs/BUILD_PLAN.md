@@ -200,7 +200,7 @@ placed **84% of ops on the ANE but only 65% of estimated cost** — i.e. 16% of 
 carried 35% of the work, and the residual is CPU/transfer overhead. Upstream's
 `graph.rs` is a rule-based single-stream compiler. A real scheduler attacks that gap.
 
-**SCHED-1 — Cost model** — *blocked (L-SCHED)* — see `docs/evidence/SCHED-1-positive-control.md`.
+**SCHED-1 — Cost model** — *partially unblocked (L-SCHED)* — cost half usable on macOS 27.x; placement half still blocked. See `docs/evidence/SCHED-1-positive-control.md` (26.7.1) and `docs/evidence/SCHED-1-macos27-result.md` (27.0).
 
 Inputs we already have: `mil_lint`'s per-op unit verdict, `MLComputePlan`'s real
 `preferred`/`cost`, and `milc plan --json`. Output: per-op `(unit, estimated_us,
@@ -224,15 +224,35 @@ cost on a fixed model; disagreement documented rather than hidden.
 > oracle without noticing.
 >
 > **Not blocked:** `mil_lint`'s per-op `Unit` verdicts. Those are unaffected and
-> remain SCHED-2's and SCHED-4's placement input. Only the *cost* half of
-> SCHED-1 is blocked.
+> remain SCHED-2's and SCHED-4's placement input.
 >
-> **Unblock condition:** an OS version (or CoreML path) where `MLComputePlan`
-> attributes non-zero cost and places ops on the ANE, or an owner decision to
-> accept e5rt end-to-end latency per subgraph as the calibration source. The
-> latter is available *today* and measurable, but is a genuine precision loss —
-> e5rt runs one `execute_sync` per graph, so per-op attribution is not
-> recoverable. Decision needed; not silently redefining the item.
+> **Split, stated precisely:** the *placement* half of SCHED-1 is still blocked
+> (nothing plans onto the ANE on either OS); the *cost* half is unblocked on
+> macOS 27.x specifically. See the UPDATE below.
+>
+> **UPDATE (2026-10-21) — tested on macOS 27.0, and the answer splits.**
+> Measured on a real 27.0 box (`davids-mac-mini`, M4 Pro, build 26A428) with the
+> same `milc` binary, so the difference is the OS and not the build:
+>
+> - **Placement: unchanged, and bad.** Still 0/10 on our corpus, and Apple's own
+>   `hybrid_model.mlmodelc` plans cpu 20/20. `MLComputePlan` places nothing on
+>   the ANE on *either* OS version, ours or Apple's. So the cost half of this
+>   criterion is unblocked on 27.x while the placement half is not — do not read
+>   "cost works now" as "CoreML will finally put graphs on the ANE".
+> - **Cost: fixed.** 26.7.1 returned one flat `0.25` for every op and `0.00` for
+>   Apple's models; 27.0 returns **differentiated, non-zero** values
+>   (`add`=0.180, `mul`=0.320 on the same package; Apple's models `1e-8…1e-5`).
+>   Reproduced over three runs. This is the variance the criterion needs and the
+>   reason the flat value made it unachievable.
+>
+> **Open confound before relying on this:** local is M5/h17 and the mini is M4
+> Pro, so "26.x flat vs 27.x differentiated" has not been separated from
+> "M5 flat vs M4 differentiated". Needs the same OS on two hosts, or two hosts
+> on one OS.
+>
+> **Unblock condition:** unchanged in kind — a CoreML path that places ops on
+> the ANE — but now with evidence that 27.x is not it. The e5rt-latency option
+> remains available today, at the precision cost already documented.
 
 **SCHED-2 — Partitioning under the plan-builder limit**
 Upstream found the hard ceiling: **CoreML error -14 between 3,164 and 3,284 ops**

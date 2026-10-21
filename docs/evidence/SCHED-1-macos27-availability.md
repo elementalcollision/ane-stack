@@ -10,6 +10,14 @@ cost) a macOS 26.x issue, or is it ameliorated in 27.x?
 **Answer: not answerable on this machine, and the reason is a structural fact
 about how Apple ships simulators — not "we didn't look hard enough".**
 
+> **SUPERSEDED as to the conclusion (2026-10-21):** a macOS 27.0 box became
+> available (`davids-mac-mini`, tailnet `100.127.197.66`, user `davidgraham`),
+> so the hypothesis *was* tested. Result in `SCHED-1-macos27-result.md`: the
+> placement problem persists on 27.0, but cost attribution is fixed there. This
+> file's reasoning about the simulator runtime remains correct — it still
+> explains why no 27.x planner existed locally — but the "not answerable" claim
+> no longer stands.
+
 ---
 
 ## 1. What is on disk
