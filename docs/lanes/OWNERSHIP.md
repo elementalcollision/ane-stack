@@ -12,9 +12,10 @@ on an unclaimed lane without claiming it.
 |---|---|---|---|
 | **L-TOOL** | dave (initiator) | 2026-10-21 | TOOL-4 ✅ → TOOL-2 ✅ → TOOL-3 ✅ |
 | **L-IR** | another model | 2026-10-21 | IR-2 ✅ → IR-3 ✅ → IR-4 ✅ |
-| **L-TEST** | dave (initiator) | 2026-10-21 | TEST-1 (evidence harness) → TEST-2 |
+| **L-TEST** | dave (initiator) | 2026-10-21 | TEST-1 ✅ → TEST-2 ✅ |
+| **L-PROBE** | dave (initiator) | 2026-10-21 | PROBE-1 (re-probe dialect on h17) → PROBE-2 → PROBE-3 |
 
-Unclaimed: **L-SCHED · L-RUN · L-PROBE · L-LINT**
+Unclaimed: **L-SCHED · L-RUN · L-LINT**
 
 ## L-TOOL — CLI, packaging, build hygiene
 
