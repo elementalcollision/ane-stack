@@ -17,8 +17,9 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0009 | `test-hw-gate` | hardware-gated tests early-`return`ed on missing hardware, so cargo reported them PASSED with no work done (27 sites across 10 files). Routes every gate through `mil_compile::hw_gate`: loud `SKIP:` line by default, hard failure under `MIL_REQUIRE_HW=1`, plus `count_hw_skips` for a CI summary | open |
 | 0010 | `ir-for-loop` | `mil_spec::ir` was straight-line SSA with no iteration construct. Adds bounded `for i in a..b {` fully unrolled at compile time: loop var substituted per iteration, LHS names suffixed with `_<iter>`. Matches the ANE's no-control-flow capability. | open |
 | 0011 | `fuzz-noop-splice` | `gen_mutation`'s `const()→const(` splice silently no-ops when the base has no `const()` wrapper (ew_chain), producing a valid program misreported as an UnexpectedAccept. Falls back to a guaranteed-hit keyword. Found by PROBE-1 | open |
+| 0013 | `run2-state-lifecycle` | `e5rt` state was implicit — no way to inspect, reset or snapshot a `state<>` inout port, so a KV cache could not be tested bit-exactly. Adds `reset_states`, `state_f16`, `state_names`, `state_len`, `save_states`, `restore_states` + `StateSnapshot`. Also establishes (by probe) that ANE_FRONTEND_SPEC.md line 59 is wrong and line 281 right: `write_state` data must be the terminal `slice_update` output. **RUN-2** | open |
 
-All eleven patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+All thirteen patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
 verified) and are applied in order by `scripts/apply-patches.sh`.
 
 **Note on 0008:** the original file used repo-root-relative paths
@@ -29,6 +30,19 @@ unchanged, verified byte-identical to committed HEAD.
 **Note on 0010:** same header-only defect as 0007 (no diff hunks). Body
 reconstructed from the committed tree, byte-identical to HEAD; content is
 L-IR's IR-4 work, unchanged.
+
+**Missing entry — 0012:** `patches/0012-deploy-gate-probes.patch` exists and
+applies cleanly, but has no row in this table and no evidence link. Not
+backfilled here, because it is PROBE-2 work (L-PROBE, in flight) and the
+owner is better placed to describe it. Request to L-PROBE.
+
+**Root cause of the 0007/0008/0010 patch defects (found during RUN-2):** all
+three were authored by writing the prose header and then editing the vendor
+tree directly, instead of deriving the patch body from a committed diff. A
+patch file that is not generated from a diff is unverifiable, which is why
+each needed repair after the fact. Method that does not recur: edit the
+tree, commit, then `git diff HEAD~1 -- <paths> | sed 's|vendor/mil_spec/||'`
+into `patches/`, and confirm with `apply-patches.sh --check`. Used for 0013.
 
 ## Evidence
 
@@ -41,8 +55,7 @@ L-IR's IR-4 work, unchanged.
 - 0009: `docs/evidence/0009-test-hw-gate.md`
 - 0010: `docs/evidence/0010-ir-for-loop.md` (L-IR)
 - 0011: `docs/spec/ane-frontend-h17.md` (PROBE-1 findings)
-- 0009: `docs/evidence/0009-test-hw-gate.md`
-- 0010: `docs/evidence/0010-ir-for-loop.md`
+- 0013: `docs/evidence/RUN-2-state-lifecycle.md` (L-RUN)
 
 ## Test delta
 

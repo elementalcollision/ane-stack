@@ -39,6 +39,14 @@ pub enum E5Error {
     Call(&'static str, i64),
     Io(std::io::Error),
     Parse(String),
+    /// A state handle was addressed but the program exposes no such inout
+    /// (state) port. Names the offending port; recovered from the op's own
+    /// inout descriptors via `e5rt_io_port_*`, not from the caller.
+    NoSuchState(String),
+    /// A state snapshot had the wrong element count for the named port.
+    StateSizeMismatch { state: String, want: u64, got: u64 },
+    /// A state snapshot was malformed (bad magic, truncated payload).
+    StateCorrupt(String),
 }
 
 impl std::fmt::Display for E5Error {
@@ -49,6 +57,12 @@ impl std::fmt::Display for E5Error {
             E5Error::Call(s, rc) => write!(f, "{s} → {rc}"),
             E5Error::Io(e) => write!(f, "{e}"),
             E5Error::Parse(s) => write!(f, "{s}"),
+            E5Error::NoSuchState(s) => write!(f, "no such state port: {s}"),
+            E5Error::StateSizeMismatch { state, want, got } => write!(
+                f,
+                "state {state}: expected {want} elements, got {got}"
+            ),
+            E5Error::StateCorrupt(s) => write!(f, "state snapshot corrupt: {s}"),
         }
     }
 }
@@ -730,7 +744,175 @@ impl Program {
             "execute_sync",
         )
     }
+
+    // ---- RUN-2: explicit state lifecycle ---------------------------------
+    //
+    // `state<>` params surface as e5rt *inout* ports: resident across calls,
+    // readable and writable in place. Upstream verified the residency but left
+    // it implicit — a caller could only mutate state by binding a value into
+    // the port, with no way to inspect, reset, or snapshot it.
+    //
+    // These four operations make a KV cache a first-class object:
+    //
+    //   reset_states()          -> zero every inout port
+    //   state_f16(name)         -> read an inout port as fp16 bits
+    //   save_states()/restore_states() -> snapshot/rollback in one call
+    //
+    // All operate on the *bound* buffers, which `execute()` reads and writes
+    // in place, so a snapshot round-trip is meaningful: restore then execute
+    // continues from the restored state, not from wherever the last call left
+    // it. Nothing here allocates or rebinds a port.
+
+    /// Zero every state (inout) port.
+    ///
+    /// This is the "fresh decode" operation: after `reset_states`, the next
+    /// `execute` sees an all-zero cache, exactly as a newly created state
+    /// object would. Returns the number of ports reset.
+    pub fn reset_states(&self) -> Result<usize, E5Error> {
+        for (_, b) in &self.inout_bounds {
+            let p = self.data_ptr(b)?;
+            if p.is_null() {
+                return Err(E5Error::Call("reset_states: null data ptr", -1));
+            }
+            // SAFETY: `b` was bound with `b.bytes` capacity by `bind_ports`
+            // (buffer_object_alloc) and is owned by this Program. Zeroing
+            // exactly that region cannot exceed it.
+            unsafe { std::ptr::write_bytes(p as *mut u8, 0, b.bytes as usize) };
+        }
+        Ok(self.inout_bounds.len())
+    }
+
+    /// Read a state port as raw fp16 bits.
+    ///
+    /// Errors with [`E5Error::NoSuchState`] when `name` is not an inout port —
+    /// which is the honest failure: a plain input is not state and cannot be
+    /// read back this way.
+    pub fn state_f16(&self, name: &str) -> Result<Vec<u16>, E5Error> {
+        let b = self
+            .inout_bounds
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, b)| b)
+            .ok_or_else(|| E5Error::NoSuchState(name.to_string()))?;
+        let p = self.data_ptr(b)?;
+        if p.is_null() {
+            return Err(E5Error::Call("state_f16: null data ptr", -1));
+        }
+        // SAFETY: the buffer holds `b.bytes` bytes (bind_ports), so it holds
+        // exactly `b.bytes / 2` u16 elements.
+        Ok(unsafe { std::slice::from_raw_parts(p, (b.bytes / 2) as usize) }.to_vec())
+    }
+
+    /// The state port names this program exposes, in bind order.
+    pub fn state_names(&self) -> Vec<&str> {
+        self.inout_bounds.iter().map(|(n, _)| n.as_str()).collect()
+    }
+
+    /// Element count of a state port, from the binding (not the descriptor).
+    pub fn state_len(&self, name: &str) -> Option<u64> {
+        self.inout_bounds
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, b)| b.bytes / 2)
+    }
+
+    /// Snapshot every state port in one call.
+    ///
+    /// The snapshot is a plain (name, fp16-bits) list — deliberately not an
+    /// opaque handle, so a caller can persist it, diff it, or log it.
+    pub fn save_states(&self) -> Result<StateSnapshot, E5Error> {
+        let mut entries = Vec::with_capacity(self.inout_bounds.len());
+        for (name, _) in &self.inout_bounds {
+            entries.push((name.clone(), self.state_f16(name)?));
+        }
+        Ok(StateSnapshot { entries })
+    }
+
+    /// Restore a snapshot written by [`Program::save_states`].
+    ///
+    /// Atomic in the failure sense: size and membership are validated for
+    /// *every* entry before any buffer is written, so a bad snapshot leaves
+    /// the program's state untouched rather than half-restored.
+    pub fn restore_states(&self, snap: &StateSnapshot) -> Result<(), E5Error> {
+        // Validate the whole snapshot first.
+        for (name, data) in &snap.entries {
+            let b = self
+                .inout_bounds
+                .iter()
+                .find(|(n, _)| n == name)
+                .map(|(_, b)| b)
+                .ok_or_else(|| E5Error::NoSuchState(name.clone()))?;
+            let want = b.bytes / 2;
+            let got = data.len() as u64;
+            if got != want {
+                return Err(E5Error::StateSizeMismatch {
+                    state: name.clone(),
+                    want,
+                    got,
+                });
+            }
+        }
+        // Every port this program has must be present in the snapshot,
+        // otherwise a restore would silently leave one port stale.
+        for (name, _) in &self.inout_bounds {
+            if !snap.entries.iter().any(|(n, _)| n == name) {
+                return Err(E5Error::NoSuchState(format!(
+                    "{name} (missing from snapshot)"
+                )));
+            }
+        }
+        // All validated — now write.
+        for (name, data) in &snap.entries {
+            let b = self
+                .inout_bounds
+                .iter()
+                .find(|(n, _)| n == name)
+                .map(|(_, b)| b)
+                .expect("validated above");
+            let p = self.data_ptr(b)?;
+            if p.is_null() {
+                return Err(E5Error::Call("restore_states: null data ptr", -1));
+            }
+            // SAFETY: size validated == b.bytes/2 elements above.
+            unsafe { std::ptr::copy_nonoverlapping(data.as_ptr(), p, data.len()) };
+        }
+        Ok(())
+    }
 }
 
 unsafe impl Send for Program {}
 unsafe impl Sync for Program {}
+
+/// A snapshot of every state (inout) port of a [`Program`], as raw fp16 bits.
+///
+/// Produced by [`Program::save_states`] and consumed by
+/// [`Program::restore_states`]. Deliberately plain data rather than an opaque
+/// handle: a caller can persist, diff, or log it.
+///
+/// In-memory only. A caller who wants durability chooses the serialisation —
+/// this type does not invent a format and then own it forever.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct StateSnapshot {
+    /// `(port_name, fp16_bits)` in the program's bind order.
+    pub entries: Vec<(String, Vec<u16>)>,
+}
+
+impl StateSnapshot {
+    /// Total fp16 elements across every port — a cheap "is this empty?" signal.
+    pub fn len(&self) -> usize {
+        self.entries.iter().map(|(_, d)| d.len()).sum()
+    }
+
+    /// True when the snapshot holds no state at all.
+    pub fn is_empty(&self) -> bool {
+        self.entries.iter().all(|(_, d)| d.is_empty())
+    }
+
+    /// The bits for one port, if present.
+    pub fn get(&self, name: &str) -> Option<&[u16]> {
+        self.entries
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, d)| d.as_slice())
+    }
+}
