@@ -257,3 +257,85 @@ fn q8_weight_lowers() {
         .iter()
         .any(|o| o.ty == "constexpr_blockwise_shift_scale"));
 }
+
+#[test]
+fn slice_update_whole_state_write() {
+    // slice_update with begin..end == full dims == whole-state write; update
+    // shape must equal state shape exactly.
+    let p = compile_ok(
+        "state kv: fp16[1,8,64,64]\n\
+         input step: fp16[1,8,64,64]\n\
+         cur = read_state(kv)\n\
+         merged = add(cur, step)\n\
+         su = slice_update(kv, begin=[0,0,0,0], end=[1,8,64,64], update=merged)\n\
+         output su",
+    );
+    assert_eq!(p.types["su"].shape, vec![1, 8, 64, 64]);
+    assert_eq!(
+        p.block
+            .ops
+            .iter()
+            .filter(|o| o.ty == "slice_update")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn slice_update_region_write() {
+    // Incremental write into a stripe: write row 3 of a 4-row state.
+    let p = compile_ok(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[1,8,64,64]\n\
+         su = slice_update(kv, begin=[3,0,0,0], end=[4,8,64,64], update=row)\n\
+         output su",
+    );
+    assert_eq!(p.types["su"].shape, vec![4, 8, 64, 64]);
+    assert_eq!(
+        p.block
+            .ops
+            .iter()
+            .filter(|o| o.ty == "slice_update")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn slice_update_begin_end_must_match_rank() {
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[1,8,64,64]\n\
+         su = slice_update(kv, begin=[0,0,0], end=[4,8,64], update=row)\n\
+         output su",
+    );
+    assert!(e.message.contains("begin/end must match rank"));
+}
+
+#[test]
+fn slice_update_update_shape_must_match_region() {
+    // Writing a 2-row update into a 1-row region must fail.
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input rows: fp16[2,8,64,64]\n\
+         su = slice_update(kv, begin=[0,0,0,0], end=[1,8,64,64], update=rows)\n\
+         output su",
+    );
+    assert!(
+        e.message.contains("update shape") || e.message.contains("doesn't match"),
+        "expected update-shape mismatch, got: {}",
+        e.message
+    );
+}
+
+#[test]
+fn slice_update_range_invalid_is_rejected() {
+    let e = compile_err(
+        "state kv: fp16[4,8,64,64]\n\
+         input row: fp16[1,8,64,64]\n\
+         su = slice_update(kv, begin=[3,0,0,0], end=[4,8,64,64], update=row)\n\
+         su2 = slice_update(kv, begin=[5,0,0,0], end=[6,8,64,64], update=row)\n\
+         output su2",
+    );
+    assert!(e.message.contains("invalid for dim"));
+}

@@ -93,7 +93,7 @@ evidence `docs/evidence/0005-vendor-guard.md`. First act was catching a stray
 **IR-1 — `write_state` shape validation** ✅ *done*
 Patch 0001. Caught that two upstream fixtures had encoded the bug.
 
-**IR-2 — `slice_update` / incremental state write** ⭐ *highest IR value* — *wip (L-IR)*
+**IR-2 — `slice_update` / incremental state write** ⭐ *highest IR value* — *done (L-IR)* — patch `0007-ir-slice-update`, evidence `docs/evidence/0007-ir-slice-update.md`.
 The IR has **no `slice_update`**, so a KV-cache append is inexpressible — the only
 legal state write is whole-shape. Every real decode loop needs "write row `pos`".
 The `Block` layer already supports it (`ane_lower` rebases `slice_update` for the

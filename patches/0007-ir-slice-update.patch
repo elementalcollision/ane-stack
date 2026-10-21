@@ -1,0 +1,19 @@
+From: ane-stack
+Subject: [PATCH 0007] ir: add slice_update for incremental state writes
+
+mil_spec::ir had no slice_update, so an incremental KV-cache append
+("write row pos of a state") was inexpressible — the only legal state write
+was whole-state. The Block layer already supports write_state; the IR gap
+prevented expressing a partial write that ane_lower then stripes per decodes
+position.
+
+Adds:
+- Block::slice_update (vendor/mil_spec/src/lib.rs) emitting a MIL
+  slice_update op with begin/end const vectors.
+- IR form `su = slice_update(x, begin=[..], end=[..], update=name)` with full
+  validation: state must exist, begin/end match rank, ranges are in-bounds,
+  and the update's shape equals the region shape (not the whole state).
+- Tests: whole-state write, region write, rank mismatch, update-shape
+  mismatch, out-of-bounds range rejection.
+
+Upstream: 20f097fb34969cd577342a4d7996fbf5464998c8

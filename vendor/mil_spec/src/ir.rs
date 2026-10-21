@@ -25,6 +25,7 @@
 //! s   = slice(x, begin=[...], end=[...])
 //! c   = concat([a, b, ...], axis)
 //! m   = matmul(x, y[, transpose_y])
+//! su  = slice_update(x, begin=[...], end=[...], update)
 //! sm  = softmax(x, axis[, fp32])
 //! cs  = cast(x, to=fp32|fp16|int32)
 //! n   = rms_norm(x, w=gamma, d=64, eps=1e-5)
@@ -584,6 +585,52 @@ impl Compiler {
                 Ok(Ty {
                     dtype: x.dtype,
                     shape,
+                })
+            }
+
+            "slice_update" => {
+                // slice_update(x, begin=[...], end=[...], update) — writes
+                // `update` into `x` at begin..end per dim; output keeps x's
+                // shape (whole-state write, ANE stripe write).
+                if args.len() != 4 {
+                    return err(n, "slice_update(x, begin=[...], end=[...], update)");
+                }
+                let st = self
+                    .states
+                    .iter()
+                    .find(|s| s.name == args[0])
+                    .ok_or_else(|| IrError {
+                        line: n,
+                        message: format!("undefined state {}", args[0]),
+                    })?;
+                // slice_update uses named args: begin=[..], end=[..], update=name
+                let begin = parse_i32_list(args[1].strip_prefix("begin=").unwrap_or(args[1]), n)?;
+                let end = parse_i32_list(args[2].strip_prefix("end=").unwrap_or(args[2]), n)?;
+                let update_name = args[3].strip_prefix("update=").unwrap_or(args[3]);
+                let u = self.lookup(update_name, n)?;
+                if begin.len() != st.shape.len() || end.len() != st.shape.len() {
+                    return err(n, "slice_update begin/end must match rank");
+                }
+                let mut region = Vec::with_capacity(begin.len());
+                for ((&b, &e), &dim) in begin.iter().zip(end.iter()).zip(st.shape.iter()) {
+                    if b < 0 || e > dim as i32 || b >= e {
+                        return err(n, format!("slice_update range {b}..{e} invalid for dim {dim}"));
+                    }
+                    region.push((e - b) as i64);
+                }
+                if u.shape != region {
+                    return err(
+                        n,
+                        format!(
+                            "slice_update update shape {:?} doesn't match region shape {:?}",
+                            u.shape, region
+                        ),
+                    );
+                }
+                self.block.slice_update(args[0], &begin, &end, update_name, &region, name);
+                Ok(Ty {
+                    dtype: st.dtype,
+                    shape: st.shape.clone(),
                 })
             }
 

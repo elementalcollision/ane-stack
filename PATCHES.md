@@ -12,9 +12,10 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0004 | `milc-run-shard-dispatch` | `milc run` sent **every** `.mlpackage` to the shard loader (case-insensitive `manifest.json` vs `Manifest.json`), so `milc run <pkg>` never worked on a plain package | open |
 | 0005 | `milc-run-mlmodelc` | `milc run <x.mlmodelc>` failed with `model.mlmodel: No such file` — compiled artifacts carry the spec as `model.mil` text, not protobuf. Detect the `.mlmodelc` and parse its `func main` signature instead | open |
 | 0006 | `milc-json-diagnostics` | no machine-readable failures — agents grepped stderr. Top-level `--json` / `MILC_JSON=1` emits a `{ok, command, ...}` envelope with `{stage, code, message, path}` errors for `check`/`run`/`plan` | open |
+| 0007 | `ir-slice-update` | `mil_spec::ir` had no `slice_update`; an incremental KV-cache write was inexpressible. Adds `Block::slice_update` + IR form with full validation (region-shape rule, rank/bounds checks). Unblocks `RUN-2` (stateful e5rt). | open |
 
-All six apply cleanly to pristine upstream (`patch -p1 --dry-run` verified) and
-are applied in order by `scripts/apply-patches.sh`.
+All seven patches apply cleanly to pristine upstream (`patch -p1 --dry-run`
+verified) and are applied in order by `scripts/apply-patches.sh`.
 
 ## Evidence
 
@@ -22,6 +23,7 @@ are applied in order by `scripts/apply-patches.sh`.
 - 0004: `docs/evidence/0004-milc-run-dispatch.md`
 - 0005: `docs/evidence/0005-milc-run-mlmodelc.md`
 - 0006: `docs/evidence/0006-milc-json-diagnostics.md`
+- 0007: `docs/evidence/0007-ir-slice-update.md`
 
 ## Test delta
 
@@ -37,7 +39,4 @@ assert a legal program) — deliberately, because the previous assertion was the
 - The HWX deploy lane is closed at the OS level (Apple's own artifacts fail too).
   See `docs/adr/0002-deploy-lane-closed.md`. Not a code bug.
 - Perf-counter instrumentation needs a compile-time switch inside Apple's compiler.
-- `mil_spec::ir` has **no `slice_update`**, so an incremental KV-cache write is not
-  expressible in the IR at all — only a whole-state write. Tracked as work item
-  `IR-2` in `docs/BUILD_PLAN.md`.
 - `units_e2e` timing assertions are `#[ignore]`d and suspect (see `patches/0005` note).

@@ -1114,6 +1114,36 @@ impl Block {
         self.konst_i32_bm(name, n)
     }
 
+    /// `slice_update(x, begin=[...], end=[...], update)` — writes `update`
+     /// into `x` at the per-dim begin..end region; output has x's shape.
+     /// `begin`/`end` are rank-length int32 vectors, emitted as consts.
+     pub fn slice_update(
+         &mut self,
+         x: &str,
+         begin: &[i32],
+         end: &[i32],
+         update: &str,
+         out_shape: &[i64],
+         name: &str,
+     ) -> String {
+         let b0 = self.fresh("begin");
+         let b0 = self.konst_i32(&b0, begin);
+         let e0 = self.fresh("end");
+         let e0 = self.konst_i32(&e0, end);
+         let vt = self.tt(DType::Fp16, out_shape);
+         self.o1(
+             "slice_update",
+             vec![
+                 ("x".into(), bind(x).1),
+                 ("begin".into(), bind(&b0).1),
+                 ("end".into(), bind(&e0).1),
+                 ("update".into(), bind(update).1),
+             ],
+             name,
+             vt,
+         )
+     }
+ 
     /// `concat` along `axis`.
     pub fn concat(&mut self, xs: &[String], axis: i32, out_shape: &[i64], name: &str) -> String {
         let a = self.fresh("axis");
