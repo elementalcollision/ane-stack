@@ -154,7 +154,13 @@ exceptions abort the process.
 Upstream measured fixed / EnumeratedShapes / ShapeRange × compute units. Extend to
 e5rt and to `h17`, and turn it into an executable table (`mil_sched` input).
 *Accept:* `docs/spec/shape-flex-matrix.md` + a test that asserts the table matches
-observed behaviour.
+observed behaviour. ✅ **done** — two-lane matrix on h17 (CoreML `loadModel` vs
+e5rt `compile_auto`), minimal 1-op add + converted decoder. **h16g→h17 regression:**
+ShapeRange on `all`/`ane` went from clean `-14` to a hard crash (SIGSEGV/SIGBUS).
+**Lanes disagree on EnumeratedShapes:** CoreML loads+predicts on cpu/ane; e5rt
+cannot find `main` in the package at all. **e5rt binds ShapeRange at the default
+shape only** — runtime variation needs the unprobed JIT-shapes path. Executable
+assertions in `docs/spec/shape-flex-matrix.spec` (passes via evidence-check.sh).
 *Owner:* L-PROBE. **Effort:** S–M.
 
 ### L-TEST
