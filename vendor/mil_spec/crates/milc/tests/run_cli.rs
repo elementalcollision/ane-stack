@@ -16,8 +16,82 @@ fn milc_bin() -> PathBuf {
     target.join(format!("milc{}", std::env::consts::EXE_SUFFIX))
 }
 
+fn milc(args: &[&str]) -> (i32, String, String) {
+    let out = Command::new(milc_bin())
+        .args(args)
+        .output()
+        .expect("spawn milc");
+    (
+        out.status.code().unwrap_or(-1),
+        String::from_utf8_lossy(&out.stdout).into_owned(),
+        String::from_utf8_lossy(&out.stderr).into_owned(),
+    )
+}
+
+/// Tiny hand-rolled JSON field extractor — asserts a `"key":` appears and
+/// returns the raw value up to the delimiter. Good enough for asserting on
+/// envelopes without pulling in serde_json.
+fn json_has(out: &str, key: &str) -> bool {
+    out.contains(&format!("\"{}\":", key))
+}
+
 fn coremlc() -> bool {
     mil_compile::coremlc_path().is_some()
+}
+
+// ---------- TOOL-3: structured --json diagnostics ----------
+
+#[test]
+#[cfg(target_os = "macos")]
+fn failing_run_emits_parseable_json_envelope() {
+    let (rc, stdout, _stderr) = milc(&["run", "--json", "/nonexistent.mlpackage", "--units", "ane"]);
+    assert_ne!(rc, 0, "a missing package must fail");
+    // stdout must be a single JSON envelope: ok=false, an error object with a
+    // stage, and no trailing junk after the closing brace.
+    let t = stdout.trim();
+    assert!(t.starts_with('{') && t.ends_with('}'), "not a JSON object: {t}");
+    assert!(json_has(t, "ok"), "no ok field: {t}");
+    assert!(t.contains("\"ok\":false"), "ok should be false: {t}");
+    assert!(json_has(t, "error"), "no error field: {t}");
+    assert!(json_has(t, "stage"), "error must carry a stage: {t}");
+    assert!(json_has(t, "path"), "error must carry a path: {t}");
+}
+
+#[test]
+#[cfg(target_os = "macos")]
+fn failing_check_emits_parseable_json_envelope() {
+    let (rc, stdout, _stderr) = milc(&["check", "--json", "/nonexistent"]);
+    assert_ne!(rc, 0);
+    let t = stdout.trim();
+    assert!(t.contains("\"ok\":false"), "check should report ok=false: {t}");
+    assert!(json_has(t, "errors"), "check must report an errors array: {t}");
+    assert!(json_has(t, "path"), "check must report the path: {t}");
+}
+
+#[test]
+#[cfg(target_os = "macos")]
+fn failing_plan_emits_parseable_json_envelope() {
+    let (rc, stdout, _stderr) = milc(&["plan", "--json", "/nonexistent.mlpackage"]);
+    assert_ne!(rc, 0);
+    let t = stdout.trim();
+    assert!(t.contains("\"ok\":false"), "plan should report ok=false: {t}");
+    assert!(json_has(t, "error"), "plan must carry an error: {t}");
+    assert!(json_has(t, "stage"), "plan error must carry a stage: {t}");
+}
+
+#[test]
+#[cfg(target_os = "macos")]
+fn milc_json_env_var_is_honoured() {
+    let out = Command::new(milc_bin())
+        .args(["run", "/nonexistent.mlpackage", "--units", "ane"])
+        .env("MILC_JSON", "1")
+        .output()
+        .expect("spawn milc");
+    let t = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        t.trim().starts_with('{') && t.contains("\"ok\":false"),
+        "MILC_JSON=1 should produce the envelope without the flag: {t}"
+    );
 }
 
 fn write_stateful_pkg(dir: &std::path::Path) -> std::path::PathBuf {

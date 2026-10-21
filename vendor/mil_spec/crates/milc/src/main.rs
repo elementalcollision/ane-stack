@@ -17,12 +17,116 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+// FORK(ane-stack): machine-readable diagnostics (TOOL-3). A top-level `--json`
+// flag (or `MILC_JSON=1`) makes a supported subcommand emit its result — success
+// or failure — as a single JSON envelope `{ok, command, ...}` on stdout, with
+// errors as `{stage, code, message, path}`. Agents then assert on failures
+// structurally instead of grepping stderr. Upstream: 20f097f.
+
+/// True when the user asked for JSON output for this invocation.
+fn json_requested() -> bool {
+    std::env::var("MILC_JSON").as_deref() == Ok("1")
+        || std::env::args().skip(1).any(|a| a == "--json")
+}
+
+/// A structured diagnostic.
+#[derive(Clone, Debug, Default)]
+struct Diag {
+    stage: String,
+    code: Option<String>,
+    message: String,
+    path: Option<String>,
+}
+
+impl Diag {
+    fn new(stage: &str, message: impl Into<String>) -> Self {
+        Diag {
+            stage: stage.to_string(),
+            code: None,
+            message: message.into(),
+            path: None,
+        }
+    }
+    fn code(mut self, code: impl Into<String>) -> Self {
+        self.code = Some(code.into());
+        self
+    }
+    fn path(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
+        self
+    }
+}
+
+/// Minimal JSON string escaping (no serde in the tree).
+fn jesc(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+        .replace('\t', "\\t")
+}
+
+fn json_opt(o: &Option<String>) -> String {
+    o.as_ref()
+        .map(|v| format!("\"{}\"", jesc(v)))
+        .unwrap_or_else(|| "null".into())
+}
+
+impl Diag {
+    fn to_json(&self) -> String {
+        format!(
+            "{{\"stage\":\"{}\",\"code\":{},\"message\":\"{}\",\"path\":{}}}",
+            jesc(&self.stage),
+            json_opt(&self.code),
+            jesc(&self.message),
+            json_opt(&self.path)
+        )
+    }
+}
+
+/// Emit a failure envelope for a `--json` invocation and return the exit code.
+/// Prints nothing when `json` is false, so the human-format eprintln is the
+/// only output in that case.
+fn emit_diag(json: bool, command: &str, d: &Diag) -> ExitCode {
+    if json {
+        println!(
+            "{{\"ok\":false,\"command\":\"{}\",\"error\":{}}}",
+            jesc(command),
+            d.to_json()
+        );
+    }
+    ExitCode::FAILURE
+}
+
+/// Emit a success envelope for a `--json` invocation and return the exit code.
+/// `payload` is the command-specific JSON object, already serialized.
+fn emit_ok(json: bool, command: &str, payload: &str) -> ExitCode {
+    if json {
+        println!(
+            "{{\"ok\":true,\"command\":\"{}\",{}}}",
+            jesc(command),
+            payload
+        );
+    }
+    ExitCode::SUCCESS
+}
+
+/// Strip the top-level `--json` flag so subcommand arg parsers never see it.
+fn strip_json_flag(args: &[String]) -> Vec<String> {
+    args.iter().filter(|a| a.as_str() != "--json").cloned().collect()
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() {
         usage();
         return ExitCode::from(2);
     }
+    // FORK(ane-stack): top-level `--json` (or `MILC_JSON=1`) opts a supported
+    // subcommand into a machine-readable result envelope (TOOL-3). Strip the
+    // flag before subcommand parsers see it.
+    let json = json_requested();
+    let args = strip_json_flag(&args);
     match args[0].as_str() {
         "convert" => cmd_convert(&args[1..]),
         "gguf" => cmd_gguf(&args[1..]),
@@ -31,10 +135,10 @@ fn main() -> ExitCode {
         "inspect" => cmd_inspect(&args[1..]),
         "diff" => cmd_diff(&args[1..]),
         "compile" => cmd_compile(&args[1..]),
-        "run" => cmd_run(&args[1..]),
-        "plan" => cmd_plan(&args[1..]),
+        "run" => cmd_run(&args[1..], json),
+        "plan" => cmd_plan(&args[1..], json),
         "verify" => ExitCode::from(mil_verify::run_battery() as u8),
-        "check" => cmd_check(&args[1..]),
+        "check" => cmd_check(&args[1..], json),
         "fuse-lora" => cmd_fuse_lora(&args[1..]),
         "requant" => cmd_requant(&args[1..]),
         "graft" => cmd_graft(&args[1..]),
@@ -1476,7 +1580,7 @@ fn cmd_compile(args: &[String]) -> ExitCode {
 /// The units flag is the point: `--units ane` pins the run to the
 /// neural engine — the latency number the lint report predicts.
 #[cfg(target_os = "macos")]
-fn cmd_run(args: &[String]) -> ExitCode {
+fn cmd_run(args: &[String], json: bool) -> ExitCode {
     use mil_infer::{ComputeUnits, Model};
 
     let mut path: Option<PathBuf> = None;
@@ -1506,13 +1610,15 @@ fn cmd_run(args: &[String]) -> ExitCode {
             }
             other => {
                 eprintln!("milc run: unknown flag {other}");
-                return ExitCode::from(2);
+                let d = Diag::new("args", format!("unknown flag {other}")).code("BAD_FLAG");
+                return emit_diag(json, "run", &d);
             }
         }
     }
     let Some(path) = path else {
         eprintln!("milc run: needs <pkg.mlpackage>");
-        return ExitCode::from(2);
+        let d = Diag::new("args", "needs <pkg.mlpackage|model.mlmodelc>").code("MISSING_ARG");
+        return emit_diag(json, "run", &d);
     };
     // FORK(ane-stack): a shard bundle carries a lowercase `manifest.json`,
     // while every CoreML `.mlpackage` carries `Manifest.json`. macOS APFS is
@@ -1537,12 +1643,16 @@ fn cmd_run(args: &[String]) -> ExitCode {
             Ok(t) => t,
             Err(e) => {
                 eprintln!("milc run: {}: {e}", path.join("model.mil").display());
-                return ExitCode::FAILURE;
+                let d = Diag::new("io", format!("{e}"))
+                    .path(path.join("model.mil").display().to_string());
+                return emit_diag(json, "run", &d);
             }
         };
         let Some(summary) = summary_from_model_mil(&mil_text) else {
             eprintln!("milc run: could not parse signature in model.mil");
-            return ExitCode::FAILURE;
+            let d = Diag::new("parse", "could not parse signature in model.mil")
+                .path(path.join("model.mil").display().to_string());
+            return emit_diag(json, "run", &d);
         };
         (summary, path.clone())
     } else {
@@ -1551,7 +1661,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("milc run: {}: {e}", spec_path.display());
-                return ExitCode::FAILURE;
+                let d = Diag::new("io", format!("{e}"))
+                    .path(spec_path.display().to_string());
+                return emit_diag(json, "run", &d);
             }
         };
         // compile (or reuse) the .mlmodelc next to the package
@@ -1567,7 +1679,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
                 Ok(m) => println!("compiled {} via {}", m.path.display(), m.backend),
                 Err(e) => {
                     eprintln!("milc run: {e}");
-                    return ExitCode::FAILURE;
+                    let d = Diag::new("compile", format!("{e}"))
+                        .path(path.display().to_string());
+                    return emit_diag(json, "run", &d);
                 }
             }
         }
@@ -1575,7 +1689,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
             Some(s) => s,
             None => {
                 eprintln!("milc run: could not decode spec");
-                return ExitCode::FAILURE;
+                let d = Diag::new("decode", "could not decode spec")
+                    .path(spec_path.display().to_string());
+                return emit_diag(json, "run", &d);
             }
         };
         (summary, compiled_path)
@@ -1585,7 +1701,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
         Ok(m) => m,
         Err(e) => {
             eprintln!("milc run: {e}");
-            return ExitCode::FAILURE;
+            let d = Diag::new("load", format!("{e}"))
+                .path(path.display().to_string());
+            return emit_diag(json, "run", &d);
         }
     };
     let state = if summary.states.is_empty() {
@@ -1595,7 +1713,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
             Ok(s) => Some(s),
             Err(e) => {
                 eprintln!("milc run: {e}");
-                return ExitCode::FAILURE;
+                let d = Diag::new("state", format!("{e}"))
+                    .path(path.display().to_string());
+                return emit_diag(json, "run", &d);
             }
         }
     };
@@ -1613,7 +1733,9 @@ fn cmd_run(args: &[String]) -> ExitCode {
             Ok(p) => lat.push(p.latency),
             Err(e) => {
                 eprintln!("milc run: step {step}: {e}");
-                return ExitCode::FAILURE;
+                let d = Diag::new("predict", format!("step {step}: {e}"))
+                    .path(path.display().to_string());
+                return emit_diag(json, "run", &d);
             }
         }
     }
@@ -1626,6 +1748,24 @@ fn cmd_run(args: &[String]) -> ExitCode {
         ComputeUnits::CpuAndGpu => "cpu+gpu",
         ComputeUnits::CpuAndNeuralEngine => "cpu+ane",
     };
+    if json {
+        let ns: Vec<String> = lat.iter().map(|d| format!("{}", d.as_nanos())).collect();
+        return emit_ok(
+            json,
+            "run",
+            &format!(
+                "\"path\":\"{}\",\"units\":\"{}\",\"steps\":{},\"latencies_ns\":[{}],\"median_ns\":{},\"min_ns\":{},\"max_ns\":{},\"total_ns\":{}",
+                jesc(&path.display().to_string()),
+                unit_name,
+                lat.len(),
+                ns.join(","),
+                med.as_nanos(),
+                lat[0].as_nanos(),
+                lat[lat.len() - 1].as_nanos(),
+                total.as_nanos()
+            ),
+        );
+    }
     println!(
         "{} steps on {unit_name}: median {:.2?}  min {:.2?}  max {:.2?}  total {:.2?}",
         lat.len(),
@@ -1892,11 +2032,11 @@ fn cmd_run(_args: &[String]) -> ExitCode {
 /// where Core ML's compute plan (`MLComputePlan`) puts every op of an
 /// ML Program, with a per-device summary of op count and estimated cost.
 #[cfg(target_os = "macos")]
-fn cmd_plan(args: &[String]) -> ExitCode {
+fn cmd_plan(args: &[String], json_flag: bool) -> ExitCode {
     use mil_infer::{summarize_plan, ComputeUnits, Device};
     let mut path: Option<PathBuf> = None;
     let mut units = ComputeUnits::All;
-    let mut json = false;
+    let mut json = json_flag;
     let mut vs_lint = false;
     let mut i = 0;
     while i < args.len() {
@@ -1909,7 +2049,9 @@ fn cmd_plan(args: &[String]) -> ExitCode {
                     Some("all") => ComputeUnits::All,
                     other => {
                         eprintln!("milc plan: --units all|ane|gpu|cpu, got {other:?}");
-                        return ExitCode::from(2);
+                        let d = Diag::new("args", format!("--units all|ane|gpu|cpu, got {other:?}"))
+                            .code("BAD_UNITS");
+                        return emit_diag(json, "plan", &d);
                     }
                 };
                 i += 2;
@@ -1930,13 +2072,15 @@ fn cmd_plan(args: &[String]) -> ExitCode {
             }
             other => {
                 eprintln!("milc plan: unknown flag {other}");
-                return ExitCode::from(2);
+                let d = Diag::new("args", format!("unknown flag {other}")).code("BAD_FLAG");
+                return emit_diag(json, "plan", &d);
             }
         }
     }
     let Some(path) = path else {
         eprintln!("milc plan: needs <pkg.mlpackage|model.mlmodelc>");
-        return ExitCode::from(2);
+        let d = Diag::new("args", "needs <pkg.mlpackage|model.mlmodelc>").code("MISSING_ARG");
+        return emit_diag(json, "plan", &d);
     };
     // .mlpackage → compile into a scratch dir that is removed afterwards
     let scratch = std::env::temp_dir().join(format!("milc_plan_{}", std::process::id()));
@@ -1948,7 +2092,9 @@ fn cmd_plan(args: &[String]) -> ExitCode {
             Err(e) => {
                 eprintln!("milc plan: compile: {e}");
                 let _ = std::fs::remove_dir_all(&scratch);
-                return ExitCode::FAILURE;
+                let d = Diag::new("compile", format!("{e}"))
+                    .path(path.display().to_string());
+                return emit_diag(json, "plan", &d);
             }
         }
     };
@@ -1958,7 +2104,9 @@ fn cmd_plan(args: &[String]) -> ExitCode {
         Ok(o) => o,
         Err(e) => {
             eprintln!("milc plan: {e}");
-            return ExitCode::FAILURE;
+            let d = Diag::new("compute_plan", format!("{e}"))
+                .path(compiled.display().to_string());
+            return emit_diag(json, "plan", &d);
         }
     };
     if vs_lint {
@@ -2093,12 +2241,45 @@ fn cmd_plan(_args: &[String]) -> ExitCode {
     ExitCode::FAILURE
 }
 
-fn cmd_check(args: &[String]) -> ExitCode {
+fn cmd_check(args: &[String], json: bool) -> ExitCode {
     let Some(path) = args.first().map(PathBuf::from) else {
+        let d = Diag::new("args", "needs <pkg>").code("MISSING_ARG");
         eprintln!("milc check: needs <pkg>");
-        return ExitCode::from(2);
+        return emit_diag(json, "check", &d);
     };
+    // FORK(ane-stack): --json emits the verify report as a structured envelope
+    // so tests assert on errors, not on `Display` text.
     let r = mil_verify::verify_package(&path);
+    if json {
+        let errors: Vec<String> = r
+            .errors
+            .iter()
+            .map(|e| format!("\"{}\"", jesc(e)))
+            .collect();
+        let warnings: Vec<String> = r
+            .warnings
+            .iter()
+            .map(|w| format!("\"{}\"", jesc(w)))
+            .collect();
+        if r.is_ok() {
+            return emit_ok(
+                json,
+                "check",
+                &format!(
+                    "\"path\":\"{}\",\"errors\":[],\"warnings\":[{}]",
+                    jesc(&path.display().to_string()),
+                    warnings.join(",")
+                ),
+            );
+        }
+        println!(
+            "{{\"ok\":false,\"command\":\"check\",\"path\":\"{}\",\"errors\":[{}],\"warnings\":[{}]}}",
+            jesc(&path.display().to_string()),
+            errors.join(","),
+            warnings.join(",")
+        );
+        return ExitCode::FAILURE;
+    }
     println!("{r}");
     if r.is_ok() {
         ExitCode::SUCCESS

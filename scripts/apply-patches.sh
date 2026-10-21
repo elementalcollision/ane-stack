@@ -24,20 +24,26 @@ patches=("$root"/patches/[0-9]*.patch)
 mode="${1:-}"
 case "$mode" in
   --check)
-    [ -d "$vendor" ] || { echo "no vendored tree at $vendor" >&2; exit 1; }
+    # Verify the whole patch set applies, in order, to a PRISTINE clone. Testing
+    # each patch independently against the working tree is wrong for stacked
+    # patches (later patches assume earlier ones), which is exactly the case we
+    # have. See docs/evidence/0006.
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    git clone --quiet "$url" "$work/up"
+    (cd "$work/up" && git checkout --quiet "$sha" && rm -rf .git)
     fail=0
     for p in "${patches[@]}"; do
       echo "==> $(basename "$p")"
-      if patch -d "$vendor" -p1 --dry-run --silent -i "$p" >/dev/null 2>&1; then
-        echo "    would apply"
-      elif patch -d "$vendor" -p1 --dry-run --silent -R -i "$p" >/dev/null 2>&1; then
-        echo "    already applied"
+      if patch -d "$work/up" -p1 --forward --silent -i "$p"; then
+        echo "    applied"
       else
         echo "    CONFLICT"; fail=1
       fi
     done
     echo
-    [ $fail -eq 0 ] && echo "all patches OK" || echo "conflicts present"
+    [ $fail -eq 0 ] && echo "all patches apply to pristine upstream, in order" \
+                    || echo "conflicts present"
     exit $fail
     ;;
   --rebuild)

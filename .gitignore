@@ -4,3 +4,5 @@ target/
 *.compiled/
 *.rej
 *.orig
+.ori/
+.DS_Store

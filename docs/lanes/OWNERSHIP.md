@@ -10,9 +10,10 @@ on an unclaimed lane without claiming it.
 
 | Lane | Agent | Since | Active items |
 |---|---|---|---|
-| **L-TOOL** | dave (initiator) | 2026-10-21 | TOOL-4 (guard) → TOOL-2 → TOOL-3 |
+| **L-TOOL** | dave (initiator) | 2026-10-21 | TOOL-4 ✅ → TOOL-2 ✅ → TOOL-3 ✅ |
+| **L-IR** | another model | 2026-10-21 | IR-2 → IR-3 → IR-4 |
 
-Unclaimed: **L-IR · L-SCHED · L-RUN · L-PROBE · L-LINT · L-TEST**
+Unclaimed: **L-SCHED · L-RUN · L-PROBE · L-LINT · L-TEST**
 (L-TEST has veto authority over every lane's tests regardless of claim status.)
 
 ## L-TOOL — CLI, packaging, build hygiene

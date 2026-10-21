@@ -11,8 +11,9 @@ Status: `open` (carried) · `proposed` (PR sent) · `upstreamed` (droppable) · 
 | 0003 | `mil-verify-stateful-fixture` | conformance case `stateful-kv` encoded the same bug; corrected | open |
 | 0004 | `milc-run-shard-dispatch` | `milc run` sent **every** `.mlpackage` to the shard loader (case-insensitive `manifest.json` vs `Manifest.json`), so `milc run <pkg>` never worked on a plain package | open |
 | 0005 | `milc-run-mlmodelc` | `milc run <x.mlmodelc>` failed with `model.mlmodel: No such file` — compiled artifacts carry the spec as `model.mil` text, not protobuf. Detect the `.mlmodelc` and parse its `func main` signature instead | open |
+| 0006 | `milc-json-diagnostics` | no machine-readable failures — agents grepped stderr. Top-level `--json` / `MILC_JSON=1` emits a `{ok, command, ...}` envelope with `{stage, code, message, path}` errors for `check`/`run`/`plan` | open |
 
-All five apply cleanly to pristine upstream (`patch -p1 --dry-run` verified) and
+All six apply cleanly to pristine upstream (`patch -p1 --dry-run` verified) and
 are applied in order by `scripts/apply-patches.sh`.
 
 ## Evidence
@@ -20,12 +21,14 @@ are applied in order by `scripts/apply-patches.sh`.
 - 0001/0002/0003: `docs/evidence/0001-write-state-shape.md`
 - 0004: `docs/evidence/0004-milc-run-dispatch.md`
 - 0005: `docs/evidence/0005-milc-run-mlmodelc.md`
+- 0006: `docs/evidence/0006-milc-json-diagnostics.md`
 
 ## Test delta
 
 Upstream baseline for `-p mil_spec -p mil_lint -p mil_passes -p mil_verify`:
 all green. After patches: **all green, +2 tests** (`write_state_shape_mismatch_rejected`,
-`run_compiled_mlmodelc_directly`).
+`run_compiled_mlmodelc_directly`). `run_cli.rs` additionally carries the TOOL-3
+JSON-envelope assertions (4 tests).
 The two fixture corrections change *what* two existing tests assert (they now
 assert a legal program) — deliberately, because the previous assertion was the bug.
 

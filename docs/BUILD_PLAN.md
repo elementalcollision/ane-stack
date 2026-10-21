@@ -74,7 +74,9 @@ a prebuilt `.mlmodelc` (run only).
 Every error currently prints a stage string. Emit machine-readable JSON
 (`milc --json check|run|plan`) with `{stage, code, message, path}`, so lanes can
 assert on failures in tests instead of grepping stderr.
-*Accept:* a failing `milc` invocation under `--json` yields parseable JSON.
+*Accept:* a failing `milc` invocation under `--json` yields parseable JSON. ✅ **done**
+(patch 0006 + 4 run_cli tests; evidence `docs/evidence/0006-milc-json-diagnostics.md`.
+Top-level `--json` / `MILC_JSON=1`; success carries latency data; stderr stays human.)
 *Owner:* L-TOOL. **Effort:** S. **Needed by:** L-TEST.
 
 **TOOL-4 — Vendored-tree CI guard**
@@ -91,7 +93,7 @@ evidence `docs/evidence/0005-vendor-guard.md`. First act was catching a stray
 **IR-1 — `write_state` shape validation** ✅ *done*
 Patch 0001. Caught that two upstream fixtures had encoded the bug.
 
-**IR-2 — `slice_update` / incremental state write** ⭐ *highest IR value*
+**IR-2 — `slice_update` / incremental state write** ⭐ *highest IR value* — *wip (L-IR)*
 The IR has **no `slice_update`**, so a KV-cache append is inexpressible — the only
 legal state write is whole-shape. Every real decode loop needs "write row `pos`".
 The `Block` layer already supports it (`ane_lower` rebases `slice_update` for the
