@@ -23,3 +23,7 @@ path = "sched_corpus.rs"
 [[example]]
 name = "gen_big"
 path = "gen_big.rs"
+
+[[example]]
+name = "gen_ceiling"
+path = "gen_ceiling.rs"
