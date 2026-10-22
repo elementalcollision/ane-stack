@@ -1,5 +1,9 @@
 # Review of `HANDOFF-2025-10-22.md`
 
+> **Status (later on 2026-10-22):** acted on in [PR #1](https://github.com/elementalcollision/ane-stack/pull/1). The handoff is now `HANDOFF-2026-10-22.md`, and the spec and writeup were re-measured and rewritten; see the Corrections table in `docs/spec/ane-port-limits-h17.md`. Re-measurement also overturned two points this review accepted:
+> - "53 states" is not the cap. It is a 55-id BAR pool, and 54 states fit when the program has no plain input.
+> - "`0x9344` = states + plain inputs" was only a special case. `0x9344` = exposed states + max(1, min(in, out)).
+
 **Reviewed:** 2026-10-22, at HEAD `9c52422`, on Apple M5 Max running macOS 26.7.1 (25G241).
 **How:** Nine runners (2 Haiku 5.5, 7 Sonnet 5.5) checked each section of the handoff against the repo and against hardware. Their 131 raw findings were deduplicated to 40. Each batch of findings then went to two independent Sonnet 5.5 skeptics with different refutation lenses. Opus did the orchestration and this analysis, and re-ran every hardware claim marked **[re-run]** below.
 **Read-only:** nothing in the repo was changed or committed. All probes ran in the session scratchpad.
