@@ -2,6 +2,11 @@
 # gen_mix_ports.py <in> <out> — emit an ANE-eligible MIL program with <in> input
 # ports and <out> output ports, each y_i = add(x, x) passthrough. Used by the
 # port-limits probe (docs/spec/ane-port-limits-h17.spec).
+#
+# CAUTION: output i reads x{i % in}, so when in > out only the first `out` inputs
+# are referenced. `milc ane run` drops the dead ones (they do not count toward
+# the execution cap) while `validate`/`compile` count every DECLARED input.
+# Use gen_live_ports.py when every input must be live.
 import sys
 
 def main() -> None:

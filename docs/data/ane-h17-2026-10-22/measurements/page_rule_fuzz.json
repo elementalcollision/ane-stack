@@ -1,0 +1,5181 @@
+{
+ "predictions": {
+  "tag_3_7": "tags: 0x9361=1 0x9365=1",
+  "tag_2_16": "tags: 0x9360=1 0x9364=1",
+  "tag_1_1": "tags: 0x9261=2",
+  "tag_5_33": "tags: 0x9361=1 0x9365=1",
+  "tag_1_16": "tags: 0x9360=2",
+  "tag_7_1": "tags: 0x9261=1 0x9265=1",
+  "stride_4_3": {
+   "stride": 16,
+   "region": 3145728
+  },
+  "stride_4_6": {
+   "stride": 24,
+   "region": 6291456
+  },
+  "stride_4_12": {
+   "stride": 32,
+   "region": 12582912
+  },
+  "stride_4_15": {
+   "stride": 32,
+   "region": 15728640
+  },
+  "stride_4_100": {
+   "stride": 32,
+   "region": 104857600
+  },
+  "stride_4_1000": {
+   "stride": 32,
+   "region": 1048576000
+  },
+  "stride_2_7": {
+   "stride": 24,
+   "region": 7340032
+  },
+  "stout_2": "long=1 short=1 region=4194304",
+  "stout_7": "long=6 short=1 region=4194304",
+  "stout_30": "long=29 short=1 region=4194304",
+  "reads_6": {
+   "stride": 24,
+   "rowbits": 96
+  },
+  "reads_33": {
+   "stride": 32,
+   "rowbits": 528
+  }
+ },
+ "batches": {
+  "fuzz_add_n1_12": [
+   {
+    "shape": [
+     3,
+     171,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     93,
+     4,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     256,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     279,
+     4,
+     54
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     256,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     65,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     344,
+     1,
+     17
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     345,
+     1,
+     28
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     256,
+     1,
+     59
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     198,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     85,
+     4,
+     123
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     64,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     208,
+     8,
+     141
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     169,
+     4,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     126,
+     3,
+     83
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     399,
+     1,
+     155
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     178,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     319,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     248,
+     4,
+     8
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     282,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     16,
+     2,
+     126
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     201,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     320,
+     2,
+     79
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     287,
+     3,
+     110
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     258,
+     1,
+     11
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     100,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     110,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     217,
+     1,
+     74
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     356,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     57,
+     4,
+     31
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     376,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     275,
+     1,
+     31
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     136,
+     4,
+     49
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     150,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     262,
+     1,
+     31
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     143,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     64,
+     1,
+     176
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     265,
+     1,
+     126
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     105,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     193,
+     3,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     144,
+     2,
+     35
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     255,
+     1,
+     2
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     204,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     274,
+     4,
+     10
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     66,
+     4,
+     31
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     188,
+     1,
+     68
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     96,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     56,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     56,
+     1,
+     116
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     135,
+     2,
+     2
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     76,
+     4,
+     43
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     79,
+     4,
+     83
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     140,
+     1,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     310,
+     2,
+     148
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     98,
+     8,
+     41
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     337,
+     3,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     352,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     321,
+     8,
+     114
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     320,
+     2,
+     186
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     129,
+     1,
+     107
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   }
+  ],
+  "fuzz_add_n7_15": [
+   {
+    "shape": [
+     8,
+     72,
+     2,
+     41
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     272,
+     1,
+     125
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     256,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     42,
+     8,
+     16
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     128,
+     3,
+     33
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     162,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     336,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     282,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     364,
+     1,
+     90
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     283,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     164,
+     8,
+     25
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     24,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     384,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     66,
+     8,
+     36
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     315,
+     8,
+     104
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     20,
+     3,
+     5
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     51,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     117,
+     2,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     341,
+     2,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     138,
+     3,
+     54
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     272,
+     4,
+     124
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     298,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     64,
+     4,
+     125
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     83,
+     1,
+     14
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     241,
+     8,
+     108
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     142,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     4,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     173,
+     2,
+     76
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     77,
+     2,
+     30
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     365,
+     3,
+     118
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     198,
+     1,
+     41
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     104,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     36,
+     4,
+     117
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     243,
+     4,
+     27
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     256,
+     3,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     63,
+     1,
+     97
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     397,
+     1,
+     66
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     316,
+     4,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     100,
+     8,
+     116
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     138,
+     1,
+     97
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   }
+  ],
+  "fuzz_direct_11": [
+   {
+    "shape": [
+     8,
+     272,
+     1,
+     55
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     376,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     141,
+     1,
+     116
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     345,
+     8,
+     134
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     160,
+     4,
+     98
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     73,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     117,
+     4,
+     35
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     318,
+     4,
+     74
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     320,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     79,
+     2,
+     82
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     200,
+     4,
+     120
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     375,
+     3,
+     40
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     384,
+     1,
+     29
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     99,
+     8,
+     49
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     272,
+     1,
+     113
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     157,
+     1,
+     12
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     16,
+     8,
+     89
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     297,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     392,
+     8,
+     100
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     128,
+     1,
+     54
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     234,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     73,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     192,
+     4,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     201,
+     8,
+     21
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     188,
+     8,
+     80
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     362,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     192,
+     2,
+     36
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     370,
+     1,
+     58
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     73,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     142,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     88,
+     4,
+     93
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     32,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     360,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     247,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     288,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     360,
+     1,
+     71
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     96,
+     8,
+     36
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     35,
+     8,
+     43
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     336,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     95,
+     3,
+     17
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     32,
+     1,
+     164
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     144,
+     1,
+     9
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     294,
+     4,
+     109
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     316,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     224,
+     4,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     211,
+     2,
+     14
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     400,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     291,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     184,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     332,
+     3,
+     110
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     240,
+     1,
+     79
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     152,
+     3,
+     19
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     39,
+     3,
+     70
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     385,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     336,
+     2,
+     107
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     43,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     332,
+     1,
+     111
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     176,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     315,
+     1,
+     13
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     301,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     96,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     62,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     316,
+     4,
+     52
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     375,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     332,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     33,
+     2,
+     45
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     25,
+     1,
+     110
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     20,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     392,
+     4,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     159,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     85,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     158,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     34,
+     1,
+     83
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     262,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     138,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     169,
+     4,
+     17
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     352,
+     1,
+     49
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     111,
+     1,
+     10
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     152,
+     2,
+     80
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     105,
+     1,
+     29
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     384,
+     1,
+     1
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     287,
+     3,
+     66
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     376,
+     3,
+     115
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     35,
+     8,
+     107
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     320,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     269,
+     2,
+     130
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     280,
+     4,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     351,
+     1,
+     112
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     64,
+     1,
+     57
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     54,
+     3,
+     46
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     400,
+     1,
+     23
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     320,
+     8,
+     43
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     64,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     36,
+     4,
+     121
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     4,
+     8,
+     61
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     130,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     194,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     73,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     298,
+     4,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     215,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   }
+  ],
+  "fuzz_direct_n4_14": [
+   {
+    "shape": [
+     8,
+     152,
+     8,
+     28
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     261,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     262,
+     2,
+     102
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     217,
+     1,
+     14
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     130,
+     4,
+     55
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     338,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     176,
+     1,
+     27
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     254,
+     1,
+     65
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     120,
+     8,
+     24
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     90,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     32,
+     3,
+     26
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     196,
+     1,
+     155
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     368,
+     2,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     138,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     288,
+     1,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     242,
+     1,
+     25
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     207,
+     2,
+     47
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     338,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     242,
+     8,
+     110
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     203,
+     4,
+     68
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     204,
+     4,
+     49
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     340,
+     1,
+     20
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     232,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     352,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     258,
+     1,
+     26
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     340,
+     8,
+     116
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     58,
+     8,
+     15
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     99,
+     8,
+     51
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     152,
+     2,
+     77
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     28,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     384,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     140,
+     1,
+     55
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     116,
+     4,
+     113
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     127,
+     1,
+     110
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     136,
+     1,
+     114
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     71,
+     1,
+     151
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     368,
+     8,
+     84
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     105,
+     1,
+     2
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     285,
+     1,
+     46
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     77,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     256,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     273,
+     1,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     203,
+     8,
+     111
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     127,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     300,
+     4,
+     110
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     132,
+     1,
+     152
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     144,
+     3,
+     102
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     173,
+     4,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     128,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     309,
+     3,
+     45
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     2,
+     2,
+     6
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     85,
+     2,
+     51
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     332,
+     8,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     279,
+     4,
+     72
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     204,
+     1,
+     102
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     381,
+     4,
+     9
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     377,
+     1,
+     19
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     266,
+     3,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     170,
+     1,
+     73
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     282,
+     2,
+     79
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   }
+  ],
+  "fuzz_noupd_n1_13": [
+   {
+    "shape": [
+     16,
+     46,
+     4,
+     33
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     368,
+     1,
+     3
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     77,
+     8,
+     101
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     86,
+     1,
+     9
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     312,
+     2,
+     30
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     231,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     228,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     351,
+     1,
+     81
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     272,
+     1,
+     101
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     323,
+     2,
+     104
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     256,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     290,
+     1,
+     52
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     298,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     205,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     341,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     366,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     24,
+     1,
+     101
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     25,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     348,
+     1,
+     47
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     264,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     240,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     166,
+     2,
+     73
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     220,
+     4,
+     119
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     263,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     105,
+     8,
+     117
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     140,
+     1,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     192,
+     2,
+     119
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     49,
+     3,
+     4
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     199,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     280,
+     3,
+     103
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     199,
+     8,
+     38
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     271,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     192,
+     2,
+     11
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     304,
+     4,
+     93
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     288,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     5,
+     69,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     32,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     291,
+     4,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     112,
+     8,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     307,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     256,
+     2,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     304,
+     1,
+     9
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     328,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     390,
+     1,
+     105
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     34,
+     8,
+     118
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     281,
+     1,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     384,
+     1,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     329,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     384,
+     8,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     354,
+     3,
+     96
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     275,
+     4,
+     105
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     7,
+     334,
+     8,
+     5
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     400,
+     8,
+     16
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     8,
+     201,
+     4,
+     65
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     384,
+     4,
+     32
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     1,
+     173,
+     8,
+     87
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     2,
+     16,
+     8,
+     109
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     4,
+     361,
+     4,
+     64
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     16,
+     256,
+     4,
+     27
+    ],
+    "pred": "FAIL",
+    "obs": [
+     "FAIL",
+     "FAIL"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   },
+   {
+    "shape": [
+     3,
+     101,
+     1,
+     28
+    ],
+    "pred": "PASS",
+    "obs": [
+     "PASS",
+     "PASS"
+    ],
+    "hit": true,
+    "flip": false,
+    "tail": ""
+   }
+  ]
+ }
+}

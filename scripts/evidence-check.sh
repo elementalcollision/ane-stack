@@ -3,7 +3,7 @@
 # still hold. This is TEST-1: evidence that cannot drift from the code, because
 # it is re-run, not re-read.
 #
-#   ./scripts/evidence-check.sh --all              # every *.spec in docs/evidence/
+#   ./scripts/evidence-check.sh --all              # every *.spec in docs/evidence/ and docs/spec/
 #   ./scripts/evidence-check.sh <spec> [spec...]   # specific specs
 #   ./scripts/evidence-check.sh --list             # list specs and their items
 #
@@ -63,7 +63,7 @@ run_spec() {
                 ;;
             run)
                 if $skip; then continue; fi
-                last_out="$(bash -c "$rest" 2>&1)"; last_rc=$?
+                last_out="$(bash -c "$rest" 2>&1 </dev/null)"; last_rc=$?
                 ;;
             want_rc)
                 if $skip; then continue; fi
@@ -96,6 +96,13 @@ run_spec() {
                     item_fail=1
                 fi
                 ;;
+            require_hw)
+                # hardware gate: probe must be cheap and non-destructive; a failing probe SKIPs
+                if $skip; then continue; fi
+                if ! bash -c "$rest" >/dev/null 2>&1; then
+                    missing+=("hardware"); skip=true
+                fi
+                ;;
             setup)
                 # Rebuild a prerequisite artifact so evidence is self-contained
                 # and never depends on something that lived only in /tmp once.
@@ -121,15 +128,15 @@ run_spec() {
         esac
     done < "$spec"
 
-    if $skip; then
+    if [ "$item_fail" -ne 0 ]; then
+        fail_count=$((fail_count+1))   # FAIL lines were already printed; FAIL beats SKIP
+    elif $skip; then
         echo "  ${YEL}SKIP${RST} $name: missing tool(s): ${missing[*]}"
         skip_count=$((skip_count+1))
         $require_all && fail_count=$((fail_count+1))
-    elif [ "$item_fail" -eq 0 ]; then
+    else
         echo "  ${GRN}PASS${RST} $name"
         pass_count=$((pass_count+1))
-    else
-        fail_count=$((fail_count+1))
     fi
 }
 
@@ -137,15 +144,17 @@ run_spec() {
 mode="${1:-}"
 case "$mode" in
     --list)
-        ls "$root"/docs/evidence/*.spec 2>/dev/null | while read -r s; do basename "$s"; done
+        for s in "$root"/docs/evidence/*.spec "$root"/docs/spec/*.spec; do
+            [ -f "$s" ] && echo "${s#"$root"/}"
+        done
         exit 0
         ;;
     --all)
         shift
         [ "${1:-}" = "--require-all" ] && require_all=true
         shopt -s nullglob
-        specs=("$root"/docs/evidence/*.spec)
-        [ ${#specs[@]} -gt 0 ] || { echo "no specs found in docs/evidence/" >&2; exit 1; }
+        specs=("$root"/docs/evidence/*.spec "$root"/docs/spec/*.spec)
+        [ ${#specs[@]} -gt 0 ] || { echo "no specs found in docs/evidence/ or docs/spec/" >&2; exit 1; }
         ;;
     --require-all)
         require_all=true; shift
@@ -160,6 +169,7 @@ case "$mode" in
         ;;
 esac
 
+[ ${#specs[@]} -gt 0 ] || { echo "no specs selected" >&2; exit 2; }
 echo "evidence-check — re-running $(echo "${specs[@]}" | wc -w | tr -d ' ') spec(s)"
 for spec in "${specs[@]}"; do
     [ -f "$spec" ] || { echo "  ${RED}FAIL${RST} no such spec: $spec"; fail_count=$((fail_count+1)); continue; }

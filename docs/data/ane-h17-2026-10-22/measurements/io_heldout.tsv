@@ -1,0 +1,156 @@
+sanity_mulzero	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 249.916µs	
+sanity_mulzero_val	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0	
+live_40_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 705.959µs | rc=0 step 0: 783.167µs	
+live_40_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+live_90_37	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 637.375µs | rc=0 step 0: 624.291µs	
+live_90_38	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+live_10_117	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 733.75µs | rc=0 step 0: 734.959µs	
+live_10_118	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+live_120_7	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 594.625µs | rc=0 step 0: 659.459µs	
+live_120_8	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+wide32768_50_77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 37.202ms | rc=0 step 0: 43.200291ms	
+wide32768_50_78	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+mix70_40_unref_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 687.875µs | rc=0 step 0: 695.958µs	
+mix70_40_unref_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+mix70_40_deadop_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 712.292µs | rc=0 step 0: 692.833µs	
+mix70_40_deadop_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+mix70_40_deadchain_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 721.459µs | rc=0 step 0: 724.834µs	
+mix70_40_deadchain_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+mulzero_30p10z_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 722.5µs | rc=0 step 0: 675.708µs	
+mulzero_30p10z_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+dupmix_40_87_x63	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 662.458µs | rc=0 step 0: 684.458µs	
+dupmix_40_88_x63	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+mix60_25_deadop_102	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 763.292µs | rc=0 step 0: 722.709µs	
+mix60_25_deadop_103	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+fe_mix_h17_60_195	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mix_h17_60_196	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+fe_mix_h17_200_55	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mix_h17_200_56	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+fe_mix_h16g_60_195	validate	h16g	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mix_h16g_60_196	validate	h16g	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+fe_mix_h16g_200_55	validate	h16g	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mix_h16g_200_56	validate	h16g	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+fe_mixc_h17_60_195	compile	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mixc_h17_60_196	compile	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+fe_mixc_h17_200_55	compile	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+fe_mixc_h17_200_56	compile	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+st_a_N10_in5_add_102	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 787.292µs | rc=0 step 0: 759.709µs	
+st_a_N10_in5_add_103	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+st_b_N20_noupd_in1_106	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 780.208µs | rc=0 step 0: 851.208µs	
+st_b_N20_noupd_in1_107	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+st_c_N100_exp_h17_54	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+st_c_N100_exp_h17_55	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+st_c_N100_exp_h16g_54	validate	h16g	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+st_c_N100_exp_h16g_55	validate	h16g	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+st_c_N100_noupd_h17_154	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	
+st_c_N100_noupd_h17_155	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	
+san_rw_exp	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 235.583µs	
+san_rw_noexp	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 201.083µs	
+san_ro_use	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 207.167µs	
+san_ro_dead	run	h17	pred=ok	obs=fail	**CONTRADICTED**	rc=1 -	
+san_wo	run	h17	pred=ok	obs=fail	**CONTRADICTED**	rc=1 ANECCompile() FAILED	
+san_unref	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 212.875µs	
+san_updonly	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 227.334µs	
+ex_partial_N30_K7_in3_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 916.458µs | rc=0 step 0: 907.708µs	
+ex_partial_N30_K7_in3_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+ex_updonly_in_N3_noupd_122	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 1.033208ms | rc=0 step 0: 733.875µs	pred by 'all declared live' count; alt model (x1 uncounted) predicts ok at 123
+ex_updonly_in_N3_noupd_123	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	pred by 'all declared live' count; alt model (x1 uncounted) predicts ok at 123
+dead_unref10_rw10_106	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 749.958µs | rc=0 step 0: 904.25µs	doc letter: each state<> param = 1 port
+dead_unref10_rw10_107	run	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 step 0: 781.125µs | rc=0 step 0: 767.834µs	doc letter: each state<> param = 1 port
+dead_ro_use10_rw10_105	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	ro_use adds 10 outputs
+dead_ro_use10_rw10_106	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	ro_use adds 10 outputs
+ctl_x1unref_N3_noupd_123	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 789.125µs | rc=0 step 0: 755.834µs	x1 declared but unreferenced
+ctl_x1unref_N3_noupd_124	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	x1 declared but unreferenced
+unrefst10_rw10_116	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 748.375µs | rc=0 step 0: 812.917µs	unref states assumed free (observed model)
+unrefst10_rw10_117	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	unref states assumed free (observed model)
+rouse10_rw10_96	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 863.5µs | rc=0 step 0: 1.407459ms	ro_use state = 1 in port + 1 out port (read value returned)
+rouse10_rw10_97	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	ro_use state = 1 in port + 1 out port (read value returned)
+fe_unrefst10_rw10_234	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	doc letter: unref states count at frontend
+fe_unrefst10_rw10_235	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	doc letter: unref states count at frontend
+fe_unrefst10_rw10_244	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	doc letter: unref states count at frontend
+fe_unrefst10_rw10_245	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	doc letter: unref states count at frontend
+pass_in40_p10_c77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 714.084µs | rc=0 step 0: 652.667µs	passthrough output counts as an out port; input counted once
+pass_in40_p10_c78	run	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 step 0: 663.708µs | rc=0 step 0: 673.125µs	passthrough output counts as an out port; input counted once
+dupupd_N10_in5_102	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 821.708µs | rc=0 step 0: 823.5µs	upd0 listed 8x -> one port
+dupupd_N10_in5_103	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	upd0 listed 8x -> one port
+stshape_8_16_1_32_N15_in3_94	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 656.375µs | rc=0 step 0: 917.958µs	
+stshape_8_16_1_32_N15_in3_95	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+st_N10_in40_add_67	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 726.041µs | rc=0 step 0: 847.084µs	
+st_N10_in40_add_68	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+st_N33_noupd_in30_add_64	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 953.875µs | rc=0 step 0: 928.333µs	
+st_N33_noupd_in30_add_65	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	
+run255_live_60_195	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	expect: 255 -> status=0x2 ; 256 -> ANECCompile() FAILED
+run255_live_60_196	run	h17	pred=fail	obs=fail	MATCH	rc=1 ANECCompile() FAILED | rc=1 ANECCompile() FAILED	expect: 255 -> status=0x2 ; 256 -> ANECCompile() FAILED
+run255_live_129_126	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	expect: 255 -> status=0x2 ; 256 -> ANECCompile() FAILED
+run255_live_130_126	run	h17	pred=fail	obs=fail	MATCH	rc=1 ANECCompile() FAILED | rc=1 ANECCompile() FAILED	expect: 255 -> status=0x2 ; 256 -> ANECCompile() FAILED
+run_mix_200_100	run	h17	pred=ok	obs=fail	**CONTRADICTED**	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	declared 300 > 255 but only 100 live: pruned
+run_mix_200_127	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	live 127 + 127 = 254 exec fail; declared 327
+dv_unref_validate_70_40_50	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_unref_compile_70_40_50	compile	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_deadop_validate_70_40_50	validate	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_deadop_compile_70_40_50	compile	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_deadchain_validate_70_40_50	validate	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_deadchain_compile_70_40_50	compile	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: input only used by dead op -> CompilationFailure on validate/compile (strong)
+dv_deadop_run_70_40_50	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 554.917µs | rc=0 step 0: 577.584µs	run path prunes
+pass_in40_p10_c87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 862.791µs | rc=0 step 0: 708.792µs	alt model: passthrough out = 0 extra ports
+pass_in40_p10_c88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	alt model: passthrough out = 0 extra ports
+pass_in40_p40_c97	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	all 40 inputs returned directly; alt model: 0 extra ports
+pass_in40_p40_c98	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	all 40 inputs returned directly; alt model: 0 extra ports
+runmix_200_60	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 634.625µs | rc=0 step 0: 676.667µs	effective live_in=min(in,out)
+runmix_200_64	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	effective live_in=min(in,out)
+runmix_150_63	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 714.541µs | rc=0 step 0: 677.042µs	effective live_in=min(in,out)
+runmix_150_64	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	effective live_in=min(in,out)
+passonly_l10_p30_c117	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passonly_l10_p30_c118	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passonly_l10_p30_c87	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passonly_l10_p30_c88	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passonly_l10_p30_c57	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passonly_l10_p30_c58	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	bisect: free->ok<=117; in-only->ok<=87; in+out->ok<=57
+passall_l40_pl40_c87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 757.291µs | rc=0 step 0: 696.791µs	all 40 live inputs also returned directly; passthrough outputs free?
+passall_l40_pl40_c88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	all 40 live inputs also returned directly; passthrough outputs free?
+passfe_val_l40_pl40_c175	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	frontend count incl. passthrough outputs? (doc: declared_in+out)
+passfe_val_l40_pl40_c176	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	frontend count incl. passthrough outputs? (doc: declared_in+out)
+passfe_val2_l40_pl40_c215	validate	h17	pred=ok	obs=fail	**CONTRADICTED**	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	alt: passthrough outputs free at frontend too
+passfe_val2_l40_pl40_c216	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	alt: passthrough outputs free at frontend too
+updonly_N20_noupd_105	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 835.709µs | rc=0 step 0: 821.542µs	x1 feeds only non-returned state writes; counted-as-live model
+updonly_N20_noupd_106	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	x1 feeds only non-returned state writes; counted-as-live model
+ctl_N20_noupd_x1unref_106	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 831.417µs | rc=0 step 0: 821.583µs	control: x1 unreferenced
+ctl_N20_noupd_x1unref_107	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	control: x1 unreferenced
+stwide_4_2048_1_32_N10_in5_102	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 2.361458ms | rc=0 step 0: 2.317542ms	wide [1,2048,1,32] ports and states
+stwide_4_2048_1_32_N10_in5_103	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	wide [1,2048,1,32] ports and states
+stc_N40_exp_h17_174	compile	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	compile path with states
+stc_N40_exp_h17_175	compile	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	compile path with states
+stc_N40_exp_h16g_174	compile	h16g	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	compile path with states
+stc_N40_exp_h16g_175	compile	h16g	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	compile path with states
+fe_comb_N100_exp_in30dead_25	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	declared inputs incl dead + states + exposed + out
+fe_comb_N100_exp_in30dead_26	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	declared inputs incl dead + states + exposed + out
+mixedw_in40_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 21.264833ms | rc=0 step 0: 21.885292ms	alternating C=32768/C=4 ports
+mixedw_in40_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	alternating C=32768/C=4 ports
+fp32_in40_87	run	h17	pred=ok	obs=fail	**CONTRADICTED**	rc=1 - | rc=1 -	INFO: fp32 ports unmeasured by doc
+fp32_in40_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	INFO: fp32 ports unmeasured by doc
+rank3_in40_87	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 724.292µs | rc=0 step 0: 725.042µs	INFO: rank-3 ports unmeasured by doc
+rank3_in40_88	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	INFO: rank-3 ports unmeasured by doc
+zeroout_validate	validate	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: validate CompilationFailure; compile emits artifact; does not run
+zeroout_compile	compile	h17	pred=fail	obs=fail	MATCH	rc=1 CompilationFailure | rc=1 CompilationFailure	doc: validate CompilationFailure; compile emits artifact; does not run
+zeroout_run	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	doc: validate CompilationFailure; compile emits artifact; does not run
+zeroout_states2_validate	validate	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	2 states, noupd, zero plain outputs
+zeroout_states2_compile	compile	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	2 states, noupd, zero plain outputs
+zeroout_states2_run	run	h17	pred=fail	obs=fail	MATCH	rc=1 - | rc=1 -	2 states, noupd, zero plain outputs
+zeroout_states2_in0_validate	validate	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	2 states, in=0, noupd, zero outputs
+zeroout_states2_in0_compile	compile	h17	pred=fail	obs=ok	**CONTRADICTED**	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	2 states, in=0, noupd, zero outputs
+alias_identity_in40_a10_c77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 686.042µs | rc=0 step 0: 734.541µs	identity outputs of live inputs; doc law: each is a unique output
+alias_identity_in40_a10_c78	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	identity outputs of live inputs; doc law: each is a unique output
+alias_reshape_in40_a10_c77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 676.542µs | rc=0 step 0: 730.958µs	reshape outputs of live inputs; doc law: each is a unique output
+alias_reshape_in40_a10_c78	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	reshape outputs of live inputs; doc law: each is a unique output
+alias_sigmoid_in40_a10_c77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 671.625µs | rc=0 step 0: 741.208µs	sigmoid outputs of live inputs; doc law: each is a unique output
+alias_sigmoid_in40_a10_c78	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	sigmoid outputs of live inputs; doc law: each is a unique output
+alias_relu_in40_a10_c77	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 762.208µs | rc=0 step 0: 703.958µs	relu outputs of live inputs; doc law: each is a unique output
+alias_relu_in40_a10_c78	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	relu outputs of live inputs; doc law: each is a unique output
+fe_states_N126_exp	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	doc: N<=126 validates with all updates returned
+fe_states_N127_exp	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	doc: N<=126 validates with all updates returned
+fe_states_N253_noupd	validate	h17	pred=ok	obs=ok	MATCH	rc=0 status=0x0 rc=0 | rc=0 status=0x0 rc=0	noupd
+fe_states_N254_noupd	validate	h17	pred=fail	obs=fail	MATCH	rc=1 MaxLiveInLiveOutExceeded | rc=1 MaxLiveInLiveOutExceeded	noupd
+val_pass_small	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 187.292µs	
+val_alias_small	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 200.833µs	
+composite_95	run	h17	pred=ok	obs=ok	MATCH	rc=0 step 0: 799.541µs | rc=0 step 0: 778.083µs	corrected model: live_in 16 (x15 via state write), 12 states (3 unref free), K=4
+composite_96	run	h17	pred=fail	obs=fail	MATCH	rc=1 status=0x2 : statusType=0x9: Program Inference error | rc=1 status=0x2 : statusType=0x9: Program Inference error	corrected model: live_in 16 (x15 via state write), 12 states (3 unref free), K=4

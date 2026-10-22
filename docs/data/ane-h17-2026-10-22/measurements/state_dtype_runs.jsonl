@@ -1,0 +1,44 @@
+{"dtype": "fp16", "states": 53, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py fp16 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.140041ms"}
+{"dtype": "fp16", "states": 53, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py fp16 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.105041ms"}
+{"dtype": "fp16", "states": 54, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py fp16 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "fp16", "states": 54, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py fp16 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "fp16", "states": 54, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py fp16 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.149875ms"}
+{"dtype": "fp16", "states": 54, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py fp16 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.14825ms"}
+{"dtype": "fp16", "states": 55, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py fp16 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "fp16", "states": 55, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py fp16 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int16", "states": 53, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py int16 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.271417ms"}
+{"dtype": "int16", "states": 53, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py int16 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.421667ms"}
+{"dtype": "int16", "states": 54, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py int16 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int16", "states": 54, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py int16 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int16", "states": 54, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py int16 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.167917ms"}
+{"dtype": "int16", "states": 54, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py int16 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.19025ms"}
+{"dtype": "int16", "states": 55, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py int16 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int16", "states": 55, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py int16 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int8", "states": 53, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py int8 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.162375ms"}
+{"dtype": "int8", "states": 53, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py int8 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.158792ms"}
+{"dtype": "int8", "states": 54, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py int8 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int8", "states": 54, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py int8 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int8", "states": 54, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py int8 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.180333ms"}
+{"dtype": "int8", "states": 54, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py int8 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.206ms"}
+{"dtype": "int8", "states": 55, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py int8 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "int8", "states": 55, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py int8 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "uint8", "states": 53, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py uint8 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.123833ms"}
+{"dtype": "uint8", "states": 53, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py uint8 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.11325ms"}
+{"dtype": "uint8", "states": 54, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py uint8 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "uint8", "states": 54, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py uint8 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "uint8", "states": 54, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py uint8 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.165458ms"}
+{"dtype": "uint8", "states": 54, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py uint8 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.270167ms"}
+{"dtype": "uint8", "states": 55, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py uint8 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "uint8", "states": 55, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py uint8 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "bool", "states": 53, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py bool 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.170541ms"}
+{"dtype": "bool", "states": 53, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py bool 53", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.173917ms"}
+{"dtype": "bool", "states": 54, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py bool 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "bool", "states": 54, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py bool 54", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "bool", "states": 54, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py bool 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.175917ms"}
+{"dtype": "bool", "states": 54, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py bool 54 noin", "compile_rc": 0, "compile": "status=0x0 rc=0", "run_rc": 0, "run": "step 0: 1.225542ms"}
+{"dtype": "bool", "states": 55, "plain_input": false, "rep": 1, "gen": "scripts/gen_state_dtype.py bool 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "bool", "states": 55, "plain_input": false, "rep": 2, "gen": "scripts/gen_state_dtype.py bool 55 noin", "compile_rc": 1, "compile": "unable to allocate free BAR"}
+{"dtype": "fp32", "states": 1, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py fp32 1", "compile_rc": 1, "compile": "CompilationFailure"}
+{"dtype": "fp32", "states": 1, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py fp32 1", "compile_rc": 1, "compile": "CompilationFailure"}
+{"dtype": "int32", "states": 1, "plain_input": true, "rep": 1, "gen": "scripts/gen_state_dtype.py int32 1", "compile_rc": 1, "compile": "InvalidMILProgram"}
+{"dtype": "int32", "states": 1, "plain_input": true, "rep": 2, "gen": "scripts/gen_state_dtype.py int32 1", "compile_rc": 1, "compile": "InvalidMILProgram"}
