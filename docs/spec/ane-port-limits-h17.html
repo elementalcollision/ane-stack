@@ -99,8 +99,8 @@ re-measured 2026-10-22 and re-evaluated the same day. Every number below is asse
   additionally need its declared ports to fit in <b>255</b>. Every <span class="mono">state&lt;&gt;</span> the program uses costs one port, and
   each returned update costs one more. Separately, each state surface owns one of the <b>55</b> BAR ids. In the packed layout
   (more than 55 sections) all non-state io shares at most two segments, data and const. So
-  <span class="mono">N_max = 55 − [any output] − [any plain input]</span>, for the asserted shapes, for fp16/int8/int16 states
-  (uint8 and bool <span class="tag warn">runner</span>), with inline conv weights and with LUT ops. Inside the compiled HWX, every
+  <span class="mono">N_max = 55 − [any output] − [any plain input]</span>, for the asserted shapes, for fp16/int8 states
+  (int16, uint8 and bool: <span class="tag warn">dataset</span>, <span class="mono">docs/data/…/state_dtype_runs.jsonl</span>), with inline conv weights and with LUT ops. Inside the compiled HWX, every
   task block ends with a flat trailer: 12-byte buffer bindings, whose slot word is a BAR ordinal or a special word below
   <span class="mono">0x2300</span>, then 8-byte records.
 </div>

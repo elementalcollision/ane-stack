@@ -34,6 +34,7 @@
 | Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_block_trailers.py` (block framing and trailers), `decode_copy_records.py`, `decode_copy_words.py` (word-level copy-record view), `state_exec_predict.py` |
 | Method | Four hardware runners re-measured each law family (the io runner alone made 3,886 `milc` calls; the others compiled ~900, ~1,300 and ~1,900 artifacts). Every boundary was run at least twice with 0 flips; the ANE may have been shared between runners. The decisive points were re-run by the orchestrator. A second round tested held-out points against this text (the corrections are listed at the end). |
 | Spec | 102 probes, 219 assertions, PASS in ~20 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
+| Datapoints | `docs/data/ane-h17-2026-10-22/`: the spec as structured JSON (CI drift-checked), the runners' raw measurement logs (3,908 io-call rows, 2,281 state-cap rows, held-out batches, copy-record and trailer sweeps, a 44-row state-dtype table), the runner-only generators, and the review/claim audit trail; scrubbed of private paths and host details |
 | Date | 2026-10-22 |
 
 Reading a run result:
@@ -107,9 +108,10 @@ Each row was bisected. A dense 2-D sweep then checked (IN, 127−IN) PASS and
 round added held-out checks at (40, 87/88), (90, 37/38), (10, 117/118) and
 (120, 7/8), and a mixed-liveness case; all held.
 
-**Domain.** fp16 rank-4 ports, one `main` function, `milc ane run`. **Not
-measured:** fp32/int32 ports, rank ≠ 4, multi-function programs, the CoreML
-lane, M4 silicon.
+**Domain.** fp16 rank-4 ports, one `main` function, `milc ane run`. Rank 3 was
+spot-checked at (40, 87/88) and holds. **Not measured:** fp32/int32 ports (one
+fp32-port program failed to run), other ranks, multi-function programs, the
+CoreML lane, M4 silicon.
 
 **Where the old "floor at 63" came from.** `gen_mix_ports.py` makes output `i`
 read `x{i % in}`, so with `in > out` only the first `out` inputs are referenced,
@@ -294,10 +296,15 @@ else against the segment table (`format_ok=1`). `bars` counts the referenced
 - Every block ends with a **flat** descriptor trailer
   `[9344 12B] [934a 12B]* [9442 12B] [1340 8B] [1341 8B] [1440 8B]` (any subset,
   in this order). The 8-byte members are `[tag u16][0x2200][flags u32]`.
-- Nothing is embedded inside `0x9344` or `0x9361`. No trailer tag occurs outside a
-  trailer, except where a state dimension equals a tag value: that value then
+- Nothing is embedded inside `0x9344` or `0x9361`. In `gen_states`-shaped programs
+  (plain-input or self-add), no trailer tag occurs outside a trailer, except where
+  a state dimension equals a tag value: that value then
   appears as a header u16, and `decode_block_trailers.py` reports `chain_ok=0`.
   `count_desc_records.py`'s raw u16 scan would also count it *(runner)*.
+- **Open:** in multi-input add-chain programs (`gen_states_nd … add` with ≥ 5
+  inputs), the raw `0x934a`/`0x1341` counts exceed what the trailer parser
+  attributes to trailers. These programs emit extra source records that are not
+  yet decoded *(runner census, dataset `trailer_census_*.json`)*.
 - In `gen_states 53 1 1` there are 107 blocks:
   - one full trailer (block 0, the plain-output add task), with 7 members on h17
     (two `0x934a`) and 6 on h16g
@@ -342,7 +349,9 @@ outside the fan-out regime):**
 
 **`0x934a` (established).** One record per binary-add task whose operands are the
 same tensor: 2 per task on h17, 1 on h16g. `gen_states 53 32 32` gives 64 vs 32.
-Distinct-operand elementwise ops fuse into one task per program *(tentative)*.
+In a single distinct-operand elementwise chain the outputs fuse into one task
+*(tentative)*. Multi-input add chains instead show about 2 per add on h17
+*(runner census; open)*.
 Unary ops emit none *(strong, runner)*.
 
 **Fan-out regime (tentative; fitted at in = 1).** When one live input feeds about
@@ -391,7 +400,8 @@ records. The cause is unknown; other special values may exist.
   state to its output port. There is one per **returned** update, and none in a
   noupd program (asserted).
 
-**Header (strong).** All fields are LE u32 at 2-byte alignment, at offsets from
+**Header (strong; one open exception: at `[1000,4096]`, an 8 MB state, the dim0
+field reads 500).** All fields are LE u32 at 2-byte alignment, at offsets from
 the tag: `+0x02` dim3, `+0x06` dim2, then dim1 (if flagged), then dim0 (if flagged),
 then the constant `0x14000`, then dim2 again. The stride word is `0x0a` past
 `0x14000` (that is `+0x1c` in `0x9365`).
@@ -426,7 +436,8 @@ The old law `min(2·dim1 + 8, 32)` agrees only at dim1 = 4, 8 and ≥ 12.
   update-row, and update-rows with dim2 > 1, decode as `form=other`.
 
 **Word-level fields (established; `decode_copy_words.py`, offsets from the `0x1041`
-marker so they hold for every tag; 328/328 state-out records fit).**
+marker so they hold for every tag; 328/328 state-out records with dim0 ≠ 1 and
+dim1 ≠ 1 fit, of 329 decoded).**
 
 | field | value | where (in `0x9365`) |
 |---|---|---|
