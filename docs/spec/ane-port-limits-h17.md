@@ -135,6 +135,34 @@ proof:
 **state-descriptor table** (boundary 53), not the segment table. Io and total
 segments are irrelevant to it.
 
+### The descriptor economy (what `ZinBarIdManager` allocates)
+
+Going one level below the section table into the `__text` instruction stream:
+each `state<>` compiles to a fixed set of descriptor records, identifiable by
+their `0x93xx` family tags. Counting them across state counts:
+
+| record tag | 0 states | 1 state | 2 states | 53 states | scaling |
+|---|---|---|---|---|---|
+| `0x9344` (descriptor-list slot) | 0 | 2 | 3 | 54 | **N + 1** |
+| `0x9361` (state-copy) | 0 | 1 | 2 | 53 | **N** |
+| `0x9365` (state-copy) | 0 | 1 | 2 | 53 | **N** |
+| `0x9342`, `0x935a`, `0x934a` | fixed | fixed | fixed | fixed | constant |
+
+So each `state<>` costs **one `0x9344` descriptor-list slot** (plus one extra
+header slot — the +1 — present only when at least one state exists), and the two
+`0x9361`/`0x9365` state-copy records are exactly the 2-per-state seen in the
+`__data` segment counts.
+
+**The BAR table holds 54 `0x9344` descriptor-list slots.** 53 states consume 53
+slots + 1 header = 54, which compiles; a 54th state would need a 55th slot and
+fails with `unable to allocate free BAR`. This is the precise location of the 53
+budget: the `ZinBarIdManager` descriptor table, capacity **54 slots**.
+
+The slot-record body (second word, e.g. `0x2400` / `0x2300`) is an encoded
+descriptor field whose exact bit layout is **not yet decoded** — the *count* and
+the *cap* are proven; the per-slot encoding is the remaining unknown (see Open
+questions).
+
 Probed by varying one structural knob at a time on the working rsw form:
 
 | knob varied | boundary moves? | conclusion |
@@ -200,13 +228,13 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    Finding 2's 53-state BAR table are *separate* unknowns in the same territory.
    `ZinBarIdManager` names the state one (a descriptor allocator); the io one is
    unlocalized.
-2. **Is 53 a table size or a derived limit?** **Resolved structurally.** The
-   cap is a raw state **count** — 53 admitted, 54 rejected — independent of io,
-   consts, stripe width, and total segment count (154 io-heavy segments pass;
-   109 state-heavy segments fail). Each `state<>` costs 2 Mach-O `__data`
-   segments. What is NOT yet localized: *why* 53 — the table is a descriptor
-   allocator (`ZinBarIdManager`), and 53 is not a power of two, so it is likely
-   a fixed-size table with a small reserved overhead whose exact composition the
-   Mach-O layout does not by itself reveal.
+2. **Is 53 a table size or a derived limit?** **Resolved.** The cap is a raw
+   state **count** on the `ZinBarIdManager` descriptor table, capacity **54
+   `0x9344` slots**: 53 states + 1 header slot = 54 (compiles); a 54th state
+   needs a 55th slot (fails). Each `state<>` costs 2 Mach-O `__data` segments
+   (the `0x9361`/`0x9365` state-copy pair) + 1 descriptor-list slot. What is NOT
+   yet decoded: the per-slot record encoding (the `0x9344` body's second word,
+   e.g. `0x2400`/`0x2300`) — the count and cap are proven, the slot-field layout
+   is the remaining unknown.
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

@@ -8,6 +8,7 @@ require_cmd  python3
 require_file scripts/gen_mix_ports.py
 require_file scripts/gen_states.py
 require_file scripts/gen_states_width.py
+require_file scripts/count_desc_records.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -77,3 +78,12 @@ want_out  status=0x0 rc=0
 
 run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_m54.mil && rm -rf /tmp/pl_m54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_m54.mil -o /tmp/pl_m54c --arch h17 2>&1
 want_out  unable to allocate free BAR
+
+# --- descriptor economy: 0x9344 record count is N+1, capped at 54 ---
+# a 1-state program has exactly 2 descriptor-list records (1 state + 1 header)
+run  python3 scripts/gen_states.py 1 1 1 > /tmp/pl_d1.mil && rm -rf /tmp/pl_d1c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d1.mil -o /tmp/pl_d1c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_d1c/pl_d1.macho
+want_out  0x9344 records: 2
+
+# a 53-state program has exactly 54 records (53 states + 1 header = the table cap)
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_d53.mil && rm -rf /tmp/pl_d53c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d53.mil -o /tmp/pl_d53c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_d53c/pl_d53.macho
+want_out  0x9344 records: 54
