@@ -17,12 +17,13 @@ def text_file_range(d: bytes):
                 for s in range(nsects):
                     so = lc + 72 + s * 80
                     sect = d[so : so + 16].split(b"\0")[0].decode("latin1")
-                    size = struct.unpack_from("<Q", d, so + 32)[0]
-                    off = struct.unpack_from("<I", d, so + 40)[0]
+                    # section_64: sectname[16] segname[16] addr@32 size@40 offset@48
+                    size = struct.unpack_from("<Q", d, so + 40)[0]
+                    off = struct.unpack_from("<I", d, so + 48)[0]
                     if sect == "__text":
                         return off, off + size
         lc += cmdsz
-    return 0x50C0, len(d)
+    raise SystemExit("no __TEXT.__text section")
 
 def main() -> None:
     d = open(sys.argv[1], "rb").read()
