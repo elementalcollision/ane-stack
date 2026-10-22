@@ -153,8 +153,23 @@ Concrete, ordered, cheapest first:
    **LOAD_OK**, so no size cliff has been seen — but nothing above 320 ops
    exists to test, so that is an absence of evidence, stated as such.
 
-   **This item is now blocked on:** getting `ANECCompile` (or
-   `milc convert --shard N`) past ~320 ops.
+   **RESOLVED (2026-10-22).** The blocker was a probe artefact, not a toolchain
+   limit. See `docs/evidence/A5-anecompile-ceiling-is-ports-not-ops.md` and
+   `docs/evidence/A5-scale-deploy-passes.md`: the earlier generator raised op
+   count and **independent-`state<>`-port** count together, so its failure at
+   320 ops could not distinguish them. Measured separately, the binding
+   resource is **independent inout ports (~52)**, not ops, bytes, or state rows.
+
+   In the shape `milc convert --shard N` actually emits — **one packed `kv`
+   state per shard** (`builder.rs::build_range`, `kv_shape` has `(le-ls)*2`
+   rows) — the port ceiling does not bind. A **16384-op, 4.5 MB stateful
+   artifact** compiles for h16g **and deploys on 27.0** (`LOAD_OK`), which is
+   5× the >3.2k-op bar this item named. **The scale caveat falls away in that
+   shape.**
+
+   **Still caveated:** synthetic weights, one shard, no `execute` on the large
+   artifact, n=1 OS/host. A real `qwen/llama` checkpoint remains the confirming
+   test and none is available on this Mac.
 2. **Why H16** — diff the accepted vs rejected image headers, or check against a
    non-Apple-compiled h16g bundle. Separates allowlist from capability.
 3. **Class 4 re-run:** `aned`'s own `.e5` bundle. PROBE-2's "even aned's own
