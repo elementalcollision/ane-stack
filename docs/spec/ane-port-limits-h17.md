@@ -163,6 +163,33 @@ descriptor field whose exact bit layout is **not yet decoded** — the *count* a
 the *cap* are proven; the per-slot encoding is the remaining unknown (see Open
 questions).
 
+### The `0x9365` state-copy record, decoded
+
+Reading the per-state `0x9365` record body across 10 state shapes (training +
+4 held-out), the field map is:
+
+| offset (bytes) | field | meaning |
+|---|---|---|
+| +0x00 | `0x9365` | record tag (4-D state-copy) |
+| +0x02..+0x09 | `01 00 00 00 01 00 00 00` | flags / type constants |
+| **+0x0a** (u32) | **dim1** | the inner dim (channels) |
+| **+0x0e** (u32) | **dim0** | the stripe/rows dim |
+| **+0x1c** (u32) | **`min(dim1×2 + 8, 32)`** | packed inner-row stride |
+| +0x30 | 0 | flag byte |
+| +0x40 | descriptor ref | per-state descriptor pointer (varies) |
+| **+0x48** (u32) | **`dim1 × 1 MiB`** | the region's vmsize reservation |
+
+All four held-out shapes match exactly (`[4,12]`, `[4,24]`, `[8,8]`, `[2,4]`).
+So each state's descriptor record carries its **shape** (`dim0`, `dim1`), a
+**packed row stride** (`min(2·dim1+8, 32)` — the fp16 row bytes plus alignment,
+saturating at 32), and a **1 MiB-per-channel vmsize reservation**. The stride
+saturating at 32 elements is the first hint of the inner-tile geometry the ANE
+uses for state surfaces.
+
+The `0x9344` parent record's second word (`0x2400`/`0x2300`) is still the
+encoded slot field whose bit layout is undecoded — but the per-state *content*
+it points to is now fully mapped.
+
 Probed by varying one structural knob at a time on the working rsw form:
 
 | knob varied | boundary moves? | conclusion |
@@ -232,9 +259,9 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    state **count** on the `ZinBarIdManager` descriptor table, capacity **54
    `0x9344` slots**: 53 states + 1 header slot = 54 (compiles); a 54th state
    needs a 55th slot (fails). Each `state<>` costs 2 Mach-O `__data` segments
-   (the `0x9361`/`0x9365` state-copy pair) + 1 descriptor-list slot. What is NOT
-   yet decoded: the per-slot record encoding (the `0x9344` body's second word,
-   e.g. `0x2400`/`0x2300`) — the count and cap are proven, the slot-field layout
-   is the remaining unknown.
+   (the `0x9361`/`0x9365` state-copy pair) + 1 descriptor-list slot. The
+   `0x9365` state-copy record is **fully decoded** (shape + packed stride +
+   region size — see above). The one remaining unknown is the `0x9344` parent
+   record's second-word slot encoding.
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

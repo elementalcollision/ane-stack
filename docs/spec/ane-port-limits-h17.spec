@@ -9,6 +9,7 @@ require_file scripts/gen_mix_ports.py
 require_file scripts/gen_states.py
 require_file scripts/gen_states_width.py
 require_file scripts/count_desc_records.py
+require_file scripts/decode_9365.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -87,3 +88,8 @@ want_out  0x9344 records: 2
 # a 53-state program has exactly 54 records (53 states + 1 header = the table cap)
 run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_d53.mil && rm -rf /tmp/pl_d53c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d53.mil -o /tmp/pl_d53c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_d53c/pl_d53.macho
 want_out  0x9344 records: 54
+
+# --- the 0x9365 state-copy record, decoded: shape + stride + region size ---
+# a [4,4,1,1] state decodes to dim0=4 dim1=4 stride=16 region=4MiB
+run  python3 scripts/gen_states.py 1 1 1 > /tmp/pl_dec.mil && rm -rf /tmp/pl_decc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_dec.mil -o /tmp/pl_decc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_9365.py /tmp/pl_decc/pl_dec.macho
+want_out  dim0=4 dim1=4 stride=16 region=4194304
