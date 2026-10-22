@@ -28,3 +28,6 @@ jobs:
 
       - name: guard regression test
         run: bash tests/vendor-guard.bats.sh
+
+      - name: evidence harness regression test (fake milc, no hardware)
+        run: bash tests/evidence-harness.sh
