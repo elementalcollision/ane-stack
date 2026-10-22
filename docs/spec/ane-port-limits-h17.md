@@ -290,12 +290,39 @@ the precise boundary on this build is **53**, not 52.
   the one closest to the claimed number.
 - ✅ Both are count budgets, not byte budgets; they are independent of each other.
 
+## The M4 → M5 delta
+
+Compiling the *same* 53-state program for `h16g` (M4) and `h17` (M5) and
+diffing the records: the descriptor economy is **identical** — same record
+counts, same slot model, same 54-record cap (53 states compile, 54 fail with
+`free BAR` on *both*). The **only** delta across all 20 record families:
+
+| record family | h16g (M4) | h17 (M5) |
+|---|---|---|
+| `0x9344` (descriptor-list) | 54 | 54 |
+| `0x9361` / `0x9365` (state-copy) | 53 / 53 | 53 / 53 |
+| `0x1340` / `0x1342` / `0x135a` | 54 / 53 / 53 | 54 / 53 / 53 |
+| `0x1440` / `0x9442` (region/segment) | 107 / 107 | 107 / 107 |
+| **`0x934a`** | **1** | **2** |
+| 11 singleton records | 1 | 1 |
+
+**The M4→M5 delta is exactly one extra `0x934a` record per program on M5** —
+the first `0x9344` descriptor-list record embeds `0x934a` **twice** on h17,
+once on h16g. Fixed per program, independent of state count. The 54-record
+state cap is unchanged. So the resource model is **portable M4 → M5**; only the
+`0x934a` embedding count moved.
+
 ## Reproduce
 
 ```console
 # Finding 1 (io ports, execution-time)
 python3 scripts/gen_mix_ports.py 1 126 > /tmp/a.mil   # in=1 out=126
 milc ane run /tmp/a.mil --steps 1                     # PASS
+
+# M4 vs M5 (same program, both arches)
+python3 scripts/gen_states.py 53 1 1 > /tmp/s53.mil
+milc ane compile /tmp/s53.mil -o /tmp/cm4 --arch h16g   # M4: 1x 0x934a
+milc ane compile /tmp/s53.mil -o /tmp/cm5 --arch h17    # M5: 2x 0x934a, same 54 cap
 python3 scripts/gen_mix_ports.py 1 127 > /tmp/b.mil   # in=1 out=127
 milc ane run /tmp/b.mil --steps 1                     # FAIL: Program Inference error
 
@@ -312,13 +339,14 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    Finding 2's 53-state BAR table are *separate* unknowns in the same territory.
    `ZinBarIdManager` names the state one (a descriptor allocator); the io one is
    unlocalized.
-2. **Is 53 a table size or a derived limit?** **Resolved end to end.** The cap
-   is a raw state **count** on the `ZinBarIdManager` descriptor table: **54
-   `0x9344` slots** (53 states + 1 header). Each `state<>` costs 2 Mach-O
-   `__data` segments (`0x9361`/`0x9365`) + 1 descriptor-list record. The
-   `0x9365` state-copy record is **fully decoded** (shape + packed stride +
-   region size), and the `0x9344` slot word is **decoded** —
-   `(slot_index << 8) | (copy << 7)`: the table is an array of slots each
-   holding two records. No undecoded fields remain in the descriptor economy.
+2. **Why 54 — resolved.** The `ZinBarIdManager` descriptor-list table holds
+   **54 `0x9344` records**. `0x9344` scales as **N + 1** (one record per state
+   + one header). So 53 states + 1 header = 54 records compile; a 54th state
+   needs a 55th record and fails with `unable to allocate free BAR`. The cap is
+   a raw **record count**, not a slot-id range (the slot-id space 0x23..0x3e
+   packs 2 records/slot = 56 record capacity — more than the 54 cap) and not a
+   fixed byte-extent (the `__text` vmsize grows linearly with states). The
+   `0x9365` state-copy record is fully decoded (shape + stride + region size)
+   and the `0x9344` slot word is decoded (`(slot_index << 8) | (copy << 7)`).
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

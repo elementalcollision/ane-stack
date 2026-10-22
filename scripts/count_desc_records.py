@@ -32,13 +32,14 @@ def main() -> None:
     if d[:4] != (0xBEEFFACE).to_bytes(4, "little"):
         print("not an HWX Mach-O", file=sys.stderr)
         sys.exit(2)
+    tag = int(sys.argv[2], 0) if len(sys.argv) > 2 else 0x9344
     start, end = text_file_range(d)
     c = sum(
         1
         for i in range(start, min(end, len(d)) - 2, 2)
-        if struct.unpack_from("<H", d, i)[0] == 0x9344
+        if struct.unpack_from("<H", d, i)[0] == tag
     )
-    print(f"0x9344 records: {c}")
+    print(f"0x{tag:04x} records: {c}")
 
 if __name__ == "__main__":
     main()

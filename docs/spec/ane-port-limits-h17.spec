@@ -91,6 +91,15 @@ want_out  0x9344 records: 2
 run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_d53.mil && rm -rf /tmp/pl_d53c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d53.mil -o /tmp/pl_d53c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_d53c/pl_d53.macho
 want_out  0x9344 records: 54
 
+# --- the M4 -> M5 delta: one extra 0x934a on h17; the 54 cap is unchanged ---
+# compile the SAME 53-state program for both arches and count 0x934a records.
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_mm.mil && rm -rf /tmp/pl_m4 /tmp/pl_m5 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_mm.mil -o /tmp/pl_m4 --arch h16g >/dev/null 2>&1 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_mm.mil -o /tmp/pl_m5 --arch h17 >/dev/null 2>&1 && echo "h16g: $(python3 scripts/count_desc_records.py /tmp/pl_m4/pl_mm.macho 0x934a)  h17: $(python3 scripts/count_desc_records.py /tmp/pl_m5/pl_mm.macho 0x934a)"
+want_out  h16g: 0x934a records: 1  h17: 0x934a records: 2
+
+# and the 53-state cap holds on M4 too (54 states fail with free BAR on h16g)
+run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_m54m.mil && rm -rf /tmp/pl_m54mc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_m54m.mil -o /tmp/pl_m54mc --arch h16g 2>&1
+want_out  unable to allocate free BAR
+
 # --- the 0x9365 state-copy record, decoded: shape + stride + region size ---
 # a [4,4,1,1] state decodes to dim0=4 dim1=4 stride=16 region=4MiB
 run  python3 scripts/gen_states.py 1 1 1 > /tmp/pl_dec.mil && rm -rf /tmp/pl_decc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_dec.mil -o /tmp/pl_decc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_9365.py /tmp/pl_decc/pl_dec.macho
