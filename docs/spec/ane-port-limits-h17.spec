@@ -2,9 +2,11 @@
 # Asserts the model in docs/spec/ane-port-limits-h17.md:
 #   - the ANECCompile frontend accepts >>52 ports (no frontend constraint)
 #   - the e5rt execution lane enforces out_cap(in) = max(63, 127 - in)
+#   - the state<> budget IS a frontend constraint: 53 states compile, 54 fail
 require_cmd  cargo
 require_cmd  python3
 require_file scripts/gen_mix_ports.py
+require_file scripts/gen_states.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -35,3 +37,20 @@ want_out_re  step 0:
 
 run  python3 scripts/gen_mix_ports.py 32 96 > /tmp/pl_f.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_f.mil --steps 1 2>&1
 want_out  Inference error
+
+# --- Finding 2: the state<> budget is a FRONTEND constraint (53 pass, 54 fail) ---
+# 53 independent state<> params compile
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_s53.mil && rm -rf /tmp/pl_c53 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_s53.mil -o /tmp/pl_c53 --arch h17 2>&1
+want_out  status=0x0 rc=0
+
+# 54 independent state<> params fail at ANECCompile with the BAR allocator error
+run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_s54.mil && rm -rf /tmp/pl_c54 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_s54.mil -o /tmp/pl_c54 --arch h17 2>&1
+want_out  unable to allocate free BAR
+
+# and 53 states actually run on the e5rt lane (not just compile)
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_r53.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_r53.mil --steps 1 2>&1
+want_out_re  step 0:
+
+# plain io does NOT consume the state BAR table: 53 states + 32 in + 32 out still compile
+run  python3 scripts/gen_states.py 53 32 32 > /tmp/pl_sio.mil && rm -rf /tmp/pl_siocc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sio.mil -o /tmp/pl_siocc --arch h17 2>&1
+want_out  status=0x0 rc=0
