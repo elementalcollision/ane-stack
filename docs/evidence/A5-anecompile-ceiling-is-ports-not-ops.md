@@ -5,6 +5,24 @@ Lane: **L-SCHED**. Work item: ADR-0002 A.5 (blocker) + feeds SCHED-2.
 Supersedes the working assumption in `ADR-0002-A5-scale-deploy.md`, which read
 the 320-op ladder as an op-count limit. It is not.
 
+> **CORRECTED 2026-10-22 (L-Probe validation).** This file's headline — "the
+> ceiling is inout ports, not op count" — is right, but the **"~52" figure and
+> the word "frontend constraint" were both wrong as universal statements.**
+> L-Probe (`docs/spec/ane-port-limits-h17.md`, verified: their executable spec
+> passes on hardware) showed plain `tensor<>` in/out ports compile to ~128 and
+> have no 52-port wall. This file measured `state<>` ports only.
+>
+> The correct statement is **two separate budgets**: plain ports ~128 with
+> `MaxLiveInLiveOutExceeded`, and **`state<>` inout ports ~53** with
+> `Compiler internal error`. Reconciled in
+> `docs/evidence/reconciliation-two-port-limits.md`, which includes the decisive
+> check that they are separate counters (40 `state<>` + 16 plain = 56 total
+> ports compiles).
+>
+> Everything in §2's operational conclusions survives unchanged — the conclusion
+> that matters is "`--shard N` emits one packed `kv` state per shard and so sits
+> far under 53".
+
 ---
 
 ## 1. Why the earlier reading was wrong
