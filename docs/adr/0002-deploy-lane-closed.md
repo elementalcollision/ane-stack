@@ -159,8 +159,18 @@ Concrete, ordered, cheapest first:
    **Still caveated:** synthetic weights, one shard, no `execute` on the large
    artifact, n=1 OS/host. A real `qwen/llama` checkpoint remains the confirming
    test and none is available on this Mac.
-2. **Why H16** — diff the accepted vs rejected image headers, or check against a
-   non-Apple-compiled h16g bundle. Separates allowlist from capability.
+2. ~~**Why H16** — diff the accepted vs rejected image headers.~~
+   **ANSWERED (2026-10-22): capability, not allowlist, and not signature.**
+   `docs/evidence/A5-item2-why-h16.md`. A length-preserving label swap settles
+   it: the accepted h16g artifact, relabelled to claim h17, **still loads**; the
+   refused h17 artifact, relabelled to claim h16g, **still fails**. So the
+   loader resolves the target from the compiled image and ignores the label.
+
+   Also: the h16g-vs-h17 byte difference is **mostly the compiler's own embedded
+   command line** (1614 of 1628 bytes — `-t h16g` vs `-t h17` plus ~64 flags),
+   not a structural field, and all four artifacts are locally compiled, so no
+   signature is involved either way. *Limit:* the remaining 14 code bytes were
+   not attributed individually.
 3. ~~**Class 4 re-run:** `aned`'s own `.e5` bundle.~~
    **ANSWERED (2026-10-22): it is STILL refused on macOS 27.0.**
    `docs/evidence/A5-class4-e5-bundle.md`. Tested with a fresh bundle from this
@@ -174,8 +184,17 @@ Concrete, ordered, cheapest first:
    runs identical (not transient in practice), and that host is at 77 % free
    with swap nearly unused (no real shortfall). A persistent refusal reporting
    a transient cause.
-4. **A second 27.0 host** — the current data is n=1 per OS, and one host is a
-   machine configuration as much as an OS build.
+4. ~~**A second 27.0 host** — the current data is n=1 per OS.~~
+   **BLOCKED ON HARDWARE (2026-10-22).**
+   `docs/evidence/A5-item4-no-second-host.md`. The tailnet has exactly one
+   macOS 27.0 host (`davids-mac-mini`, M4 Pro) and one other Mac
+   (`bev-imac-new`), which is offline and last seen 55 days ago — ping 100 %
+   loss, port 22 closed, and it cannot be woken from here. Remaining nodes are
+   Windows/Linux/iOS, not Apple Silicon.
+
+   **Consequence for reading every other 27.0 result above:** they are one M4
+   Pro on build 26A428, while the 26.7.1 host is an M5, so the OS×SoC confound
+   is unresolved. Read "open on 27.0" as "open on this one 27.0 M4 Pro".
 
 Until 1–4 land, **ADR-0002 stays accepted as written, with this appendix.**
 
