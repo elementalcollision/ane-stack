@@ -275,6 +275,7 @@ placement % against `--shard 4` for the same model.
 >    single **packed** state with **16384 ops / 32768 state rows / 4.5 MB**
 >    compiles and deploys. So "it is op count, not bytes" is wrong for *this*
 >    path — do not carry that sentence across.
+>    *(2026-10-22: superseded — the state budget is a 55-id BAR pool, 53 states with a plain input / 54 without, and each state also costs io ports; see `docs/spec/ane-port-limits-h17.md` §3–§4, §9.)*
 >
 > **Consequence for this item:** `--shard N` already emits **one packed `kv`
 > state per shard** (`builder.rs::build_range`, `kv_shape` = `(le-ls)*2` rows),

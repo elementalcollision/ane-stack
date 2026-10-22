@@ -3,7 +3,7 @@
 # still hold. This is TEST-1: evidence that cannot drift from the code, because
 # it is re-run, not re-read.
 #
-#   ./scripts/evidence-check.sh --all              # every *.spec in docs/evidence/
+#   ./scripts/evidence-check.sh --all              # every *.spec in docs/evidence/ and docs/spec/
 #   ./scripts/evidence-check.sh <spec> [spec...]   # specific specs
 #   ./scripts/evidence-check.sh --list             # list specs and their items
 #

@@ -1,17 +1,21 @@
 # ane-port-limits-h17: ANE resource budgets on h17 (M5), re-measured 2026-10-22.
-# Asserts the model in docs/spec/ane-port-limits-h17.md:
-#   1. execution io cap:  live_in + unique_out (+ states, + exposed states) <= 127
-#   2. frontend io cap:   declared_in + out (+ states, + exposed states)    <= 255
-#   3. BAR pool:          every __FVMLIB segment is one BAR id, 55 ids in all;
+# Asserts the model in docs/spec/ane-port-limits-h17.md (section numbers match):
+#   1. execution io cap:  live_in + unique_out <= 127 (no floor)
+#   2. frontend io cap:   declared_in + out <= 255 (validate AND compile)
+#   3. states cost ports: +1 per state, +1 per exposed update; write_state is a
+#                         liveness root (an input feeding only it still counts)
+#   4. BAR pool:          every __FVMLIB segment is one BAR id, 55 ids in all;
 #                         each state<> surface needs its own segment, so
 #                         53 states fit with >=1 plain input and >=1 output,
-#                         54 fit with no plain input; one more fails ("free BAR")
-#   4. binding records:   0x9344/0x934a/0x9442 are 12-byte buffer bindings whose
+#                         54 fit with no plain input; one more fails
+#   5. binding records:   0x9344/0x934a/0x9442 are 12-byte buffer bindings whose
 #                         slot word is a BAR ordinal; 0x9344 is not a 54-entry table
-#   5. copy records:      tag = presence flags; stride = 8*min(ceil(log2 dim1),4)
-#   6. state execution:   a state executes iff 64-B row padding needs no extra
-#                         16 KiB page (d3 < 32 => d0*d1*d2 <= 256)
-#   7. h16g vs h17:       same caps and laws; 0x934a is 1 vs 2 per binary-add task
+#   6. copy records:      tag = presence flags; stride = 8*min(ceil(log2 dim1),4)
+#   7. state execution:   executes iff 64-B row padding needs no extra 16 KiB page
+#                         (rows <= 256 is SUFFICIENT when d3 <= 32); state dtype
+#                         fp16/int16/int8/uint8/bool ok, fp32/int32 rejected
+#   8. h16g vs h17:       same compile-time caps and laws; 0x934a 1 vs 2 per
+#                         binary-add task (cross-compiled only)
 # Rules: judge pass/fail by want_rc (a FAILING run also prints "step 0:"); anchor
 # every count with $ ("records: 2" also matches 20-29). See docs/evidence/SPEC.md.
 require_cmd  cargo
@@ -28,8 +32,14 @@ require_file scripts/decode_slot_ordinals.py
 require_file scripts/decode_copy_records.py
 require_file scripts/hwx_layout.py
 require_file scripts/state_exec_predict.py
+require_file scripts/gen_state_dtype.py
 setup        cd vendor/mil_spec && cargo build --release -q -p milc
 require_artifact vendor/mil_spec/target/release/milc
+
+# provenance of this run (informational; the laws below were measured on
+# Mac17,7 / macOS 26.7.1 25G241 — re-check them on any other build)
+run  sysctl -n hw.model && sw_vers -productVersion && sw_vers -buildVersion
+want_rc      0
 
 # ============================================================================
 # 1. Execution-time io cap: live_in + out <= 127. NO floor at 63.
@@ -122,6 +132,25 @@ run  python3 scripts/gen_mix_ports.py 255 1 > /tmp/pl_r255_1.mil && vendor/mil_s
 want_rc      0
 want_out_re  ^step 0: [0-9]
 
+# the compile path enforces the same 255
+run  rm -rf /tmp/pl_cc127 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_v127_128.mil -o /tmp/pl_cc127 --arch h17 2>&1
+want_rc      0
+want_out     status=0x0 rc=0
+
+run  rm -rf /tmp/pl_cc128 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_v128_128.mil -o /tmp/pl_cc128 --arch h17 2>&1
+want_rc      1
+want_out     MaxLiveInLiveOutExceeded
+
+# states count at the frontend too: 126 exposed states + 1 in + 1 out = 254 ok,
+# 127 -> 256 rejected
+run  python3 scripts/gen_states_nd.py 126 4 4 1 1 1 1 direct > /tmp/pl_fs126.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_fs126.mil --arch h17 2>&1
+want_rc      0
+want_out     status=0x0 rc=0
+
+run  python3 scripts/gen_states_nd.py 127 4 4 1 1 1 1 direct > /tmp/pl_fs127.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_fs127.mil --arch h17 2>&1
+want_rc      1
+want_out     MaxLiveInLiveOutExceeded
+
 # ============================================================================
 # 3. States cost io ports: each state is 1 input port, each exposed (returned)
 #    update is 1 output port. 53 states + 1 in + 53 exposed + 20 out = 127.
@@ -140,6 +169,18 @@ want_rc      0
 want_out_re  ^step 0: [0-9]
 
 run  python3 scripts/gen_states_nd.py 53 4 4 1 1 1 74 direct noupd > /tmp/pl_sn74.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_sn74.mil --steps 1 2>&1
+want_rc      1
+want_out     status=0x2 : statusType=0x9: Program Inference error
+
+# write_state is a liveness root: 100 inputs feed only the state update (u
+# chain) and 24/25 outputs read x0..x23/x24. 100 + 3 + 24 = 127 runs, 128 fails.
+# ("live = reachable from a returned output" would count 25 inputs and predict
+# that OUT = 25 runs)
+run  python3 scripts/gen_states_nd.py 3 4 4 1 1 100 24 noupd > /tmp/pl_ws24.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_ws24.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_states_nd.py 3 4 4 1 1 100 25 noupd > /tmp/pl_ws25.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_ws25.mil --steps 1 2>&1
 want_rc      1
 want_out     status=0x2 : statusType=0x9: Program Inference error
 
@@ -171,6 +212,38 @@ want_out_re  ^step 0: [0-9]
 run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_s54.mil && rm -rf /tmp/pl_c54 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_s54.mil -o /tmp/pl_c54 --arch h17 2>&1
 want_rc      1
 want_out     unable to allocate free BAR
+
+# the run lane (e5rt compiles via aned) refuses the same 54-state program
+run  vendor/mil_spec/target/release/milc ane run /tmp/pl_s54.mil --steps 1 2>&1
+want_rc      1
+want_out     ANECCompile() FAILED
+
+# weights and lookup-table ops do not lower the cap: 53 states + an inline
+# conv weight, or + a sigmoid, compile and run (the __KERN_0 segment is shed);
+# 54 + conv still fail
+run  python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct conv=1 > /tmp/pl_cv53.mil && rm -rf /tmp/pl_cv53c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cv53.mil -o /tmp/pl_cv53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_cv53c/pl_cv53.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_cv53.mil --steps 1 2>&1
+want_rc      0
+want_out     fvmlib=55
+want_out     kern=0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct conv=1 > /tmp/pl_cv54.mil && rm -rf /tmp/pl_cv54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cv54.mil -o /tmp/pl_cv54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  python3 scripts/gen_states_nd.py 53 4 4 1 1 1 1 direct lut=sigmoid > /tmp/pl_lt53.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_lt53.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+# split vs packed layout: const+data sections <= 55 -> one segment each;
+# 56 -> one shared const + one shared data segment
+run  python3 scripts/gen_states.py 0 5 50 > /tmp/pl_sp50.mil && rm -rf /tmp/pl_sp50c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sp50.mil -o /tmp/pl_sp50c --arch h17 >/dev/null 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_sp50c/pl_sp50.macho
+want_rc      0
+want_out     fvmlib=55 fvmlib_data=50 fvmlib_const=5
+
+run  python3 scripts/gen_states.py 0 5 51 > /tmp/pl_sp51.mil && rm -rf /tmp/pl_sp51c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sp51.mil -o /tmp/pl_sp51c --arch h17 >/dev/null 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_sp51c/pl_sp51.macho
+want_rc      0
+want_out     fvmlib=2 fvmlib_data=1 fvmlib_const=1 data_sections=51
 
 # no plain input => no const segment => 54 states compile AND run; 55 fail.
 # (refutes "53 states" as the cap itself)
@@ -214,6 +287,12 @@ run  python3 scripts/decode_slot_ordinals.py /tmp/pl_c53/pl_s53.macho && python3
 want_rc      0
 want_out     records=54 bars=55 max_ordinal=54 input_ordinal=54 format_ok=1
 want_out_re  0x9344 records: 54$
+
+# with no plain input, one 0x9344 binds the fill source: bar_word 0x2080 is
+# below 0x2300 (not an __FVMLIB segment) and is counted as special
+run  python3 scripts/decode_slot_ordinals.py /tmp/pl_z54c/pl_z54.macho
+want_rc      0
+want_out     format_ok=1 special=1
 
 # the old spec's own 53-state program has 85 0x9344 records and compiles
 # (0x9344 = exposed states + max(1, min(in, out)) for gen_states.py)
@@ -279,7 +358,22 @@ run  python3 scripts/gen_states_nd.py 1 1 8 1 1 1 1 direct > /tmp/pl_cre.mil && 
 want_rc      0
 want_out_re  ^tags: 0x9361=2$
 
-# state-out (0x9365) records: SHORT layout only for the last one; region is
+# exception: dim3 == 256 or dim2 == 256 (exactly) emits NO copy record, yet the
+# program runs; 255 still emits them
+run  python3 scripts/gen_states_nd.py 1 4 4 1 256 1 1 direct > /tmp/pl_nc256.mil && rm -rf /tmp/pl_nc256c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_nc256.mil -o /tmp/pl_nc256c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_records.py /tmp/pl_nc256c/pl_nc256.macho --tags && vendor/mil_spec/target/release/milc ane run /tmp/pl_nc256.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^tags: none$
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_states_nd.py 1 2 8 256 32 1 1 direct > /tmp/pl_nd256.mil && rm -rf /tmp/pl_nd256c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_nd256.mil -o /tmp/pl_nd256c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_records.py /tmp/pl_nd256c/pl_nd256.macho --tags
+want_rc      0
+want_out_re  ^tags: none$
+
+run  python3 scripts/gen_states_nd.py 1 4 4 1 255 1 1 direct > /tmp/pl_nc255.mil && rm -rf /tmp/pl_nc255c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_nc255.mil -o /tmp/pl_nc255c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_records.py /tmp/pl_nc255c/pl_nc255.macho --tags
+want_rc      0
+want_out_re  ^tags: 0x9361=1 0x9365=1$
+
+# state-out (0x9365) records, direct update source: SHORT layout only for the last one; region is
 # rowbits << 16 (= dim1 MiB), the same in both layouts
 run  python3 scripts/decode_copy_records.py /tmp/pl_c53/pl_s53.macho | tail -1
 want_rc      0
@@ -310,6 +404,43 @@ run  python3 scripts/state_exec_predict.py 4 65 1 1
 want_rc      1
 want_out     predicted=FAIL
 
+# rows <= 256 is sufficient (d3 <= 32), not necessary: 300 rows of 31 run,
+# 260 rows of 31 fail (the padding crosses a page in one case, not the other)
+run  python3 scripts/gen_states_nd.py 1 1 300 1 31 1 1 direct > /tmp/pl_p300.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_p300.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_states_nd.py 1 1 260 1 31 1 1 direct > /tmp/pl_p260.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_p260.mil --steps 1 2>&1
+want_rc      1
+want_out     status=0x1d : statusType=0x9: Program Inference error
+
+# d3 > 32 and not a multiple of 32 (head_dim 80): fails from 86 rows
+run  python3 scripts/gen_states_nd.py 1 1 85 1 80 1 1 direct > /tmp/pl_p85.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_p85.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_states_nd.py 1 1 86 1 80 1 1 direct > /tmp/pl_p86.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_p86.mil --steps 1 2>&1
+want_rc      1
+want_out     status=0x1d : statusType=0x9: Program Inference error
+
+# state dtype: int8 and bool states compile and run (io/compute stay fp16);
+# fp32 and int32 states are rejected
+run  python3 scripts/gen_state_dtype.py int8 > /tmp/pl_dt8.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_dt8.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_state_dtype.py bool > /tmp/pl_dtb.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_dtb.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_state_dtype.py fp32 > /tmp/pl_dtf.mil && rm -rf /tmp/pl_dtfc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_dtf.mil -o /tmp/pl_dtfc --arch h17 2>&1
+want_rc      1
+want_out     CompilationFailure
+
+run  python3 scripts/gen_state_dtype.py int32 > /tmp/pl_dti.mil && rm -rf /tmp/pl_dtic && vendor/mil_spec/target/release/milc ane compile /tmp/pl_dti.mil -o /tmp/pl_dtic --arch h17 2>&1
+want_rc      1
+want_out     status=0x1 rc=1
+
 # ============================================================================
 # 8. h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and
 #    laws; 0x934a is emitted once per binary-add task on h16g, twice on h17
@@ -317,11 +448,11 @@ want_out     predicted=FAIL
 # ============================================================================
 run  python3 scripts/gen_states.py 53 32 32 > /tmp/pl_aio.mil && rm -rf /tmp/pl_aio4 /tmp/pl_aio5 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_aio.mil -o /tmp/pl_aio4 --arch h16g >/dev/null 2>&1 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_aio.mil -o /tmp/pl_aio5 --arch h17 >/dev/null 2>&1 && echo "h16g: $(python3 scripts/count_desc_records.py /tmp/pl_aio4/pl_aio.macho 0x934a)  h17: $(python3 scripts/count_desc_records.py /tmp/pl_aio5/pl_aio.macho 0x934a)"
 want_rc      0
-want_out     h16g: 0x934a records: 32  h17: 0x934a records: 64
+want_out_re  ^h16g: 0x934a records: 32  h17: 0x934a records: 64$
 
 run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_amm.mil && rm -rf /tmp/pl_am4 /tmp/pl_am5 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_amm.mil -o /tmp/pl_am4 --arch h16g >/dev/null 2>&1 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_amm.mil -o /tmp/pl_am5 --arch h17 >/dev/null 2>&1 && echo "h16g: $(python3 scripts/count_desc_records.py /tmp/pl_am4/pl_amm.macho 0x934a)  h17: $(python3 scripts/count_desc_records.py /tmp/pl_am5/pl_amm.macho 0x934a)" && python3 scripts/decode_slot_ordinals.py /tmp/pl_am4/pl_amm.macho
 want_rc      0
-want_out     h16g: 0x934a records: 1  h17: 0x934a records: 2
+want_out_re  ^h16g: 0x934a records: 1  h17: 0x934a records: 2$
 want_out     records=54 bars=55 max_ordinal=54 input_ordinal=54 format_ok=1
 
 run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_a54.mil && rm -rf /tmp/pl_a54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_a54.mil -o /tmp/pl_a54c --arch h16g 2>&1

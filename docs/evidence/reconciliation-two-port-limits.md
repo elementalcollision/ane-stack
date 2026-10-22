@@ -1,5 +1,14 @@
 # Evidence — reconciling the two ANE port limits
 
+> **SUPERSEDED (2026-10-22, re-measurement).** This file's port model is
+> out of date. `max(63, 127 − in)` came from dead inputs (the real execution cap is
+> `live_in + out ≤ 127`). State params are NOT a separate counter: each state costs
+> one port in both the 127 execution cap and the 255 frontend cap, plus one port
+> per returned update. On top of that, states share a 55-id BAR pool, which is
+> where the 53 comes from. The 56-port mixed check here cannot tell the models
+> apart (56 is below both caps). Use `docs/spec/ane-port-limits-h17.md` (§1–§4, §9)
+> and its spec.
+
 Lane: **L-SCHED** validating L-PROBE's `docs/spec/ane-port-limits-h17.md`.
 
 **Verdict: L-PROBE is right that the "~52-port frontend limit" does not

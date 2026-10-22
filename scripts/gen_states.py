@@ -26,7 +26,10 @@ def main() -> None:
     # (or a const if there are no plain inputs)
     update_src = "x0" if ni > 0 else "one"
     if ni == 0:
-        lines.append('        tensor<fp16, [1, 4, 1, 1]> one = const()[val = tensor<fp16, [1, 4, 1, 1]>([1.0, 1.0, 1.0, 1.0])];')
+        # a flat literal ([1.0, 1.0, 1.0, 1.0]) is rejected for a rank-4 type; use fill
+        lines.append('        tensor<int32, [4]> oshape = const()[val = tensor<int32, [4]>([1, 4, 1, 1])];')
+        lines.append('        fp16 oval = const()[val = fp16(1.0)];')
+        lines.append('        tensor<fp16, [1, 4, 1, 1]> one = fill(shape = oshape, value = oval)[name = string("one")];')
     outs = []
     for i in range(ns):
         lines.append(f'        tensor<fp16, [4, 4, 1, 1]> cur{i} = read_state(input = kv{i})[name = string("cur{i}")];')

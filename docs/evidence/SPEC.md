@@ -76,5 +76,6 @@ verdict plus a summary. Exit 0 iff every assertion in every spec holds.
 `--all` runs every `docs/evidence/*.spec` **and** `docs/spec/*.spec`; an empty
 selection exits 2. The harness's own semantics are pinned by
 `tests/evidence-harness.sh` (fake milc, no hardware), which CI runs.
-`scripts/evidence-check.sh --all` runs every `*.spec` in `docs/evidence/`.
-Specs that need hardware skip cleanly (see TEST-2).
+Specs that declare `require_hw` SKIP on hosts that fail the probe, and a SKIP
+exits 0. Pass `--require-all` (e.g. `--all --require-all`) when a SKIP must fail
+the run, such as on the reference Mac.

@@ -8,11 +8,16 @@
 # LC_SEGMENT_64 order (__PAGEZERO excluded). 0x9344 = a task's primary source,
 # 0x934a = further sources, 0x9442 = the destination.
 # Prints one line:
-#   records=R bars=B max_ordinal=M input_ordinal=I format_ok=1
-# records = number of 0x9344 records; bars = distinct ordinals referenced by
-# any of the three tags; input_ordinal = the ordinal every 0x934a record
-# addresses (-1 if there are none or they differ); format_ok=0 if any record
-# violates the layout above. Used by docs/spec/ane-port-limits-h17.spec.
+#   records=R bars=B max_ordinal=M input_ordinal=I format_ok=1 special=S
+# records = number of 0x9344 records; bars = distinct __FVMLIB ordinals
+# referenced by any of the three tags (segments no task references, e.g. the
+# const segment of a dead input, are not counted); input_ordinal = the ordinal
+# every 0x934a record addresses (-1 if there are none or they differ);
+# special = well-formed records whose bar_word is BELOW 0x2300, i.e. they bind a
+# buffer that is not an __FVMLIB segment: 0x2080 is the source of a fill/inline
+# constant (no-plain-input programs), larger words bind the __DATA scratch
+# segment the compiler adds for intermediates over ~2 MiB. format_ok=0 only if a
+# record matches neither form. Used by docs/spec/ane-port-limits-h17.spec.
 import struct
 import sys
 
@@ -54,13 +59,18 @@ def main() -> None:
     fv, (start, end) = parse(d)
     n9344 = 0
     bars, in_ord = set(), set()
-    ok, mx = 1, -1
+    ok, mx, special = 1, -1, 0
     for i in range(start, min(end, len(d)) - 12, 2):
         tag = struct.unpack_from("<H", d, i)[0]
         if tag not in (0x9344, 0x934A, 0x9442):
             continue
         w, off, z = struct.unpack_from("<HII", d, i + 2)
         k = (w >> 7) - 0x46
+        if k < 0 and not w & 0x7F and z == 0:
+            special += 1  # binds a non-__FVMLIB buffer (fill/inline const, __DATA scratch)
+            if tag == 0x9344:
+                n9344 += 1
+            continue
         if w & 0x7F or k < 0 or k >= len(fv) or z != 0 or off not in fv[k][1]:
             ok = 0
             continue
@@ -71,7 +81,7 @@ def main() -> None:
         if tag == 0x934A:
             in_ord.add(k)
     inp = next(iter(in_ord)) if len(in_ord) == 1 else -1
-    print(f"records={n9344} bars={len(bars)} max_ordinal={mx} input_ordinal={inp} format_ok={ok}")
+    print(f"records={n9344} bars={len(bars)} max_ordinal={mx} input_ordinal={inp} format_ok={ok} special={special}")
 
 if __name__ == "__main__":
     main()

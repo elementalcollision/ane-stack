@@ -8,8 +8,10 @@
 #   padded      = rows * ceil(2*d3/64) * 64     (rows are laid out with a 64 B stride)
 #   PASS  iff  ceil(true_bytes/16384) == ceil(padded/16384)     (16 KiB pages)
 # otherwise execute_sync fails with "Program Inference error" (status 0x1d).
-# Corollaries: d3 % 32 == 0 always passes (no padding); for d3 < 32 the state
-# must satisfy d0*d1*d2 <= 256 (one 16 KiB page of 64 B rows).
+# Corollaries: d3 % 32 == 0 always passes (no padding). For d3 <= 32,
+# d0*d1*d2 <= 256 (one 16 KiB page of 64 B rows) is SUFFICIENT, and necessary only
+# for d3 <= 16 ([1,300,1,31] passes). For d3 > 32 and not a multiple of 32 small
+# row counts can fail ([1,86,1,80] fails): call this predictor, don't shortcut.
 # Prints one line; exit status 0 = predicted PASS, 1 = predicted FAIL.
 import sys
 

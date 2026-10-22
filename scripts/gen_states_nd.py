@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # gen_states_nd.py <nstates> <d0> <d1> <d2> <d3> <in> <out> [add|direct] [noupd]
+#                  [conv=K] [lut=op[,op...]]
 #
 # Emit an ANE-eligible MIL program with <nstates> independent
 # state<tensor<fp16, [d0,d1,d2,d3]>> params (each its own
@@ -15,9 +16,13 @@
 #           (0x9365 family) is then emitted.
 #   in = 0  the update source is u = fill(1.0), so the program has no plain
 #           input and no __const segment (frees one BAR id: 54 states compile).
+#   conv=K  K extra outputs conv(u) with an inline (nested-literal) [d1,d1,1,1]
+#           fp16 weight each — a weighted op inside the state program.
+#   lut=ops one extra output op(u) per listed lookup-table op (sigmoid, tanh, exp).
 #
-# Only fp16 states compile on the ANE path (fp32/int8/int16/int32/bool states
-# are rejected). Used by docs/spec/ane-port-limits-h17.spec for the BAR pool,
+# States are fp16 here; for other state dtypes see gen_state_dtype.py (fp32 and
+# int32 states are rejected, int16/int8/uint8/bool run). Used by
+# docs/spec/ane-port-limits-h17.spec for the BAR pool,
 # the state port cost, the copy-record laws and the state execution page rule.
 import sys
 
@@ -27,6 +32,8 @@ def main() -> None:
     opts = a[7:]
     mode = "direct" if "direct" in opts else "add"
     noupd = "noupd" in opts
+    nconv = next((int(o[5:]) for o in opts if o.startswith("conv=")), 0)
+    luts = next((o[4:].split(",") for o in opts if o.startswith("lut=")), [])
     S = f"[{d0}, {d1}, {d2}, {d3}]"
     U = f"[1, {d1}, {d2}, {d3}]"
     lines = ["program(1.3)", "{"]
@@ -68,6 +75,20 @@ def main() -> None:
         s = f"x{j % ni}" if ni > 0 else "u"
         lines.append(f'        tensor<fp16, {U}> y{j} = add(x = {s}, y = {s})[name = string("y{j}")];')
         outs.append(f"y{j}")
+    for j, op in enumerate(luts):
+        lines.append(f'        tensor<fp16, {U}> l{j} = {op}(x = {src})[name = string("l{j}")];')
+        outs.append(f"l{j}")
+    if nconv:
+        lines.append('        tensor<string, []> cpt = const()[val = string("valid")];')
+        lines.append('        tensor<int32, [2]> cst = const()[val = tensor<int32, [2]>([1, 1])];')
+        lines.append('        tensor<int32, [4]> cpd = const()[val = tensor<int32, [4]>([0, 0, 0, 0])];')
+        lines.append('        tensor<int32, [2]> cdl = const()[val = tensor<int32, [2]>([1, 1])];')
+        lines.append('        tensor<int32, []> cgr = const()[val = int32(1)];')
+    for j in range(nconv):
+        rows = ["[" + ", ".join(f"[[{(((r * 13 + c * 7 + j * 5) % 41) - 20) / 100:.2f}]]" for c in range(d1)) + "]" for r in range(d1)]
+        lines.append(f'        tensor<fp16, [{d1}, {d1}, 1, 1]> w{j} = const()[val = tensor<fp16, [{d1}, {d1}, 1, 1]>([{", ".join(rows)}])];')
+        lines.append(f'        tensor<fp16, {U}> cv{j} = conv(dilations = cdl, groups = cgr, pad = cpd, pad_type = cpt, strides = cst, weight = w{j}, x = {src})[name = string("cv{j}")];')
+        outs.append(f"cv{j}")
     lines.append(f"    }} -> ({', '.join(outs)});")
     lines.append("}")
     print("\n".join(lines))
