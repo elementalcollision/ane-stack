@@ -33,7 +33,7 @@
 | Generators | `gen_live_ports.py` (every input live), `gen_mix_ports.py` (inputs beyond `out` are dead), `gen_dup_returns.py`, `gen_states.py`, `gen_states_width.py`, `gen_states_nd.py` (4-D state, `add`/`direct` update source, `noupd`, `in=0`, `conv=K`, `lut=…`), `gen_state_dtype.py` |
 | Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_block_trailers.py` (block framing and trailers), `decode_copy_records.py`, `decode_copy_words.py` (word-level copy-record view), `state_exec_predict.py` |
 | Method | Four hardware runners re-measured each law family (the io runner alone made 3,886 `milc` calls; the others compiled ~900, ~1,300 and ~1,900 artifacts). Every boundary was run at least twice with 0 flips; the ANE may have been shared between runners. The decisive points were re-run by the orchestrator. A second round tested held-out points against this text (the corrections are listed at the end). |
-| Spec | 100 probes, 214 assertions, PASS in ~20 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
+| Spec | 102 probes, 219 assertions, PASS in ~20 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
 | Date | 2026-10-22 |
 
 Reading a run result:
@@ -121,9 +121,9 @@ really the diagonal `live_in = out = 63`, since 126 ≤ 127.
 **Law (established).** Both `milc ane validate` and `milc ane compile` reject a
 program once `declared_in + out ≥ 256`. The failure is exit 1, `status=0x1 rc=1`,
 `error: MaxLiveInLiveOutExceeded`.
-- The boundary holds on h17 and h16g. The spec asserts it on validate for both
-  arches and on compile for h17. The runners swept every split on validate and
-  19 splits on compile.
+- The spec asserts the boundary on validate and compile for h17, and on validate
+  for h16g at 128 + 128 only. The runners swept every split on validate on both
+  arches, and 19 splits on compile.
 - validate/compile count **declared** inputs, dead ones included: (254, 1) ok,
   (255, 1) rejected.
 - The run path prunes dead inputs first, so the same file runs. On the run path
@@ -295,7 +295,9 @@ else against the segment table (`format_ok=1`). `bars` counts the referenced
   `[9344 12B] [934a 12B]* [9442 12B] [1340 8B] [1341 8B] [1440 8B]` (any subset,
   in this order). The 8-byte members are `[tag u16][0x2200][flags u32]`.
 - Nothing is embedded inside `0x9344` or `0x9361`. No trailer tag occurs outside a
-  trailer.
+  trailer, except where a state dimension equals a tag value: that value then
+  appears as a header u16, and `decode_block_trailers.py` reports `chain_ok=0`.
+  `count_desc_records.py`'s raw u16 scan would also count it *(runner)*.
 - In `gen_states 53 1 1` there are 107 blocks:
   - one full trailer (block 0, the plain-output add task), with 7 members on h17
     (two `0x934a`) and 6 on h16g
@@ -308,10 +310,14 @@ end to end (12 + 12 + 12 + 12 + 8 + 8 + 8 bytes). On h16g every member after the
 single `0x934a` sits 12 bytes earlier.
 
 v1's "u32 tail (1, 3, 1, 1, 1, 4)" is not part of `0x9344`. It is the **next**
-block's pre-frame window (block + 0x1c, up to its first `0x8005` frame). It
-mirrors the copy record's header: `[1][(stride class + 1) << 16 | 1][0x10001]
-[d3][d2][d1]`. It is independent of N and dim0, and identical on both arches. At
-dim1 = 9 it reads `1,50001,10001,1,1,9` (asserted).
+block's pre-frame window (block + 0x1c, up to its first `0x8005` frame). When that
+next block is a state-copy block (dim2 = 1, d3 < 129), the window mirrors the copy
+record's header: `[1][(stride class + 1) << 16 | 1][0x10001][d3][d2][d1]`. It is
+independent of N and dim0, and identical on both arches. At dim1 = 9 it reads
+`1,50001,10001,1,1,9` (asserted). Two other forms occur *(runner)*:
+- at dim1 = 16 the d1 word is absent and the third word is `0x8001`, the same
+  elision as tag `0x9360`
+- before a compute block it reads `1,1,10001,d3,d2,d1`
 
 **Counts (established for `gen_states.py`-shaped programs with a plain input,
 outside the fan-out regime):**
@@ -424,19 +430,25 @@ marker so they hold for every tag; 328/328 state-out records fit).**
 
 | field | value | where (in `0x9365`) |
 |---|---|---|
-| flag word | `0x8000 | 0x08·[dim1≠1] | 0x20·[dim0≠1]` (`0x8028` for `0x9365`) | right after the `0x1342` tag, tag+0x28 |
-| **pitch** | `64·⌈d3/32⌉` bytes, the padded row length of the page rule (§7) | tag+0x2e |
-| slice | `pitch · dim1`; present only when dim0 ≠ 1 and dim1 ≠ 1 | tag+0x32 |
+| flag word | `0x8000 | 0x08·[dim1≠1] | 0x20·[dim0≠1] | 0x04·[dim2>1]` (`0x8028` for a dim2 = 1 `0x9365`); `0` when d0 = d1 = d2 = 1, with no pitch or slice words | right after the `0x1342` tag, tag+0x28 |
+| **pitch** | `64·⌈d3/32⌉` bytes, the padded row length of the page rule (§7); also holds for dim2 > 1, but the decoder prints it only for dim2 = 1 | tag+0x2e |
+| slice | `pitch · dim1` when dim2 = 1, present only when dim0 ≠ 1 and dim1 ≠ 1. With dim2 > 1 this word is `pitch · d2`, and `pitch · d1 · d2` follows at tag+0x36 *(runner)* | tag+0x32 |
 | slice copy | `slice` again (equals pitch when slice is elided) | 8 bytes before the end of the core |
 | form words | first word `0x803c` SHORT / `0x803e` LONG (sets the record length); second word `0x0142` / `0x0162` | marker+2, marker+4 |
 
 - **The two form words are independent.** Observed pairs: (803c, 0142) ×207,
   (803e, 0162) ×98, (803e, 0142) ×24 (a one-state computed-source program with
   ≥ 2 inputs and ≥ 2 outputs; asserted), and never (803c, 0162).
-- **SHORT word map:** `1M, RB, RB, RB | RB`, where 1M is `⌈d3/8⌉ MiB` (2 MiB at
-  d3 = 9, 5 MiB at d3 = 33; asserted).
-- **Direct LONG word map:** `RB, 1M, RB, RB, RB | 2RB`.
-- In both layouts exactly four words equal `rowbits << 16`.
+- **SHORT word map (direct update source):** `1M, RB, RB, RB | RB`, where 1M is
+  `⌈d3/8⌉ MiB` for d3 ≤ 128 (2 MiB at d3 = 9, 5 MiB at d3 = 33; asserted). Beyond
+  that it caps: 16 MiB for dim1 ≥ 8 from d3 = 129, and 32 MiB at dim1 = 2
+  *(runner; not monotone near the cap)*.
+- **Direct LONG word map:** `RB, 1M, RB, RB, RB | 2RB` (asserted on the 53-state
+  program).
+- With a direct source, exactly four words equal `rowbits << 16` in both layouts.
+  A computed source (the generator's default `add`) sets extra low bits, e.g.
+  `1M|0x10 … RB|0x40` in SHORT, so only three words equal RB *(runner)*.
+  `rowbits` is a u16 and wraps mod 2¹⁶.
 - No Mach-O segment size tracks these words: every `__FVMLIB` vmsize is 16 KiB.
   The old "region vmsize" reading has no counterpart.
 - **What v2 actually saw.** The `ori` page v2 compared `[4,4]` and `[32,8]` and
@@ -599,7 +611,7 @@ Each now has a spec line or an explicit *(runner-only)* label.
 The visual companion first lived in the `ori` workspace as `ane-descriptor-economy`:
 - v1 at 09:12, v2 at 09:14 (adds the read/write asymmetry and byte table), and
   v3 at 09:42 (adds "WHY 54" and the M4/M5 delta), all on 2026-10-22.
-- sha256: v1 `ac3179c2…3418d0e`, v2 `4e1e932e…bc7112`, v3 `1ab9a17b…418cfb7`.
+- sha256: v1 `ac3179c2…3418d0e`, v2 `4e1e932e…bc7112`, v3 `1ab9a17b…64ccfb7`.
 
 A Haiku runner classified all **91** factual claims on the three versions against
 this writeup:

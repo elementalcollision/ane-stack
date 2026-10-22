@@ -15,7 +15,7 @@
 #                         (rows <= 256 is SUFFICIENT when d3 <= 32); state dtype
 #                         fp16/int16/int8/uint8/bool ok, fp32/int32 rejected
 #   8. h16g vs h17:       same compile-time caps and laws; 0x934a 1 vs 2 per
-#                         binary-add task (cross-compiled only)
+#                         self-add task (add(x, x)) (cross-compiled only)
 # Rules: judge pass/fail by want_rc (a FAILING run also prints "step 0:"); anchor
 # every count with $ ("records: 2" also matches 20-29). See docs/evidence/SPEC.md.
 require_cmd  cargo
@@ -467,6 +467,19 @@ run  python3 scripts/gen_states_nd.py 1 32 8 1 1 1 1 direct > /tmp/pl_cw328.mil 
 want_rc      0
 want_out_re  ^diff: 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77$
 
+# direct LONG layout (non-last state-out records of the 53-state program) and
+# the SHORT first word at d3 = 9 (= ceil(9/8) = 2 MiB)
+run  python3 scripts/decode_copy_words.py /tmp/pl_c53/pl_s53.macho | head -1 && python3 scripts/gen_states_nd.py 1 4 4 1 9 1 1 direct > /tmp/pl_cw9.mil && rm -rf /tmp/pl_cw9c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cw9.mil -o /tmp/pl_cw9c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cw9c/pl_cw9.macho
+want_rc      0
+want_out     form=803e/0162 map=RB,1M,RB,RB,RB|2RB
+want_out     pitch=64 slice=256 slice2=256 form=803c/0142 map=0x00200000,RB,RB,RB|RB
+
+# the page rule's padded row IS the pitch word: head_dim 80 -> pitch 192
+# (dim0 = 1, so the state-out record carries the update-row tag: use --last)
+run  python3 scripts/gen_states_nd.py 1 1 85 1 80 1 1 direct > /tmp/pl_cw85.mil && rm -rf /tmp/pl_cw85c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cw85.mil -o /tmp/pl_cw85c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cw85c/pl_cw85.macho --last
+want_rc      0
+want_out     pitch=192
+
 # the two form words are independent: a one-state computed-source program with
 # 2 inputs and 3 outputs has 803e/0142
 run  python3 scripts/gen_states_nd.py 1 4 4 1 1 2 3 add > /tmp/pl_cwca.mil && rm -rf /tmp/pl_cwcac && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cwca.mil -o /tmp/pl_cwcac --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cwcac/pl_cwca.macho
@@ -537,8 +550,8 @@ want_out     status=0x1 rc=1
 
 # ============================================================================
 # 8. h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and
-#    laws; 0x934a is emitted once per binary-add task on h16g, twice on h17
-#    (+1 per add task, NOT +1 per program).
+#    laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice
+#    on h17 (+1 per add task, NOT +1 per program).
 # ============================================================================
 run  python3 scripts/gen_states.py 53 32 32 > /tmp/pl_aio.mil && rm -rf /tmp/pl_aio4 /tmp/pl_aio5 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_aio.mil -o /tmp/pl_aio4 --arch h16g >/dev/null 2>&1 && vendor/mil_spec/target/release/milc ane compile /tmp/pl_aio.mil -o /tmp/pl_aio5 --arch h17 >/dev/null 2>&1 && echo "h16g: $(python3 scripts/count_desc_records.py /tmp/pl_aio4/pl_aio.macho 0x934a)  h17: $(python3 scripts/count_desc_records.py /tmp/pl_aio5/pl_aio.macho 0x934a)"
 want_rc      0
