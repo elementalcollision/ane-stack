@@ -33,6 +33,8 @@ require_file scripts/decode_copy_records.py
 require_file scripts/hwx_layout.py
 require_file scripts/state_exec_predict.py
 require_file scripts/gen_state_dtype.py
+require_file scripts/decode_block_trailers.py
+require_file scripts/decode_copy_words.py
 setup        cd vendor/mil_spec && cargo build --release -q -p milc
 require_artifact vendor/mil_spec/target/release/milc
 
@@ -278,6 +280,28 @@ run  python3 scripts/gen_states_width.py 53 256 > /tmp/pl_w256.mil && rm -rf /tm
 want_rc      0
 want_out     status=0x0 rc=0
 
+# state dtype does not move the pool: int8 / int16 states hit the same 53/54
+# with a plain input, and int8 the same 54/55 without one
+run  python3 scripts/gen_state_dtype.py int8 53 > /tmp/pl_d8_53.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_d8_53.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_state_dtype.py int8 54 > /tmp/pl_d8_54.mil && rm -rf /tmp/pl_d8_54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d8_54.mil -o /tmp/pl_d8_54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  python3 scripts/gen_state_dtype.py int16 54 > /tmp/pl_d16_54.mil && rm -rf /tmp/pl_d16_54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d16_54.mil -o /tmp/pl_d16_54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  python3 scripts/gen_state_dtype.py int8 54 noin > /tmp/pl_d8n54.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_d8n54.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^step 0: [0-9]
+
+run  python3 scripts/gen_state_dtype.py int8 55 noin > /tmp/pl_d8n55.mil && rm -rf /tmp/pl_d8n55c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d8n55.mil -o /tmp/pl_d8n55c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
 # ============================================================================
 # 5. Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) /
 #    0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal
@@ -287,6 +311,54 @@ run  python3 scripts/decode_slot_ordinals.py /tmp/pl_c53/pl_s53.macho && python3
 want_rc      0
 want_out     records=54 bars=55 max_ordinal=54 input_ordinal=54 format_ok=1
 want_out_re  0x9344 records: 54$
+
+# block framing: __text = 0x10-byte preamble + blocks [u16 idx][u16 size in u32
+# words]; every block ends with a FLAT trailer [9344][934a]*[9442][1340][1341][1440].
+# The ori page v1's "0x9344 record with sub-records at +0x0c/+0x18/+0x24/+0x30/
+# +0x38/+0x40" is exactly that trailer laid end to end (h17: two 0x934a).
+run  python3 scripts/decode_block_trailers.py /tmp/pl_c53/pl_s53.macho
+want_rc      0
+want_out     blocks=107 chain_ok=1
+want_out     1x[9344,934a,934a,9442,1340,1341,1440]
+want_out     first9344: block=0 9344@+0x00 934a@+0x0c 934a@+0x18 9442@+0x24 1340@+0x30 1341@+0x38 1440@+0x40 end@+0x48 nexthdr@+0x4c
+want_out     nextblock: idx=1 size=39 prewords=1,30001,10001,1,1,4 frame=0x9361
+
+# h16g has one 0x934a, so every later member moves 12 bytes up
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_btg.mil && rm -rf /tmp/pl_btgc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_btg.mil -o /tmp/pl_btgc --arch h16g >/dev/null 2>&1 && python3 scripts/decode_block_trailers.py /tmp/pl_btgc/pl_btg.macho
+want_rc      0
+want_out     first9344: block=0 9344@+0x00 934a@+0x0c 9442@+0x18 1340@+0x24 1341@+0x2c 1440@+0x34 end@+0x3c nexthdr@+0x3c
+
+# v1's "u32 tail (1, 3, 1, 1, 1, 4)" is the NEXT block's pre-frame window and
+# mirrors the copy record's header: dim1 = 9 -> stride class 5, last word 9
+run  python3 scripts/gen_states_nd.py 3 4 9 1 1 1 1 direct > /tmp/pl_bd9.mil && rm -rf /tmp/pl_bd9c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bd9.mil -o /tmp/pl_bd9c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_block_trailers.py /tmp/pl_bd9c/pl_bd9.macho
+want_rc      0
+want_out     nextblock: idx=1 size=39 prewords=1,50001,10001,1,1,9 frame=0x9361
+
+# a stateless program never has 0 records (v1 said 0): min(in, out) with a
+# plain input; with none, exactly one special (fill) binding. That program
+# compiles but does not run.
+run  python3 scripts/gen_states.py 0 1 1 > /tmp/pl_z011.mil && rm -rf /tmp/pl_z011c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_z011.mil -o /tmp/pl_z011c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_z011c/pl_z011.macho && python3 scripts/hwx_layout.py /tmp/pl_z011c/pl_z011.macho
+want_rc      0
+want_out_re  0x9344 records: 1$
+want_out     data_sections=1 const_sections=1
+
+run  python3 scripts/gen_states.py 0 0 1 > /tmp/pl_z001.mil && rm -rf /tmp/pl_z001c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_z001.mil -o /tmp/pl_z001c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_z001c/pl_z001.macho && python3 scripts/decode_slot_ordinals.py /tmp/pl_z001c/pl_z001.macho
+want_rc      0
+want_out_re  0x9344 records: 1$
+want_out     format_ok=1 special=1
+
+run  vendor/mil_spec/target/release/milc ane run /tmp/pl_z001.mil --steps 1 2>&1
+want_rc      1
+want_out     e5_compiler_compile
+
+# no plain input: raw 0x9344 = K + 1 at N = 1, K + 2 from N = 2 on
+run  python3 scripts/gen_states.py 1 0 1 > /tmp/pl_i101.mil && rm -rf /tmp/pl_i101c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_i101.mil -o /tmp/pl_i101c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_i101c/pl_i101.macho
+want_rc      0
+want_out_re  0x9344 records: 2$
+
+run  python3 scripts/gen_states.py 2 0 1 > /tmp/pl_i201.mil && rm -rf /tmp/pl_i201c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_i201.mil -o /tmp/pl_i201c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_i201c/pl_i201.macho
+want_rc      0
+want_out_re  0x9344 records: 4$
 
 # with no plain input, one 0x9344 binds the fill source: bar_word 0x2080 is
 # below 0x2300 (not an __FVMLIB segment) and is counted as special
@@ -378,6 +450,28 @@ want_out_re  ^tags: 0x9361=1 0x9365=1$
 run  python3 scripts/decode_copy_records.py /tmp/pl_c53/pl_s53.macho | tail -1
 want_rc      0
 want_out     summary: records=53 long=52 short=1 dim0=4 dim1=4 stride=16 uniform=yes region=4194304
+
+# word-level fields (decode_copy_words.py, offsets from the 0x1041 marker):
+# pitch = 64*ceil(d3/32) bytes = the padded row of the §7 page rule; slice =
+# pitch*dim1 (the ori v2 page's "+0x33 flag byte 01 -> 02" is slice's 2nd byte);
+# SHORT map 1M,RB,RB,RB|RB where the 1M word is ceil(d3/8) MiB
+run  python3 scripts/decode_copy_words.py /tmp/pl_cr2c/pl_cr2.macho && python3 scripts/gen_states_nd.py 1 4 4 1 33 1 1 direct > /tmp/pl_cw33.mil && rm -rf /tmp/pl_cw33c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cw33.mil -o /tmp/pl_cw33c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cw33c/pl_cw33.macho
+want_rc      0
+want_out     dim0=4 dim1=2 flagw=8028 pitch=64 slice=128 slice2=128 form=803c/0142 map=1M,RB,RB,RB|RB
+want_out     dim0=4 dim1=4 flagw=8028 pitch=128 slice=512 slice2=512 form=803c/0142 map=0x00500000,RB,RB,RB|RB
+
+# the ori v2 page's "+0x42 shape-class selector 0x42 -> 0x62" is the LONG form
+# word (0x0162) of a non-last record, not a shape field: SHORT [4,4] vs SHORT
+# [32,8] differ at exactly these 9 offsets (no 0x42)
+run  python3 scripts/gen_states_nd.py 1 32 8 1 1 1 1 direct > /tmp/pl_cw328.mil && rm -rf /tmp/pl_cw328c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cw328.mil -o /tmp/pl_cw328c --arch h17 >/dev/null 2>&1 && python3 scripts/gen_states_nd.py 1 4 4 1 1 1 1 direct > /tmp/pl_cw44.mil && rm -rf /tmp/pl_cw44c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cw44.mil -o /tmp/pl_cw44c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cw44c/pl_cw44.macho --diff /tmp/pl_cw328c/pl_cw328.macho
+want_rc      0
+want_out_re  ^diff: 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77$
+
+# the two form words are independent: a one-state computed-source program with
+# 2 inputs and 3 outputs has 803e/0142
+run  python3 scripts/gen_states_nd.py 1 4 4 1 1 2 3 add > /tmp/pl_cwca.mil && rm -rf /tmp/pl_cwcac && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cwca.mil -o /tmp/pl_cwcac --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cwcac/pl_cwca.macho
+want_rc      0
+want_out     form=803e/0142
 
 # no returned update => no state-out record at all
 run  python3 scripts/decode_copy_records.py /tmp/pl_nu10c/pl_nu10.macho --tags

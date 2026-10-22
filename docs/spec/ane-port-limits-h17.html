@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; form-action 'none'; frame-src 'none'; base-uri 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANE Resource Budgets — h17</title>
+<!-- Visual companion to docs/spec/ane-port-limits-h17.md. Every number on this page is
+     asserted by docs/spec/ane-port-limits-h17.spec unless it is marked "runner".
+     Supersedes the ori page ane-descriptor-economy v1-v3 (archived v1:
+     docs/spec/history/ane-descriptor-economy-v1.html). -->
+<style>
+:root{
+  --bg:#ffffff; --fg:#1a1d21; --muted:#5b636e; --line:#d9dee4;
+  --card:#f6f8fa; --accent:#0b5fff; --accent-soft:#e3edff;
+  --good:#0a7a3d; --good-soft:#e2f4ea; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --warn:#9a6a00; --warn-soft:#fdf3dc; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121417; --fg:#e6e9ec; --muted:#9aa3ad; --line:#2b3138;
+    --card:#1a1e23; --accent:#5b93ff; --accent-soft:#16233c;
+    --good:#3ecf7f; --good-soft:#0f2a1c; --bad:#ff6b60; --bad-soft:#341513;
+    --warn:#e0b04b; --warn-soft:#2c2113;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  padding:28px 16px 64px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:18px;margin:34px 0 10px;padding-top:16px;border-top:1px solid var(--line)}
+h3{font-size:15px;margin:20px 0 8px}
+.sub{color:var(--muted);font-size:14px}
+code,.mono{font-family:var(--mono);font-size:12.5px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:5px;
+  background:var(--accent-soft);color:var(--accent);margin-right:4px;white-space:nowrap}
+.tag.good{background:var(--good-soft);color:var(--good)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.grid4{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.grid4{grid-template-columns:1fr}}
+.grid4 .card{margin:0}
+.big{font-size:32px;font-weight:700;font-family:var(--mono)}
+.big small{font-size:15px;color:var(--muted);font-weight:400}
+.lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tblwrap{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--card);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+td.mono{font-family:var(--mono);font-size:12px}
+svg{display:block;max-width:100%;height:auto}
+.note{color:var(--muted);font-size:13px}
+.formula{font-family:var(--mono);font-size:14px;text-align:center}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout.good{border-color:var(--good);background:var(--good-soft)}
+.callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+ol li,ul li{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>ANE Resource Budgets</h1>
+<div class="sub">What one ANE program can hold on <span class="mono">h17</span> (Apple M5 Max, macOS 26.7.1, build 25G241),
+re-measured 2026-10-22 and re-evaluated the same day. Every number below is asserted by
+<span class="mono">docs/spec/ane-port-limits-h17.spec</span> (100 probes, 214 assertions) unless it is tagged
+<span class="tag warn">runner</span>. Full text: <span class="mono">docs/spec/ane-port-limits-h17.md</span>.</div>
+
+<div class="grid4" style="margin-top:18px">
+  <div class="card">
+    <div class="lbl">Execution io cap</div>
+    <div class="big">127 <small>ports</small></div>
+    <div class="note">live inputs + unique outputs + states + returned updates. No floor.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Frontend io cap</div>
+    <div class="big">255 <small>ports</small></div>
+    <div class="note">declared inputs (dead ones too) + outputs + states + returned updates; <span class="mono">MaxLiveInLiveOutExceeded</span>.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">BAR pool</div>
+    <div class="big">55 <small>ids</small></div>
+    <div class="note">one per <span class="mono">__FVMLIB</span> segment ⇒ <b>53 states</b> with a plain input, <b>54</b> without.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">State rows</div>
+    <div class="big">64 <small>B pitch</small></div>
+    <div class="note">a state executes iff the 64 B row padding adds no 16 KiB page.</div>
+  </div>
+</div>
+
+<div class="callout good">
+  <b>The model in one paragraph.</b> A program executes iff its live ports fit in <b>127</b> and its declared ports fit in
+  <b>255</b>. Every <span class="mono">state&lt;&gt;</span> costs one port, and each returned update costs one more. Separately,
+  each state surface owns one of the <b>55</b> BAR ids, while all non-state io packs into at most two shared segments
+  (data and const). So <span class="mono">N_max = 55 − [any output] − [any plain input]</span>. This holds for fp16, int16, int8,
+  uint8 and bool states, any state shape, inline conv weights and LUT ops. Inside the compiled HWX, every task block ends
+  with a flat trailer of 12-byte buffer bindings whose slot word is a BAR id.
+</div>
+
+<h2>1 · Ports — the execution cap</h2>
+<div class="card formula">live_in + n_states + unique_out + n_exposed_states ≤ 127</div>
+<p>Liveness roots are the returned outputs <b>and every <span class="mono">write_state</span></b>. An input feeding only a
+state update still costs a port, even when the update is not returned. Dead inputs are free on the run path, and so are
+duplicate entries in the return tuple. Widening ports to 16 KiB does not move the boundary.</p>
+<div class="tblwrap"><table>
+  <tr><th class="num">inputs (all live)</th><th class="num">max outputs</th><th class="num">sum</th><th>one past it</th></tr>
+  <tr><td class="num">1</td><td class="num">126</td><td class="num">127</td><td><span class="tag bad">(1, 127) fails</span></td></tr>
+  <tr><td class="num">32</td><td class="num">95</td><td class="num">127</td><td><span class="tag bad">(32, 96) fails</span></td></tr>
+  <tr><td class="num">65</td><td class="num">62</td><td class="num">127</td><td><span class="tag bad">(65, 63) fails</span> — the old "floor at 63" predicted a pass</td></tr>
+  <tr><td class="num">100</td><td class="num">27</td><td class="num">127</td><td><span class="tag bad">(100, 28) fails</span></td></tr>
+  <tr><td class="num">126</td><td class="num">1</td><td class="num">127</td><td><span class="tag bad">(127, 1) fails</span></td></tr>
+</table></div>
+<div class="tblwrap"><table>
+  <tr><th>program with states</th><th class="num">ports</th><th>result</th></tr>
+  <tr><td>53 states, all updates returned, 1 in, 20 out</td><td class="num">127</td><td><span class="tag good">runs</span></td></tr>
+  <tr><td>… 21 out</td><td class="num">128</td><td><span class="tag bad">execute_sync status=0x2</span></td></tr>
+  <tr><td>53 states, no update returned, 1 in, 73 out</td><td class="num">127</td><td><span class="tag good">runs</span></td></tr>
+  <tr><td>3 noupd states, 100 inputs feeding only the update, 24 out</td><td class="num">127</td><td><span class="tag good">runs</span> (25 out fails)</td></tr>
+  <tr><td>53 states + 32 in + 32 out (all updates returned)</td><td class="num">170</td><td><span class="tag warn">compiles, does not run</span></td></tr>
+</table></div>
+<p class="note">Failure on the run path: exit 1, <span class="mono">status=0x2 : statusType=0x9: Program Inference error</span>. A failing
+run also prints <span class="mono">step 0:</span>, so judge by exit code. Never return an input unchanged: it comes back as
+zeros (<span class="tag warn">runner</span>).</p>
+
+<h2>2 · Ports — the frontend cap</h2>
+<div class="card formula">declared_in + n_states + out + n_exposed_states ≤ 255</div>
+<p><span class="mono">validate</span> and <span class="mono">compile</span> count declared inputs, dead ones included:
+(127, 128) is accepted, (128, 128) and (255, 1) are rejected, and 126 exposed states validate while 127 do not. The run path
+prunes dead inputs first, so the (255, 1) file still runs. These hold on <span class="mono">--arch h17</span> and
+<span class="mono">h16g</span>. Note that <span class="mono">validate</span>/<span class="mono">compile</span> default to h16g.</p>
+
+<h2>3 · The BAR pool — why 53, and when 54</h2>
+<div class="card">
+<svg viewBox="0 0 1000 250" role="img" aria-label="BAR pool: 55 ids; state surfaces each own one, shared data and const segments take the rest">
+  <defs><style>
+    .st{fill:var(--accent-soft);stroke:var(--accent)}
+    .dt{fill:var(--good-soft);stroke:var(--good)}
+    .ct{fill:var(--warn-soft);stroke:var(--warn)}
+    .ov{fill:var(--bad-soft);stroke:var(--bad);stroke-dasharray:3 2}
+    .lb{font:12px var(--mono);fill:var(--fg)}
+    .lm{font:11px var(--mono);fill:var(--muted)}
+  </style></defs>
+  <text class="lb" x="0" y="16">53 states + plain input + output → 55 of 55 ids</text>
+  <g transform="translate(0,24)">
+    <rect class="st" x="0" y="0" width="901" height="26" rx="3"/>
+    <text class="lm" x="450" y="17" text-anchor="middle">53 state surfaces (ids 0–52) · never packed</text>
+    <rect class="dt" x="905" y="0" width="40" height="26" rx="3"/><text class="lm" x="925" y="17" text-anchor="middle">data</text>
+    <rect class="ct" x="949" y="0" width="40" height="26" rx="3"/><text class="lm" x="969" y="17" text-anchor="middle">const</text>
+  </g>
+  <text class="lb" x="0" y="86">54 states, no plain input (fill / nested const source) → 55 of 55 ids · compiles and runs</text>
+  <g transform="translate(0,94)">
+    <rect class="st" x="0" y="0" width="945" height="26" rx="3"/>
+    <text class="lm" x="472" y="17" text-anchor="middle">54 state surfaces (ids 0–53)</text>
+    <rect class="dt" x="949" y="0" width="40" height="26" rx="3"/><text class="lm" x="969" y="17" text-anchor="middle">data</text>
+  </g>
+  <text class="lb" x="0" y="156">54 states + plain input → would need 56 → unable to allocate free BAR</text>
+  <g transform="translate(0,164)">
+    <rect class="st" x="0" y="0" width="857" height="26" rx="3"/>
+    <text class="lm" x="428" y="17" text-anchor="middle">54 state surfaces</text>
+    <rect class="dt" x="861" y="0" width="40" height="26" rx="3"/><text class="lm" x="881" y="17" text-anchor="middle">data</text>
+    <rect class="ct" x="905" y="0" width="40" height="26" rx="3"/><text class="lm" x="925" y="17" text-anchor="middle">const</text>
+    <rect class="ov" x="949" y="0" width="40" height="26" rx="3"/><text class="lm" x="969" y="17" text-anchor="middle">56th</text>
+  </g>
+  <text class="lm" x="0" y="232">Split layout (one segment per section) while const + data sections ≤ 55; otherwise packed. __KERN_0 (LUT / conv) is kept only if an id is free.</text>
+</svg>
+</div>
+<div class="tblwrap"><table>
+  <tr><th>program</th><th>compiles</th><th>runs</th></tr>
+  <tr><td>53 states + 1 in + 1 out (any shape; fp16, int8, int16)</td><td><span class="tag good">yes</span></td><td><span class="tag good">yes</span></td></tr>
+  <tr><td>54 states + 1 in + 1 out</td><td><span class="tag bad">free BAR</span></td><td><span class="tag bad">ANECCompile() FAILED</span></td></tr>
+  <tr><td>54 states, no plain input (fp16 or int8)</td><td><span class="tag good">yes</span></td><td><span class="tag good">yes</span></td></tr>
+  <tr><td>55 states, no plain input</td><td><span class="tag bad">free BAR</span></td><td>—</td></tr>
+  <tr><td>53 states + an inline conv weight, or + a sigmoid</td><td><span class="tag good">yes</span> (kern shed)</td><td><span class="tag good">yes</span></td></tr>
+  <tr><td>53 states, no update returned (one <span class="mono">0x9344</span> in total)</td><td><span class="tag good">yes</span></td><td><span class="tag good">yes</span>; 54 fails</td></tr>
+</table></div>
+<p class="note">Why the pool holds 55 is not known. BLOBFILE weights are untested. An intermediate over about 2 MiB adds a
+<span class="mono">__DATA</span> scratch segment, which is not a BAR consumer.</p>
+
+<h2>4 · Inside the HWX — blocks and trailers</h2>
+<p><span class="mono">__TEXT.__text</span> is a 0x10-byte preamble followed by a chain of blocks. Each block starts 16-byte aligned with
+<span class="mono">[u16 idx][u16 size in u32 words]</span> and ends with a <b>flat</b> descriptor trailer. Nothing is nested.</p>
+<div class="card">
+<svg viewBox="0 0 980 190" role="img" aria-label="The full descriptor trailer of block 0 on h17, with byte offsets">
+  <defs><style>
+    .b12{fill:var(--accent-soft);stroke:var(--accent)}
+    .b8{fill:var(--good-soft);stroke:var(--good)}
+    .bn{fill:var(--card);stroke:var(--line)}
+    .tt{font:600 12px var(--mono);fill:var(--fg)}
+    .to{font:11px var(--mono);fill:var(--muted)}
+  </style></defs>
+  <text class="tt" x="0" y="14">h17, block 0 of gen_states 53 1 1 — offsets from the first 0x9344 tag</text>
+  <g transform="translate(0,30)">
+    <rect class="b12" x="0"   y="20" width="120" height="44" rx="5"/><text class="tt" x="60"  y="47" text-anchor="middle">0x9344</text>
+    <rect class="b12" x="120" y="20" width="120" height="44" rx="5"/><text class="tt" x="180" y="47" text-anchor="middle">0x934a</text>
+    <rect class="b12" x="240" y="20" width="120" height="44" rx="5"/><text class="tt" x="300" y="47" text-anchor="middle">0x934a</text>
+    <rect class="b12" x="360" y="20" width="120" height="44" rx="5"/><text class="tt" x="420" y="47" text-anchor="middle">0x9442</text>
+    <rect class="b8"  x="480" y="20" width="80"  height="44" rx="5"/><text class="tt" x="520" y="47" text-anchor="middle">0x1340</text>
+    <rect class="b8"  x="560" y="20" width="80"  height="44" rx="5"/><text class="tt" x="600" y="47" text-anchor="middle">0x1341</text>
+    <rect class="b8"  x="640" y="20" width="80"  height="44" rx="5"/><text class="tt" x="680" y="47" text-anchor="middle">0x1440</text>
+    <rect class="bn"  x="730" y="20" width="240" height="44" rx="5"/><text class="to" x="850" y="40" text-anchor="middle">next block @+0x4c [idx 1][size 39]</text><text class="to" x="850" y="56" text-anchor="middle">prewords 1,30001,10001,1,1,4</text>
+    <text class="to" x="0"   y="12">+0x00</text><text class="to" x="120" y="12">+0x0c</text><text class="to" x="240" y="12">+0x18</text>
+    <text class="to" x="360" y="12">+0x24</text><text class="to" x="480" y="12">+0x30</text><text class="to" x="560" y="12">+0x38</text>
+    <text class="to" x="640" y="12">+0x40</text><text class="to" x="700" y="80">end +0x48</text>
+    <text class="to" x="0" y="100">12 B: [tag u16][bar_word u16][offset u32][0 u32] · bar_word = 0x2300 + 0x80·(segment ordinal = BAR id)</text>
+    <text class="to" x="0" y="118">8 B: [tag u16][0x2200][flags u32] · flags 0x21 single consumer, 0xe1/0xc1 shared (0x31 on h16g 0x1440)</text>
+    <text class="to" x="0" y="136">h16g emits one 0x934a, so 9442 sits at +0x18 and the trailer ends at +0x3c.</text>
+  </g>
+</svg>
+</div>
+<div class="tblwrap"><table>
+  <tr><th>tag</th><th>role</th><th>count (gen_states-shaped programs with a plain input)</th></tr>
+  <tr><td class="mono">0x9344</td><td>a task's primary source</td><td class="mono">K + max(1, min(in, out)) — 54 at 53 states, 85 with 32/32 io, 1 with no update returned; ≥ 1 even when stateless</td></tr>
+  <tr><td class="mono">0x934a</td><td>a further source of a binary task</td><td class="mono">2 per self-add task on h17, 1 on h16g (32/32 io: 64 vs 32)</td></tr>
+  <tr><td class="mono">0x9442</td><td>the task's destination</td><td class="mono">one per __data section (52 states + 50 out → 154)</td></tr>
+</table></div>
+<p class="note">A slot word below <span class="mono">0x2300</span> binds a buffer that is not an <span class="mono">__FVMLIB</span> segment:
+<span class="mono">0x2080</span> is a fill or inline-constant source, and higher values bind the &gt;2 MiB scratch.
+<span class="mono">decode_slot_ordinals.py</span> reports these as <span class="mono">special=</span>.</p>
+
+<h2>5 · State-copy records</h2>
+<div class="card formula">tag = 0x9261 + 0x100·[dim1 ≠ 1] + 0x004·[dim0 ≠ 1] − 0x001·[dim1 = 16]</div>
+<p>The low bits of the tag are presence flags (dim1 field, dim0 field, stride word), so the "read" <span class="mono">0x9361</span> and "write"
+<span class="mono">0x9365</span> records are the same record type. The update-row role carries the shape too. A state with
+<span class="mono">dim2</span> or <span class="mono">dim3</span> exactly 256 emits no copy record, yet still runs.</p>
+<div class="tblwrap"><table>
+  <tr><th>field</th><th>value</th><th>where in 0x9365</th></tr>
+  <tr><td>dim3, dim2, dim1, dim0</td><td>u32 each, present per the tag flags</td><td class="mono">+0x02, +0x06, +0x0a, +0x0e</td></tr>
+  <tr><td>stride word</td><td class="mono">8·min(⌈log2 dim1⌉, 4) — dim1 2→8, 5→24, 9→32</td><td class="mono">+0x1c</td></tr>
+  <tr><td>flag word</td><td class="mono">0x8000 | 0x08·[dim1≠1] | 0x20·[dim0≠1]</td><td class="mono">+0x28</td></tr>
+  <tr><td><b>pitch</b></td><td class="mono">64·⌈d3/32⌉ bytes — the padded row of §6</td><td class="mono">+0x2e</td></tr>
+  <tr><td>slice</td><td class="mono">pitch·dim1 (v2's "+0x33 flag byte" is its 2nd byte)</td><td class="mono">+0x32</td></tr>
+  <tr><td>form words</td><td class="mono">803c/0142 SHORT · 803e/0162 LONG · 803e/0142 (independent)</td><td class="mono">marker 0x1041 +2, +4</td></tr>
+  <tr><td>row width</td><td class="mono">rowbits = 16·dim1·⌈d3/8⌉; four words = rowbits &lt;&lt; 16</td><td class="mono">SHORT: 1M, RB, RB, RB | RB</td></tr>
+</table></div>
+<p class="note">When the update source is a plain input used directly, only the last state-out record is SHORT. The old
+"<span class="mono">+0x42</span> selector <span class="mono">0x42 → 0x62</span>" was the LONG form word of a non-last record; two SHORT records
+for <span class="mono">[4,4]</span> and <span class="mono">[32,8]</span> differ at exactly <span class="mono">0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77</span>.</p>
+
+<h2>6 · State execution — the page rule</h2>
+<div class="card formula">rows = d0·d1·d2 · padded = rows·pitch · executes iff ⌈rows·d3·2 / 16 KiB⌉ = ⌈padded / 16 KiB⌉</div>
+<div class="tblwrap"><table>
+  <tr><th>state</th><th class="num">rows</th><th class="num">pitch</th><th>result</th></tr>
+  <tr><td class="mono">[4,64,1,1]</td><td class="num">256</td><td class="num">64</td><td><span class="tag good">runs</span></td></tr>
+  <tr><td class="mono">[4,65,1,1]</td><td class="num">260</td><td class="num">64</td><td><span class="tag bad">status=0x1d</span></td></tr>
+  <tr><td class="mono">[1,300,1,31]</td><td class="num">300</td><td class="num">64</td><td><span class="tag good">runs</span> — rows ≤ 256 is sufficient, not necessary</td></tr>
+  <tr><td class="mono">[1,260,1,31]</td><td class="num">260</td><td class="num">64</td><td><span class="tag bad">status=0x1d</span></td></tr>
+  <tr><td class="mono">[1,85,1,80]</td><td class="num">85</td><td class="num">192</td><td><span class="tag good">runs</span></td></tr>
+  <tr><td class="mono">[1,86,1,80]</td><td class="num">86</td><td class="num">192</td><td><span class="tag bad">status=0x1d</span> — pad head_dim 80 to a multiple of 32</td></tr>
+  <tr><td class="mono">[4,128,1,32]</td><td class="num">512</td><td class="num">64</td><td><span class="tag good">runs</span> — d3 % 32 == 0 never pads</td></tr>
+</table></div>
+<p class="note">State dtypes: fp16, int16, int8, uint8 and bool compile and run; fp32 and int32 are rejected.
+<span class="mono">python3 scripts/state_exec_predict.py d0 d1 d2 d3</span> applies the rule.</p>
+
+<h2>7 · Planning rules</h2>
+<ol>
+  <li>Ports at execution: <span class="mono">live_in + n_states + unique_out + n_exposed_states ≤ 127</span>. Count every <span class="mono">write_state</span> as a root.</li>
+  <li>Ports at the frontend: <span class="mono">declared_in + n_states + out + n_exposed_states ≤ 255</span>. Drop dead inputs first.</li>
+  <li>States: <span class="mono">N ≤ 55 − [any output] − [any plain input]</span>, which is 53 in practice, for any allowed dtype.</li>
+  <li>State shape: <span class="mono">d3 % 32 == 0</span> is always safe; otherwise ask the predictor.</li>
+  <li>Return a state's update only if you need it, since each one costs a port. Never return an input unchanged.</li>
+  <li>Pass <span class="mono">--arch</span> explicitly, and re-run the spec on any new OS build or SoC.</li>
+</ol>
+
+<h2>8 · What the ori page (v1–v3) said, and what holds</h2>
+<p class="note">The first version of this companion lived in the <span class="mono">ori</span> workspace. A runner classified all
+91 of its claims: 37 refuted, 26 partially true, 14 hold, and 6 hold under a new reading. The 8 left open were measured on hardware.
+v1 is archived at <span class="mono">docs/spec/history/ane-descriptor-economy-v1.html</span>.</p>
+<div class="tblwrap"><table>
+  <tr><th>ori page</th><th>now</th></tr>
+  <tr><td>Descriptor table cap: 54 slots (53 states + 1 header)</td><td><span class="tag bad">refuted</span> a 55-id BAR pool; <span class="mono">0x9344</span> is not a table</td></tr>
+  <tr><td>53 states, independent of io, dtype, stripe width</td><td><span class="tag warn">partly</span> independent of dtype and width; 54 without a plain input; states cost io ports</td></tr>
+  <tr><td><span class="mono">0x9344</span> sub-records at +0x0c … +0x40</td><td><span class="tag good">holds, reinterpreted</span> the flat h17 trailer laid end to end</td></tr>
+  <tr><td>u32 tail (1, 3, 1, 1, 1, 4)</td><td><span class="tag bad">refuted</span> the next block's pre-frame window</td></tr>
+  <tr><td>payload <span class="mono">0x21</span> constant</td><td><span class="tag bad">refuted</span> a flags byte</td></tr>
+  <tr><td>0 states → 0 records</td><td><span class="tag bad">refuted</span> always at least 1</td></tr>
+  <tr><td>read template fixed; write carries the shape</td><td><span class="tag bad">refuted</span> one record type with presence flags</td></tr>
+  <tr><td>stride <span class="mono">min(2·dim1 + 8, 32)</span></td><td><span class="tag bad">refuted</span> <span class="mono">8·min(⌈log2 dim1⌉, 4)</span></td></tr>
+  <tr><td>+0x40/+0x42 shape-class selector</td><td><span class="tag bad">refuted</span> SHORT/LONG form words</td></tr>
+  <tr><td>+0x33 flag byte</td><td><span class="tag good">holds, reinterpreted</span> byte of <span class="mono">slice = 64·dim1·⌈d3/32⌉</span></td></tr>
+  <tr><td>region vmsize = dim1 MiB ×4</td><td><span class="tag warn">partly</span> four <span class="mono">rowbits &lt;&lt; 16</span> words; not a vmsize</td></tr>
+  <tr><td><span class="mono">max(63, 127 − in)</span>; frontend 200+</td><td><span class="tag bad">refuted</span> <span class="mono">live_in + out ≤ 127</span>; frontend ≤ 255</td></tr>
+  <tr><td>M4 → M5: only one extra <span class="mono">0x934a</span></td><td><span class="tag warn">partly</span> +1 per add task; arch bytes differ</td></tr>
+</table></div>
+
+<h2>Not covered</h2>
+<ul>
+  <li>BLOBFILE weights, matmul or attention graphs, and multi-function programs.</li>
+  <li>The CoreML lane.</li>
+  <li>M4 silicon: h16g is cross-compiled only, and the M4 host is the only macOS 27.0 host.</li>
+  <li>Numerics: a pass means exit 0 plus a timing line. Runtime-position state appends are also untested.</li>
+</ul>
+
+<h2>Provenance &amp; reproduce</h2>
+<div class="tblwrap"><table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>SoC</td><td class="mono">Apple M5 Max (Mac17,7, exposes h17); h16g cross-compiled on the same host</td></tr>
+  <tr><td>OS</td><td class="mono">macOS 26.7.1 (25G241)</td></tr>
+  <tr><td>Compiler</td><td class="mono">zin_ane_compiler v9.510.0 · coremlc 3600.25.1</td></tr>
+  <tr><td>Assertions</td><td class="mono">docs/spec/ane-port-limits-h17.spec — 100 probes / 214 assertions, ~20 s, self-contained</td></tr>
+  <tr><td>Method</td><td class="mono">four hardware runners, a held-out re-evaluation, and adversarial skeptics; decisive points re-run</td></tr>
+  <tr><td>Date</td><td class="mono">2026-10-22</td></tr>
+</table></div>
+<div class="callout warn">
+  <b>Re-derive, don't trust.</b> Run <span class="mono">./scripts/evidence-check.sh --require-all docs/spec/ane-port-limits-h17.spec</span>.
+  Every pass is judged by exit code, so a drifted claim fails the run.
+</div>
+
+</div>
+</body>
+</html>

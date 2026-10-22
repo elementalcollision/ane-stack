@@ -15,9 +15,11 @@
 > Claims marked *(runner-only)* have no spec line. The spec asserts every headline
 > law and the boundaries a planner needs, not every sentence.
 >
-> The `ori` page `ane-descriptor-economy` (v1–v3) predates this re-measurement
-> and draws the refuted model (54-slot table, read/write asymmetry). Do not
-> extrapolate from it.
+> **Visual companion:** `docs/spec/ane-port-limits-h17.html` draws this model.
+> The older `ori` page `ane-descriptor-economy` (v1–v3) drew the refuted one; v1
+> is archived with a banner at `docs/spec/history/ane-descriptor-economy-v1.html`.
+> Every claim on v1–v3 has been classified; see
+> [The ori pages, claim by claim](#the-ori-pages-v1v3-claim-by-claim).
 
 ## Build provenance
 
@@ -29,9 +31,9 @@
 | h16g (M4) data | **cross-compiled on this M5 host only**. Nothing was loaded or run on M4 silicon. |
 | Probes | `milc ane validate \| compile \| run` on generated `program(1.3)` MIL. **`validate`/`compile` default to `--arch h16g`**: always pass `--arch h17` (the spec does). `run` ignores `--arch`, so its results are always the host's. |
 | Generators | `gen_live_ports.py` (every input live), `gen_mix_ports.py` (inputs beyond `out` are dead), `gen_dup_returns.py`, `gen_states.py`, `gen_states_width.py`, `gen_states_nd.py` (4-D state, `add`/`direct` update source, `noupd`, `in=0`, `conv=K`, `lut=…`), `gen_state_dtype.py` |
-| Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_copy_records.py`, `state_exec_predict.py` |
+| Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_block_trailers.py` (block framing and trailers), `decode_copy_records.py`, `decode_copy_words.py` (word-level copy-record view), `state_exec_predict.py` |
 | Method | Four hardware runners re-measured each law family (the io runner alone made 3,886 `milc` calls; the others compiled ~900, ~1,300 and ~1,900 artifacts). Every boundary was run at least twice with 0 flips; the ANE may have been shared between runners. The decisive points were re-run by the orchestrator. A second round tested held-out points against this text (the corrections are listed at the end). |
-| Spec | 84 probes, 176 assertions, PASS in ~18 s; `require_hw`-gated, and it builds milc itself |
+| Spec | 100 probes, 214 assertions, PASS in ~20 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
 | Date | 2026-10-22 |
 
 Reading a run result:
@@ -193,6 +195,13 @@ the second round. N up to 53 (126 for the frontend); IN up to 100.
 | 53 states, **no update returned** (one `0x9344` in the whole program) | 55 | yes | yes |
 | 54 of the same | — | no | — |
 
+**State dtype does not move the pool (established).**
+- With a plain input: int8 and int16 states hit the same 53/54 as fp16. int8 at
+  53 runs. (asserted)
+- Without a plain input: int8 states hit the same 54/55. (asserted)
+- Runner: uint8 and bool, noupd variants, and int8 states up to `[16,64,1,32]`
+  behave the same way.
+
 Beyond these asserted cases, the runners found the same boundary across:
 - state shape: dim0 4..256, dim1 1..64, mixed shapes
 - op chains up to 200 ops
@@ -277,9 +286,32 @@ else against the segment table (`format_ok=1`). `bars` counts the referenced
 | `0x934a` | a **further source** of a binary task |
 | `0x9442` | the task's **destination** |
 
-These are flat members of a per-block descriptor trailer
-`[9344] [934a]* [9442] [1340] [1341] [1440]` (any subset, in this order). Nothing
-is "embedded inside" `0x9344` or `0x9361` *(strong, runner)*.
+**Block framing and trailers (established; `decode_block_trailers.py`).**
+- `__TEXT.__text` is a 0x10-byte preamble followed by a chain of blocks. Each
+  block starts 16-byte aligned with `[u16 idx][u16 size]`, where idx = 0, 1, 2, …
+  and size is the block length in u32 words including that header word. The
+  chain ends exactly at the end of `__text`.
+- Every block ends with a **flat** descriptor trailer
+  `[9344 12B] [934a 12B]* [9442 12B] [1340 8B] [1341 8B] [1440 8B]` (any subset,
+  in this order). The 8-byte members are `[tag u16][0x2200][flags u32]`.
+- Nothing is embedded inside `0x9344` or `0x9361`. No trailer tag occurs outside a
+  trailer.
+- In `gen_states 53 1 1` there are 107 blocks:
+  - one full trailer (block 0, the plain-output add task), with 7 members on h17
+    (two `0x934a`) and 6 on h16g
+  - 53 trailers of `[9344, 9442, 1340, 1440]`
+  - 53 of `[9442, 1440]`
+
+The `ori` page v1 showed a "`0x9344` record" with sub-records at
+`+0x0c/+0x18/+0x24/+0x30/+0x38/+0x40`. That is exactly the h17 full trailer laid
+end to end (12 + 12 + 12 + 12 + 8 + 8 + 8 bytes). On h16g every member after the
+single `0x934a` sits 12 bytes earlier.
+
+v1's "u32 tail (1, 3, 1, 1, 1, 4)" is not part of `0x9344`. It is the **next**
+block's pre-frame window (block + 0x1c, up to its first `0x8005` frame). It
+mirrors the copy record's header: `[1][(stride class + 1) << 16 | 1][0x10001]
+[d3][d2][d1]`. It is independent of N and dim0, and identical on both arches. At
+dim1 = 9 it reads `1,50001,10001,1,1,9` (asserted).
 
 **Counts (established for `gen_states.py`-shaped programs with a plain input,
 outside the fan-out regime):**
@@ -292,7 +324,13 @@ outside the fan-out regime):**
 - `gen_states 53 1 1` gives 54. `gen_states 53 32 32` gives **85**, and it compiles.
 - A 53-state noupd program has **1**.
 - `0x9344` is therefore **not a state table and does not cap at 54**.
-- With no plain input, the raw count is K + 2 (one special).
+- **Stateless programs always have at least one record**, so the `ori` page's
+  "0 records at 0 states" is wrong. With a plain input the count is
+  `min(in, out)` (asserted at (1,1); runner at (3,2) and (5,50)). With no plain
+  input it is exactly 1, a special binding. A stateless no-input program compiles
+  but does not run (`e5_compiler_compile` fails; asserted).
+- With no plain input and N ≥ 1, the raw count is K + 1 at N = 1 and K + 2 from
+  N = 2 on, with one special (asserted at N = 1 and 2).
 - With a computed update source, extra compute tasks add records at
   program-dependent N *(tentative)*.
 
@@ -381,6 +419,34 @@ The old law `min(2·dim1 + 8, 32)` agrees only at dim1 = 4, 8 and ≥ 12.
   update-row tag, so use `--reads` or `--tags`. A noupd program's first
   update-row, and update-rows with dim2 > 1, decode as `form=other`.
 
+**Word-level fields (established; `decode_copy_words.py`, offsets from the `0x1041`
+marker so they hold for every tag; 328/328 state-out records fit).**
+
+| field | value | where (in `0x9365`) |
+|---|---|---|
+| flag word | `0x8000 | 0x08·[dim1≠1] | 0x20·[dim0≠1]` (`0x8028` for `0x9365`) | right after the `0x1342` tag, tag+0x28 |
+| **pitch** | `64·⌈d3/32⌉` bytes, the padded row length of the page rule (§7) | tag+0x2e |
+| slice | `pitch · dim1`; present only when dim0 ≠ 1 and dim1 ≠ 1 | tag+0x32 |
+| slice copy | `slice` again (equals pitch when slice is elided) | 8 bytes before the end of the core |
+| form words | first word `0x803c` SHORT / `0x803e` LONG (sets the record length); second word `0x0142` / `0x0162` | marker+2, marker+4 |
+
+- **The two form words are independent.** Observed pairs: (803c, 0142) ×207,
+  (803e, 0162) ×98, (803e, 0142) ×24 (a one-state computed-source program with
+  ≥ 2 inputs and ≥ 2 outputs; asserted), and never (803c, 0162).
+- **SHORT word map:** `1M, RB, RB, RB | RB`, where 1M is `⌈d3/8⌉ MiB` (2 MiB at
+  d3 = 9, 5 MiB at d3 = 33; asserted).
+- **Direct LONG word map:** `RB, 1M, RB, RB, RB | 2RB`.
+- In both layouts exactly four words equal `rowbits << 16`.
+- No Mach-O segment size tracks these words: every `__FVMLIB` vmsize is 16 KiB.
+  The old "region vmsize" reading has no counterpart.
+- **What v2 actually saw.** The `ori` page v2 compared `[4,4]` and `[32,8]` and
+  reported 9 varying bytes, including "`+0x42` selector `0x42 → 0x62`" and
+  "`+0x33` flag `01 → 02`". Two one-state SHORT records actually differ at
+  `0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77` (asserted).
+  - `+0x33` is the second byte of `slice` (dim1/4).
+  - `+0x42` stays `0x42` in every SHORT record; `0x62` is the low byte of the LONG
+    word `0x0162`, which non-last records of multi-state programs carry.
+
 **The update-row record is not a fixed template.** It carries dim1, the stride
 word, rowbits and a per-record buffer binding (asserted at dim1 = 8). The old
 "byte-identical across shapes and counts" compared only two programs that
@@ -401,7 +467,11 @@ ceil(true / 16384) == ceil(padded / 16384)
 ```
 
 Otherwise it fails with `status=0x1d : statusType=0x9: Program Inference error`.
-`scripts/state_exec_predict.py` implements the rule. **Use the predictor; the
+`scripts/state_exec_predict.py` implements the rule. **The 64-B row is in the
+compiled record:** the copy record's `pitch` word is `64·⌈d3/32⌉`, so
+`padded = rows · pitch` exactly. At `[4,4,1,33]` the pitch is 128 and
+padded = 16 · 128 = 2048, which is what the predictor computes. The rule's
+"padding" is the compiler's own row pitch. **Use the predictor; the
 shortcuts are only sufficient conditions.**
 - `d3 % 32 == 0` ⇒ there is no padding, so the state always executes. Very large
   states run, e.g. `[4,16,1,16384]`.
@@ -523,6 +593,47 @@ held-out testing and audit before merge:
 - "every claim has a spec line"
 
 Each now has a spec line or an explicit *(runner-only)* label.
+
+## The ori pages (v1–v3), claim by claim
+
+The visual companion first lived in the `ori` workspace as `ane-descriptor-economy`:
+- v1 at 09:12, v2 at 09:14 (adds the read/write asymmetry and byte table), and
+  v3 at 09:42 (adds "WHY 54" and the M4/M5 delta), all on 2026-10-22.
+- sha256: v1 `ac3179c2…3418d0e`, v2 `4e1e932e…bc7112`, v3 `1ab9a17b…418cfb7`.
+
+A Haiku runner classified all **91** factual claims on the three versions against
+this writeup:
+
+| status | count |
+|---|---|
+| refuted | 37 |
+| partially true | 26 |
+| holds | 14 |
+| holds, reinterpreted | 6 |
+| not settled by this writeup | 8 |
+
+Two Sonnet runners then measured the 8 unsettled claims, and they are settled
+above. The headline items:
+
+| page claim | status | now | § |
+|---|---|---|---|
+| "descriptor table cap: 54 slots; 53 states + 1 header" | refuted | 55-id BAR pool; `0x9344` is not a table | 4, 5 |
+| "53 states is the hard ceiling, independent of io, dtype, stripe width, segment count" | partially true | independent of **dtype** (newly measured) and stripe width; not of io (states cost ports) or segment kind (54 without a plain input) | 3, 4 |
+| "cost per state: 2 `__data` segs + 1 slot" | refuted | `N + K + plain_out` sections; one segment per state surface | 4 |
+| "`0x9344` record: `0x934a`×2 at +0x0c/+0x18, `0x9442` at +0x24, 1340/1341/1440 at +0x30/+0x38/+0x40" | holds, reinterpreted | the h17 full trailer laid end to end | 5 |
+| "u32 tail (1, 3, 1, 1, 1, 4) — type/count constants" | refuted | the next block's pre-frame window, mirroring the copy header | 5 |
+| "payload 0x21 (33, constant)" | refuted | flags byte (0x21 / 0xc1 / 0xe1; 0x31 on h16g) | 5 |
+| "0 states: 0 records" | refuted | at least 1 record always | 5 |
+| "`0x9361` read: fixed template; `0x9365` write: carries the shape" | refuted | one record type with presence flags; both carry dim1/stride | 6 |
+| "stride = `min(2·dim1 + 8, 32)`" | refuted | `8·min(⌈log2 dim1⌉, 4)` | 6 |
+| "+0x40 shape-class selector (dim1 ≤ 4 vs ≥ 8)", "+0x42: 0x42 → 0x62" | refuted | SHORT/LONG form words, independent of shape | 6 |
+| "+0x33 flag byte 01 → 02" | holds, reinterpreted | second byte of `slice = 64·dim1·⌈d3/32⌉` | 6 |
+| "+0x44 constant 0x00100000" | partially true | `⌈d3/8⌉ MiB` in SHORT records; RB in LONG | 6 |
+| "region vmsize = dim1 × 1 MiB, ×4 identical reservations" | partially true | four `rowbits << 16` words (= dim1 MiB only for d3 ≤ 8); not a vmsize | 6 |
+| "`out_cap(in) = max(63, 127 − in)`; frontend accepts 200+" | refuted / incomplete | `live_in + out ≤ 127`; frontend ≤ 255 | 1, 2 |
+| "M4 → M5 identical; only delta one `0x934a`" | partially true | compile-time laws equal; `0x934a` +1 per add task; arch bytes differ | 8 |
+| "`__text` vmsize grows linearly with states" | holds *(runner: `__text` ≈ 320 + 384·N bytes in `gen_states`)*, but it is not why the cap exists | — | 4 |
+| "Every number is reproduced; nothing here is guessed" | refuted | the page's spec checks were vacuous on the pass side | — |
 
 ## Open questions
 
