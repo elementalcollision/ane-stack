@@ -95,6 +95,24 @@ unable to allocate free BAR
 resource-descriptor allocator), so the frontend *validates* the program but
 cannot *compile* it.
 
+### BAR table characterization (what admits 53)
+
+Probed by varying one structural knob at a time on the working rsw form:
+
+| knob varied | boundary moves? | conclusion |
+|---|---|---|
+| state stripe width (rows/state: 4 → 256) | **no** (54 fails at every width) | per-**descriptor**, not per-**byte** |
+| tiny states `[1,1,1,1]` (1 elem each) | **no** (54 still fails) | a **count** of states, not a byte budget |
+| plain io added (32 in + 32 out) | **no** (53 states still compile) | io ports **do not** consume BAR entries |
+| shared consts added (60 unused) | **no** (53 states still compile) | const buffers **do not** consume BAR entries |
+| per-state transient buffers (cur + upd) | n/a — see note | **do not** count (159 named buffers would blow a 64 table; 53 passes) |
+
+Only the persistent `state<>` **params** consume BAR entries. The table admits
+**53 independent state descriptors**. The arithmetic is consistent with a
+**64-entry** descriptor table with ~11 entries reserved for the program itself
+(53 + 11 = 64), but the reserved count is inferred, not directly measured — see
+Open questions.
+
 ### Plain io does not share the state BAR table
 
 A 53-state program still compiles with 32 plain inputs + 32 plain outputs added.
@@ -143,9 +161,14 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    Finding 2's 53-state BAR table are *separate* unknowns in the same territory.
    `ZinBarIdManager` names the state one (a descriptor allocator); the io one is
    unlocalized.
-2. **Is 53 a table size or a derived limit?** 53 is not a power of two; the BAR
-   table is likely 64 with ~11 reserved for the program + io descriptors, or each
-   state's read/update buffers share the table. The BAR arithmetic per state is
-   unprobed.
+2. **Is 53 a table size or a derived limit?** The characterization above rules
+   out per-byte, per-io, per-const, and per-transient-buffer accounting — only
+   `state<>` params consume entries, and 53 are admitted. The arithmetic is
+   consistent with a **64-entry** descriptor table with ~11 reserved for the
+   program itself, but that reserved figure is **inferred, not measured**. The
+   discriminator we have not yet run: a state program whose fixed overhead
+   differs (e.g. fewer mandatory shared consts) — if the state ceiling then
+   moves above 53, the 11 is real and partly const/io overhead; if it stays 53,
+   the table is 53-entry or the reservation is elsewhere.
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

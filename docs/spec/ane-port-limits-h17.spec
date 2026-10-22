@@ -7,6 +7,7 @@ require_cmd  cargo
 require_cmd  python3
 require_file scripts/gen_mix_ports.py
 require_file scripts/gen_states.py
+require_file scripts/gen_states_width.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -53,4 +54,16 @@ want_out_re  step 0:
 
 # plain io does NOT consume the state BAR table: 53 states + 32 in + 32 out still compile
 run  python3 scripts/gen_states.py 53 32 32 > /tmp/pl_sio.mil && rm -rf /tmp/pl_siocc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sio.mil -o /tmp/pl_siocc --arch h17 2>&1
+want_out  status=0x0 rc=0
+
+# --- BAR characterization: the table is per-descriptor, not per-byte ---
+# 54 states fails at width 4 AND width 64 (width doesn't move the boundary)
+run  python3 scripts/gen_states_width.py 54 4 > /tmp/pl_w4.mil && rm -rf /tmp/pl_w4c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_w4.mil -o /tmp/pl_w4c --arch h17 2>&1
+want_out  unable to allocate free BAR
+
+run  python3 scripts/gen_states_width.py 54 64 > /tmp/pl_w64.mil && rm -rf /tmp/pl_w64c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_w64.mil -o /tmp/pl_w64c --arch h17 2>&1
+want_out  unable to allocate free BAR
+
+# and width does not let you fit more: 53 at width 256 still compiles
+run  python3 scripts/gen_states_width.py 53 256 > /tmp/pl_w256.mil && rm -rf /tmp/pl_w256c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_w256.mil -o /tmp/pl_w256c --arch h17 2>&1
 want_out  status=0x0 rc=0
