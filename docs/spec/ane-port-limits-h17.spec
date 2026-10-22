@@ -11,6 +11,7 @@ require_file scripts/gen_states_width.py
 require_file scripts/count_desc_records.py
 require_file scripts/decode_9365.py
 require_file scripts/decode_slot_word.py
+require_file scripts/cmp_9361.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -99,3 +100,10 @@ want_out  dim0=4 dim1=4 stride=16 region=4194304
 # 53 states -> 54 records in 28 slots (26 with both copies)
 run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_sw.mil && rm -rf /tmp/pl_swc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sw.mil -o /tmp/pl_swc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_slot_word.py /tmp/pl_swc/pl_sw.macho
 want_out  records=54 slots=28 fullcopies=26
+
+# --- pointer targets: the read/write asymmetry ---
+# 0x9361 (read) is a fixed template; 0x9365 (write) carries the shape.
+# Compile two different-shape single-state programs and assert the read bodies
+# are byte-identical.
+run  python3 scripts/gen_states_width.py 1 4 > /tmp/pa4.mil && python3 scripts/gen_states_width.py 1 8 > /tmp/pa8.mil && rm -rf /tmp/pl_a4 /tmp/pl_a8 && vendor/mil_spec/target/release/milc ane compile /tmp/pa4.mil -o /tmp/pl_a4 --arch h17 >/dev/null 2>&1 && vendor/mil_spec/target/release/milc ane compile /tmp/pa8.mil -o /tmp/pl_a8 --arch h17 >/dev/null 2>&1 && python3 scripts/cmp_9361.py /tmp/pl_a4/pa4.macho /tmp/pl_a8/pa8.macho
+want_out  0x9361 byte-identical across shapes: True

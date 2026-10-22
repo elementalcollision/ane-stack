@@ -223,6 +223,30 @@ The `0x9344` parent record's second word (`0x2400`/`0x2300`) is still the
 encoded slot field whose bit layout is undecoded — but the per-state *content*
 it points to is now fully mapped.
 
+### Pointer targets — the read/write asymmetry
+
+The two state-copy records are **not** symmetric. Byte-comparing each across
+state shapes and state counts:
+
+| record | role | carries shape? | varies? |
+|---|---|---|---|
+| `0x9361` | read-side state-copy | **no** | **byte-identical** on all shapes and counts — a fixed template |
+| `0x9365` | write-side state-copy | **yes** — dim0, dim1, stride, region | **9 bytes**, all on decoded fields |
+
+The reading is structural: the read just reads the surface (no geometry
+needed); the write must place the update, so it carries the shape. The **9
+varying bytes** in `0x9365` (measured `[4,4,1,1]` → `[32,8,1,1]`) all land on
+decoded fields — there is **no unexplained shape data** in the write record:
+
+| byte | field | [4,4] → [32,8] |
+|---|---|---|
+| +0x0a | dim1 | 04 → 08 |
+| +0x0e | dim0 | 04 → 20 |
+| +0x1c | inner-row stride | 16 → 24 |
+| +0x33 | flag byte | 01 → 02 |
+| +0x42 | shape-class selector | 0x42 → 0x62 |
+| +0x4a/4e/52/5e | four region reservations | 4 MiB → 8 MiB |
+
 Probed by varying one structural knob at a time on the working rsw form:
 
 | knob varied | boundary moves? | conclusion |
