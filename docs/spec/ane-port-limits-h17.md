@@ -4,6 +4,10 @@
 > it. A verdict without provenance is not a verdict. Two related budgets live
 > here so neither lane quotes half the picture.
 
+> **Visual companion:** `artifacts/ane-descriptor-economy` — a one-page
+> rendering of the full descriptor economy (tree, field tables, scaling law,
+> the 54-slot cap). Open the saved HTML from the workspace artifacts dir.
+
 ## Why this file exists
 
 A claim circulated that there is a "**~52-port limit**" that is an
