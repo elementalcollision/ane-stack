@@ -30,6 +30,10 @@ fn main() {
         .unwrap_or_else(|| "/tmp/hw/ceil.mil".into());
 
     let d = 32usize;
+    let n2: usize = std::env::args()
+        .nth(4)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(2 * n);
     let mut s = String::new();
     s.push_str("program(1.3)\n{\n    func main<ios18>(");
 
@@ -44,6 +48,24 @@ fn main() {
             for i in 0..n {
                 s.push_str(&format!(
                     "        tensor<fp16, [1, {d}]> y{i} = add(x = {prev}, y = {prev})[name = string(\"y{i}\")];\n"
+                ));
+                prev = format!("y{i}");
+            }
+            s.push_str(&format!("    }} -> ({prev});\n}}\n"));
+        }
+        // One packed state, many ops: the shape --shard N actually emits.
+        // One `kv` state whose rows carry every layer's slot, as
+        // mil_convert/src/builder.rs build_range does (kv_shape has
+        // (le-ls)*2 rows), plus a long per-layer op chain.
+        "packed" => {
+            s.push_str(&format!("state<tensor<fp16, [{n2}, {d}]>> kv, tensor<fp16, [1, {d}]> x) {{\n"));
+            s.push_str(&format!(
+                "        tensor<fp16, [{n2}, {d}]> m = read_state(input = kv)[name = string(\"m\")];\n"
+            ));
+            let mut prev = "m".to_string();
+            for i in 0..n {
+                s.push_str(&format!(
+                    "        tensor<fp16, [{n2}, {d}]> y{i} = add(x = {prev}, y = {prev})[name = string(\"y{i}\")];\n"
                 ));
                 prev = format!("y{i}");
             }
