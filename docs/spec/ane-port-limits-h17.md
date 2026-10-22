@@ -163,6 +163,35 @@ descriptor field whose exact bit layout is **not yet decoded** — the *count* a
 the *cap* are proven; the per-slot encoding is the remaining unknown (see Open
 questions).
 
+### The `0x9344` slot word, decoded
+
+The second word of each `0x9344` record (e.g. `0x2400`, `0x2300`) is a packed
+slot field:
+
+```
+word = (slot_index << 8) | (copy << 7)
+```
+
+- **high byte** (`w >> 8`): the **slot index** — sequential `0x23, 0x24, 0x25 …
+  0x3e` across the program.
+- **bit 7** (`w & 0x80`): the **copy selector** — which of the two records
+  occupying that slot (0 or 1).
+
+So the descriptor table is an array of **slots, each holding up to two
+records**. Measured across state counts:
+
+| states | records | slots | slots with both copies | singletons |
+|---|---|---|---|---|
+| 1 | 2 | 2 | 0 | 2 (0x23, 0x24) |
+| 2 | 3 | 2 | 1 | 1 (0x25) |
+| 16 | 17 | 9 | 8 | 1 |
+| 32 | 33 | 17 | 16 | 1 |
+| 53 | 54 | 28 | 26 | 2 (0x3d header, 0x3e) |
+
+records = states + 1 (the +1 header); slots = `ceil(records / 2)`. The two
+records in a full slot are a state's two descriptors — and the slot word is the
+descriptor-table **(slot, position)** coordinate.
+
 ### The `0x9365` state-copy record, decoded
 
 Reading the per-state `0x9365` record body across 10 state shapes (training +
@@ -255,13 +284,13 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    Finding 2's 53-state BAR table are *separate* unknowns in the same territory.
    `ZinBarIdManager` names the state one (a descriptor allocator); the io one is
    unlocalized.
-2. **Is 53 a table size or a derived limit?** **Resolved.** The cap is a raw
-   state **count** on the `ZinBarIdManager` descriptor table, capacity **54
-   `0x9344` slots**: 53 states + 1 header slot = 54 (compiles); a 54th state
-   needs a 55th slot (fails). Each `state<>` costs 2 Mach-O `__data` segments
-   (the `0x9361`/`0x9365` state-copy pair) + 1 descriptor-list slot. The
+2. **Is 53 a table size or a derived limit?** **Resolved end to end.** The cap
+   is a raw state **count** on the `ZinBarIdManager` descriptor table: **54
+   `0x9344` slots** (53 states + 1 header). Each `state<>` costs 2 Mach-O
+   `__data` segments (`0x9361`/`0x9365`) + 1 descriptor-list record. The
    `0x9365` state-copy record is **fully decoded** (shape + packed stride +
-   region size — see above). The one remaining unknown is the `0x9344` parent
-   record's second-word slot encoding.
+   region size), and the `0x9344` slot word is **decoded** —
+   `(slot_index << 8) | (copy << 7)`: the table is an array of slots each
+   holding two records. No undecoded fields remain in the descriptor economy.
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

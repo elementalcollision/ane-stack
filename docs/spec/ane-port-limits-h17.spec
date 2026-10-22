@@ -10,6 +10,7 @@ require_file scripts/gen_states.py
 require_file scripts/gen_states_width.py
 require_file scripts/count_desc_records.py
 require_file scripts/decode_9365.py
+require_file scripts/decode_slot_word.py
 
 # --- Finding 1: the frontend does NOT reject at 52 (or 128) ---
 run  python3 scripts/gen_mix_ports.py 26 26 > /tmp/pl52.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl52.mil --arch h17 2>&1
@@ -93,3 +94,8 @@ want_out  0x9344 records: 54
 # a [4,4,1,1] state decodes to dim0=4 dim1=4 stride=16 region=4MiB
 run  python3 scripts/gen_states.py 1 1 1 > /tmp/pl_dec.mil && rm -rf /tmp/pl_decc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_dec.mil -o /tmp/pl_decc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_9365.py /tmp/pl_decc/pl_dec.macho
 want_out  dim0=4 dim1=4 stride=16 region=4194304
+
+# --- the 0x9344 slot word, decoded: (slot_index << 8) | (copy << 7) ---
+# 53 states -> 54 records in 28 slots (26 with both copies)
+run  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_sw.mil && rm -rf /tmp/pl_swc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sw.mil -o /tmp/pl_swc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_slot_word.py /tmp/pl_swc/pl_sw.macho
+want_out  records=54 slots=28 fullcopies=26
