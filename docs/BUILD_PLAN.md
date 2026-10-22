@@ -261,8 +261,28 @@ a blunt workaround. Do better: partition to maximise ANE placement subject to th
 op limit, choosing cut points at low-traffic boundaries (minimise hidden-state
 crossings), and decide shard count from the model rather than a flag.
 *Accept:* a model past the limit is partitioned automatically and runs; compare
-placement % against `--shard N` for the same model.
+placement % against `--shard 4` for the same model.
 *Owner:* L-SCHED. **Effort:** L. **Depends on:** SCHED-1.
+
+> **Two different walls, corrected by measurement (2026-10-22).** See
+> `docs/evidence/A5-anecompile-ceiling-is-ports-not-ops.md`:
+>
+> 1. **CoreML plan builder** — the `-14` ceiling at ~3.2k **ops**. Unaffected by
+>    the finding below; still the CoreML-lane limit this item is named for.
+> 2. **`ANECCompile` frontend** (the HWX/e5rt-adjacent compile path) — the
+>    binding limit is **independent `state<>` inout ports (~52)**, *not* op
+>    count. Measured: 48 ports compile, 56 fail `Compiler internal error`; and a
+>    single **packed** state with **16384 ops / 32768 state rows / 4.5 MB**
+>    compiles and deploys. So "it is op count, not bytes" is wrong for *this*
+>    path — do not carry that sentence across.
+>
+> **Consequence for this item:** `--shard N` already emits **one packed `kv`
+> state per shard** (`builder.rs::build_range`, `kv_shape` = `(le-ls)*2` rows),
+> so the port ceiling does not bind and the "blunt workaround" comment undersells
+> it. What is actually missing is the *port-count* rule being derived from the
+> model rather than guessed, plus the cut-point choice this item is really about.
+> *Accept is unchanged* — it is about placement and shard-count choice, and the
+> op-vs-port correction changes the resource being partitioned, not the goal.
 
 **SCHED-3 — Per-subgraph backend selection (e5rt vs CoreML)**
 We have two working execution paths with different characteristics. Route each
