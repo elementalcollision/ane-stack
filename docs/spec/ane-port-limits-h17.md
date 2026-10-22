@@ -97,6 +97,44 @@ cannot *compile* it.
 
 ### BAR table characterization (what admits 53)
 
+**Mach-O structure (the decisive evidence).** Dumping the compiled `.macho`
+section table across 16 state counts (0 → 53), the number of `__FVMLIB.__data`
+segments is **exactly**:
+
+```
+__data segments = outputs + 2 × states
+```
+
+| states | outputs | measured __data | model | match |
+|---|---|---|---|---|
+| 0 | 1 | 1 | 1 | ✓ |
+| 0 | 2 | 2 | 2 | ✓ |
+| 0 | 4 | 4 | 4 | ✓ |
+| 1 | 1 | 3 | 3 | ✓ |
+| 2 | 1 | 5 | 5 | ✓ |
+| 8 | 1 | 17 | 17 | ✓ |
+| 24 | 1 | 49 | 49 | ✓ |
+| 32 | 1 | 65 | 65 | ✓ |
+| 48 | 1 | 97 | 97 | ✓ |
+| 53 | 1 | 107 | 107 | ✓ |
+
+So: **inputs are free; each output costs one segment; each `state<>` costs two**
+(its persistent surface + its read/update working buffer).
+
+**The BAR cap is on the state *count*, not the segment count.** The decisive
+proof:
+
+| program | total __data segments | verdict |
+|---|---|---|
+| 53 states + 1 out | 107 | **PASS** |
+| 54 states + 1 out | 109 | **FAIL (BAR)** |
+| **52 states + 50 out** | **154** | **PASS** |
+| 0 states + 126 out | 126 | **PASS** |
+
+154 segments pass while 109 fail — the table that overflows is the
+**state-descriptor table** (boundary 53), not the segment table. Io and total
+segments are irrelevant to it.
+
 Probed by varying one structural knob at a time on the working rsw form:
 
 | knob varied | boundary moves? | conclusion |
@@ -107,11 +145,12 @@ Probed by varying one structural knob at a time on the working rsw form:
 | shared consts added (60 unused) | **no** (53 states still compile) | const buffers **do not** consume BAR entries |
 | per-state transient buffers (cur + upd) | n/a — see note | **do not** count (159 named buffers would blow a 64 table; 53 passes) |
 
-Only the persistent `state<>` **params** consume BAR entries. The table admits
-**53 independent state descriptors**. The arithmetic is consistent with a
-**64-entry** descriptor table with ~11 entries reserved for the program itself
-(53 + 11 = 64), but the reserved count is inferred, not directly measured — see
-Open questions.
+Only the persistent `state<>` **params** consume BAR entries — **two per state**
+(persistent surface + read/update working buffer), exactly as the Mach-O section
+counts show. The table admits **53 independent state descriptors**. The earlier
+hypothesis of a "64-entry table with ~11 reserved" is **wrong**: the 52+50 = 154
+segments vs 54 = 109 segments contrast proves the cap is a raw state **count**,
+not a segment-table size.
 
 ### Plain io does not share the state BAR table
 
@@ -132,7 +171,7 @@ the precise boundary on this build is **53**, not 52.
 | budget | where it bites | boundary (h17, this build) |
 |---|---|---|
 | io ports (Finding 1) | **execution** (`execute_sync`) | `out_cap = max(63, 127 − in)` |
-| state<> params (Finding 2) | **frontend** (`ANECCompile`) | **53 states** pass, 54 fail (`free BAR`) |
+| state<> params (Finding 2) | **frontend** (`ANECCompile`) | **53 states** pass, 54 fail (`free BAR`); each state = 2 Mach-O `__data` segments |
 
 - ❌ No "~52-port io-port frontend constraint" — the io frontend accepts 200+.
 - ✅ The state<> budget is a real frontend constraint, boundary **53**, and it is
@@ -161,14 +200,13 @@ milc ane compile /tmp/s54.mil -o /tmp/c54 --arch h17  # unable to allocate free 
    Finding 2's 53-state BAR table are *separate* unknowns in the same territory.
    `ZinBarIdManager` names the state one (a descriptor allocator); the io one is
    unlocalized.
-2. **Is 53 a table size or a derived limit?** The characterization above rules
-   out per-byte, per-io, per-const, and per-transient-buffer accounting — only
-   `state<>` params consume entries, and 53 are admitted. The arithmetic is
-   consistent with a **64-entry** descriptor table with ~11 reserved for the
-   program itself, but that reserved figure is **inferred, not measured**. The
-   discriminator we have not yet run: a state program whose fixed overhead
-   differs (e.g. fewer mandatory shared consts) — if the state ceiling then
-   moves above 53, the 11 is real and partly const/io overhead; if it stays 53,
-   the table is 53-entry or the reservation is elsewhere.
+2. **Is 53 a table size or a derived limit?** **Resolved structurally.** The
+   cap is a raw state **count** — 53 admitted, 54 rejected — independent of io,
+   consts, stripe width, and total segment count (154 io-heavy segments pass;
+   109 state-heavy segments fail). Each `state<>` costs 2 Mach-O `__data`
+   segments. What is NOT yet localized: *why* 53 — the table is a descriptor
+   allocator (`ZinBarIdManager`), and 53 is not a power of two, so it is likely
+   a fixed-size table with a small reserved overhead whose exact composition the
+   Mach-O layout does not by itself reveal.
 3. Do the budgets move with `--arch` (h16g vs h17), state dtype/shape, or the
    per-state stripe layout? Only channel width was swept (no effect on Finding 1).

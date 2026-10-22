@@ -67,3 +67,13 @@ want_out  unable to allocate free BAR
 # and width does not let you fit more: 53 at width 256 still compiles
 run  python3 scripts/gen_states_width.py 53 256 > /tmp/pl_w256.mil && rm -rf /tmp/pl_w256c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_w256.mil -o /tmp/pl_w256c --arch h17 2>&1
 want_out  status=0x0 rc=0
+
+# --- Mach-O structural model: __data segments = outputs + 2*states ---
+# 53 states + 1 out -> 107 segments compiles; 54 states -> 109 segments fails.
+# The decisive contrast: 52 states + 50 out = 154 segments PASSES (the cap is on
+# the state COUNT, not the segment count).
+run  python3 scripts/gen_states.py 52 1 50 > /tmp/pl_m52.mil && rm -rf /tmp/pl_m52c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_m52.mil -o /tmp/pl_m52c --arch h17 2>&1
+want_out  status=0x0 rc=0
+
+run  python3 scripts/gen_states.py 54 1 1 > /tmp/pl_m54.mil && rm -rf /tmp/pl_m54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_m54.mil -o /tmp/pl_m54c --arch h17 2>&1
+want_out  unable to allocate free BAR
