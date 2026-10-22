@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# count_desc_records.py <macho> — count the 0x9344 descriptor-list records in a
-# compiled ANE HWX Mach-O, scanning only the __text section (where descriptor
-# records live). Prints "0x9344 records: N". Used by
-# docs/spec/ane-port-limits-h17.spec to assert the descriptor-table economy
-# (N+1 records for N states; the table caps at 54).
+# count_desc_records.py <macho> [tag] — count occurrences of a 16-bit record tag
+# (default 0x9344) at 2-byte alignment in the __TEXT.__text section of a compiled
+# ANE HWX Mach-O. Prints "0xTTTT records: N". Used by
+# docs/spec/ane-port-limits-h17.spec. 0x9344 / 0x934a / 0x9442 are 12-byte buffer
+# bindings (a task's primary source / further sources / destination, see
+# decode_slot_ordinals.py); 0x9344 is NOT a state table and does not cap at 54.
+# Anchor the count when asserting it ("records: 2$"), since "records: 2" also
+# matches 20-29.
 import struct
 import sys
 
