@@ -15,12 +15,15 @@
 //!
 //! ## Dialect boundaries discovered by this fuzzer (M4, h16g)
 //!
-//! - `const` with `BLOBFILE` weights is rejected in every spelling
-//!   (`@model_path/...`, absolute, relative, `tensor<string,[]>`-wrapped
-//!   path) — including `assets/chain/c64k1.mil`, a corpus file that
-//!   produced byte-identical HWX. Weight-bearing programs need the
-//!   `FileConstants`/`ExternConstants` dict lane (unprobed); inline
-//!   fp16 list consts are accepted.
+//! - ~~`const` with `BLOBFILE` weights is rejected in every spelling~~
+//!   FORK(ane-stack): **wrong.** The rejection came from this fuzzer's
+//!   malformed blob (`weight_blob` wrote no blob v2 header or metadata
+//!   record); the `assets/chain/c64k1.mil` weight.bin has an all-zero
+//!   storage header too. A CoreML blob v2 `weight.bin` is accepted on h17
+//!   and h16g with an absolute or `@model_path/...` path; a bare relative
+//!   path resolves against the process CWD, not the MIL's directory.
+//!   Measured 2026-10-26 on h17 (ane-stack `docs/spec/ane-port-limits-h17.md`
+//!   §4). Inline fp16 list consts are accepted too. Upstream: 20f097f.
 //! - `gelu` is rejected in all spellings (`mode` first/last, bare or
 //!   `tensor<string,[]>` const) despite the spec matrix listing it OK.
 //! - `clip` requires fp16 alpha/beta consts; int32 bounds reject.
@@ -41,7 +44,7 @@ pub enum Expected {
 }
 
 /// One generated case: MIL text plus the optional weight blob to drop
-/// at `weights/weight.bin` (64-byte corpus-style header + fp16 data).
+/// at `weights/weight.bin` (a CoreML blob v2 file; see `weight_blob`).
 #[derive(Debug)]
 pub struct GenCase {
     /// Case family name (e.g. `ew_chain`, `conv1x1`, `reject_gather`).
@@ -116,10 +119,24 @@ impl Rng {
 }
 
 /// fp16 bytes for a deterministic pseudo-random weight tensor of `n`
-/// elements (values spread over ±0.5 — safe dynamic range), with the
-/// 64-byte corpus-style header BLOBFILE offsets expect.
+/// elements (values spread over ±0.5 — safe dynamic range), as a CoreML
+/// blob v2 file holding one blob whose metadata record is at offset 64.
 fn weight_blob(rng: &mut Rng, n: usize) -> Vec<u8> {
-    let mut blob = vec![0u8; 64];
+    // FORK(ane-stack): upstream wrote 64 zero bytes + raw fp16, with no
+    // storage header or metadata record; ANECompiler rejects that file
+    // ("Cannot retrieve file blob properties"). Write blob v2 instead: a
+    // 64 B storage header (count 1, version 2), at offset 64 the 64 B
+    // record (0xDEADBEEF, dtype 1 = fp16, size, data offset 128), then the
+    // data. The MIL's BLOBFILE `offset` names the record. The rng draws
+    // are unchanged, so other cases for a given seed are too.
+    // Upstream: 20f097f.
+    let mut blob = vec![0u8; 128];
+    blob[0..4].copy_from_slice(&1u32.to_le_bytes());
+    blob[4..8].copy_from_slice(&2u32.to_le_bytes());
+    blob[64..68].copy_from_slice(&0xDEAD_BEEFu32.to_le_bytes());
+    blob[68..72].copy_from_slice(&1u32.to_le_bytes());
+    blob[72..80].copy_from_slice(&(2 * n as u64).to_le_bytes());
+    blob[80..88].copy_from_slice(&128u64.to_le_bytes());
     for _ in 0..n {
         let f = (rng.below(1024) as f32 / 1024.0) - 0.5;
         blob.extend_from_slice(&half::f16::from_f32(f).to_le_bytes());
@@ -562,10 +579,13 @@ fn gen_reject(rng: &mut Rng, id: usize) -> GenCase {
             }
         }
         4 => {
-            // BLOBFILE const — rejected in every spelling on this
-            // build (weights need the FileConstants lane, unprobed).
-            // Kept as a Reject probe: acceptance would mean the
-            // frontend opened embedded weight blobs.
+            // FORK(ane-stack): BLOBFILE const over a blob v2 weight.bin.
+            // Upstream kept this as a Reject probe ("rejected in every
+            // spelling"), but the rejection came from its malformed blob
+            // (see `weight_blob`), not from BLOBFILE: the frontend accepts
+            // it on h17 and h16g. Now a Valid probe, so a rejection is a
+            // finding. The family name is kept for corpus continuity.
+            // Upstream: 20f097f.
             let mut body = String::new();
             conv_prelude(&mut body);
             body.push_str(&blob_const("w", "[4, 4, 1, 1]", 64));
@@ -577,8 +597,8 @@ fn gen_reject(rng: &mut Rng, id: usize) -> GenCase {
                 family: "blobfile_probe",
                 mil: wrap("[1, 4, 1, 1]", &["x0"], &body, "z"),
                 weights: Some(weight_blob(rng, 16)),
-                expected: Expected::Reject,
-                note: "BLOBFILE const — rejected on this build".into(),
+                expected: Expected::Valid,
+                note: "BLOBFILE const, blob v2 weight.bin".into(),
             }
         }
         _ => {
@@ -943,5 +963,67 @@ mod tests {
                 );
             }
         }
+    }
+}
+
+// FORK(ane-stack): regression tests for the BLOBFILE blob fix (patch 0019).
+// `weight_blob` wrote 64 zero bytes + raw fp16 with no blob v2 metadata
+// record, so `blobfile_probe` was rejected by its own malformed file and
+// "BLOBFILE is rejected in every spelling" was recorded as a dialect
+// boundary. A blob v2 file is accepted on h17 and h16g. Upstream: 20f097f.
+#[cfg(test)]
+mod blobfile_tests {
+    use super::*;
+
+    fn u32_at(b: &[u8], at: usize) -> u32 {
+        u32::from_le_bytes(b[at..at + 4].try_into().unwrap())
+    }
+
+    fn u64_at(b: &[u8], at: usize) -> u64 {
+        u64::from_le_bytes(b[at..at + 8].try_into().unwrap())
+    }
+
+    /// The blob is CoreML blob v2: a 64 B storage header (count, version 2),
+    /// then at the MIL's `offset` a 64 B record (0xDEADBEEF, dtype 1 = fp16,
+    /// size, data offset) pointing at the 16 fp16 weights.
+    #[test]
+    fn blobfile_case_writes_a_blob_v2_file() {
+        let case = gen_reject(&mut Rng::new(7), 4);
+        assert_eq!(case.family, "blobfile_probe");
+        assert!(case.mil.contains("offset = uint64(64)"));
+        let w = case.weights.expect("blobfile_probe carries weights");
+        assert_eq!((u32_at(&w, 0), u32_at(&w, 4)), (1, 2), "storage header");
+        assert_eq!(u32_at(&w, 64), 0xDEAD_BEEF, "record sentinel");
+        assert_eq!(u32_at(&w, 68), 1, "dtype fp16");
+        let (size, data) = (u64_at(&w, 72) as usize, u64_at(&w, 80) as usize);
+        assert_eq!(size, 16 * 2, "record size");
+        assert_eq!(data % 64, 0, "data offset alignment");
+        assert_eq!(w.len(), data + size, "data follows the record");
+    }
+
+    /// A well-formed blob is legal, so this is a Valid probe, not a Reject.
+    #[test]
+    fn blobfile_case_is_expected_valid() {
+        let case = gen_reject(&mut Rng::new(7), 4);
+        assert_eq!(case.expected, Expected::Valid);
+    }
+
+    /// The frontend accepts the case laid out on disk as the fuzz driver
+    /// writes it (`model.mil` + `weights/weight.bin`).
+    #[test]
+    fn blobfile_case_validates_on_h17() {
+        let ane = crate::anec::Anec::open();
+        if !mil_compile::hw_gate("ANECompiler.framework", ane.is_ok()) {
+            return;
+        }
+        let case = gen_reject(&mut Rng::new(7), 4);
+        let dir = std::env::temp_dir().join(format!("fuzz_blobfile_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("weights")).unwrap();
+        std::fs::write(dir.join("model.mil"), &case.mil).unwrap();
+        std::fs::write(dir.join("weights").join("weight.bin"), case.weights.unwrap()).unwrap();
+        let v = ane.unwrap().validate(&dir.join("model.mil"), "h17").unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(v.rc == 0 && v.status == 0, "rejected: {:?}", v.errors);
     }
 }
