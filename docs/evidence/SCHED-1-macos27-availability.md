@@ -11,7 +11,7 @@ cost) a macOS 26.x issue, or is it ameliorated in 27.x?
 about how Apple ships simulators — not "we didn't look hard enough".**
 
 > **SUPERSEDED as to the conclusion (2026-10-21):** a macOS 27.0 box became
-> available (`davids-mac-mini`, tailnet `100.127.197.66`, user `davidgraham`),
+> available (host B, a second Mac on the owner's private network: M4 Pro),
 > so the hypothesis *was* tested. Result in `SCHED-1-macos27-result.md`: the
 > placement problem persists on 27.0, but cost attribution is fixed there. This
 > file's reasoning about the simulator runtime remains correct — it still

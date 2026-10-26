@@ -231,7 +231,7 @@ cost on a fixed model; disagreement documented rather than hidden.
 > macOS 27.x specifically. See the UPDATE below.
 >
 > **UPDATE (2026-10-21) — tested on macOS 27.0, and the answer splits.**
-> Measured on a real 27.0 box (`davids-mac-mini`, M4 Pro, build 26A428) with the
+> Measured on a real 27.0 box (host B: M4 Pro, build 26A428) with the
 > same `milc` binary, so the difference is the OS and not the build:
 >
 > - **Placement: unchanged, and bad.** Still 0/10 on our corpus, and Apple's own
