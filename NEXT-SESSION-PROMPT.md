@@ -27,7 +27,8 @@ The project reverse-engineers the Apple Neural Engine's resource model on an M5 
 ## Where things stand
 - **`main` is current.** PR #1 was merged on 2026-10-26 as `816a642`, with CI green.
   `main` has:
-  - the re-measured spec (102 probes, 219 assertions) and the writeup
+  - the re-measured spec and the writeup (now 123 probes and 272 assertions, with
+    the 2026-10-26 BLOBFILE addendum)
   - the visual companion
   - the public datapoints in `docs/data/ane-h17-2026-10-22/`
   - the harness fixes
@@ -59,8 +60,11 @@ Pass `--arch h17` to `milc ane validate|compile`, which default to h16g.
   copy `docs/spec/ane-port-limits-h17.html` is canonical.
 
 ## Work queue (highest value first)
-1. **BLOBFILE weights vs the 55-id BAR pool.** Inline conv weights don't consume an id;
-   BLOBFILE is untested, and it decides the practical state cap for real models.
+1. **Done 2026-10-26: BLOBFILE weights take no BAR id** (writeup §4; real models keep 53/54
+   states). Follow-ups:
+   - a vendor patch fixing the fuzzer's header-less `weight_blob` and upstream's
+     "BLOBFILE rejected" claim
+   - weights not yet measured: CoreML lane, matmul, palettized, hundreds of tensors
 2. **Port caps per function and per lane:** multi-function programs and the CoreML lane.
 3. **State semantics:**
    - assert that non-returned (noupd) updates persist, with a read-back

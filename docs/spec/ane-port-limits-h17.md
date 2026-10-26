@@ -30,12 +30,12 @@
 | Compiler | `zin_ane_compiler v9.510.0` (from the HWX `LC_IDENT`); coremlc 3600.25.1 |
 | h16g (M4) data | **cross-compiled on this M5 host only**. Nothing was loaded or run on M4 silicon. |
 | Probes | `milc ane validate \| compile \| run` on generated `program(1.3)` MIL. **`validate`/`compile` default to `--arch h16g`**: always pass `--arch h17` (the spec does). `run` ignores `--arch`, so its results are always the host's. |
-| Generators | `gen_live_ports.py` (every input live), `gen_mix_ports.py` (inputs beyond `out` are dead), `gen_dup_returns.py`, `gen_states.py`, `gen_states_width.py`, `gen_states_nd.py` (4-D state, `add`/`direct` update source, `noupd`, `in=0`, `conv=K`, `lut=…`), `gen_state_dtype.py` |
+| Generators | `gen_live_ports.py` (every input live), `gen_mix_ports.py` (inputs beyond `out` are dead), `gen_dup_returns.py`, `gen_states.py`, `gen_states_width.py`, `gen_states_nd.py` (4-D state, `add`/`direct` update source, `noupd`, `in=0`, `conv=K`, `lut=…`; BLOBFILE weights with `blob=K blobdir=DIR [bpath=abs\|rel\|mp] [bshare]`, weight size with `wch=C`), `gen_state_dtype.py` |
 | Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_block_trailers.py` (block framing and trailers), `decode_copy_records.py`, `decode_copy_words.py` (word-level copy-record view), `state_exec_predict.py` |
 | Method | Four hardware runners re-measured each law family (the io runner alone made 3,886 `milc` calls; the others compiled ~900, ~1,300 and ~1,900 artifacts). Every boundary was run at least twice with 0 flips; the ANE may have been shared between runners. The decisive points were re-run by the orchestrator. A second round tested held-out points against this text (the corrections are listed at the end). |
-| Spec | 102 probes, 219 assertions, PASS in ~20 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
+| Spec | 123 probes, 272 assertions, PASS in ~35 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
 | Datapoints | `docs/data/ane-h17-2026-10-22/`: the spec as structured JSON (CI drift-checked), the runners' raw measurement logs (3,908 io-call rows, 2,281 state-cap rows, held-out batches, copy-record and trailer sweeps, a 44-row state-dtype table), the runner-only generators, and the review/claim audit trail; scrubbed of private paths and host details |
-| Date | 2026-10-22 |
+| Date | 2026-10-22; BLOBFILE-weights addendum (§4) 2026-10-26, same host and OS build |
 
 Reading a run result:
 - **Pass:** `milc ane run` exits 0 and prints a line starting `step 0: <time>`.
@@ -52,7 +52,7 @@ Reading a run result:
 | 1 | Execution io cap | `execute_sync` | `live_in + unique_out ≤ 127` (no floor) | established | 1 |
 | 2 | Frontend io cap | `ANECValidate` / `ANECCompile` | `declared_in + out ≤ 255` (`MaxLiveInLiveOutExceeded`) | established | 2 |
 | 3 | States cost io ports | both caps | each state = 1 input port; each returned update = 1 output port; `write_state` is a liveness root | established | 3 |
-| 4 | BAR pool (the state cap) | `ANECCompile` (`ZinBarIdManager`) | 55 BAR ids = 55 `__FVMLIB` segments; each state owns one ⇒ **53 states** with a plain input, **54** without | established (count) / strong (mechanism) | 4 |
+| 4 | BAR pool (the state cap) | `ANECCompile` (`ZinBarIdManager`) | 55 BAR ids = 55 `__FVMLIB` segments; each state owns one ⇒ **53 states** with a plain input, **54** without; weights (inline or BLOBFILE, any measured size or count) do not lower it | established (count) / strong (mechanism) | 4 |
 | 5 | Buffer-binding records | HWX `__text` | `0x9344`/`0x934a`/`0x9442` = 12-byte bindings; slot word = segment ordinal (or a special word below `0x2300`) | established | 5 |
 | 6 | State-copy records | HWX `__text` | tag = presence flags; stride = `8·min(⌈log2 dim1⌉, 4)` | established | 6 |
 | 7 | State execution | `execute_sync` | 64 B row padding must not add a 16 KiB page; state dtype fp16/int16/int8/uint8/bool | established (asserted points) / strong (rule) | 7 |
@@ -237,10 +237,61 @@ N_max + 1, twice each *(runner)*. A program with no output of any kind compiles
   segments. This segment is **not** a BAR-pool consumer: 53/54 is unchanged.
 
 Why the pool is 55 is **not determined**: it could be hardware BAR registers, or
-64 minus reserved ids. Inline-literal conv weights do **not** consume a BAR id.
-Weights passed as BLOBFILE remain **untested**: `const`+BLOBFILE is rejected on
-h17 (`docs/spec/ane-frontend-h17.md`), and weights fed as plain inputs cost io
-ports instead.
+64 minus reserved ids.
+
+**Weights do not consume a BAR id (established, 2026-10-26).**
+- All of a program's weights, whether inline literals or BLOBFILE, share at most
+  **one** kernel segment, `__KERN_0`.
+- That segment takes a BAR id only if one is free. At the edge, the weights are
+  shed into `__TEXT,__const` instead.
+- So the state cap stays `55 − [any output] − [any plain input]`, whatever the
+  weights' form, size or count.
+- Weights fed as plain inputs are different: they are io ports (§1).
+
+| program (1 plain in + 1 out unless noted; states `[4,8,1,1]`) | layout | compiles | runs |
+|---|---|---|---|
+| 52 states + one BLOBFILE conv weight (128 B, or 8 MiB) | `fvmlib=54 kern=1` | yes | yes |
+| 53 of the same | `fvmlib=55 kern=0`; the 8 MiB weight is inside the HWX | yes | yes |
+| 54 of the same | — | **no** (`free BAR`); run lane `ANECCompile() FAILED` (128 B weight) | — |
+| no plain input: 54 states + a BLOBFILE weight | `fvmlib=55 fvmlib_const=0 kern=0` | yes | yes |
+| no plain input: 55 of the same | — | no | no |
+| 3 states + **8** distinct 2 MiB BLOBFILE weights | `fvmlib=16 kern=1`: one `__KERN_0` for all 8 | yes | — |
+| 53 of the same | `fvmlib=55 kern=0` | yes | yes |
+| 54 of the same | — | no | — |
+| 53 states (`noupd`) + **32** distinct 128 KiB BLOBFILE weights | `fvmlib=55 kern=0` | yes | yes |
+| 3 states + one **2 MiB inline** weight | `fvmlib=9 kern=1` (the same layout as a 128 B weight) | yes | — |
+| 53 states + one 2 MiB inline weight | `fvmlib=55 kern=0` | yes | yes |
+
+Every row is asserted. The following gave the same result but have no spec line
+*(runner)*:
+- one 32 MiB weight at 53 states
+- 8 × 8 MiB (64 MiB) at 52 and 53 states
+- 64 × 512 KiB weights at 53 states (`noupd`)
+- a BLOBFILE const used by `add` instead of conv
+- `@model_path` paths at the boundary: three 4.5 MiB weights at 52/53/54 states,
+  and 54/55 with no plain input (held-out, re-run by the orchestrator)
+
+**BLOBFILE is accepted on h17 (established; corrects the previous version).**
+- **Lanes:** a `const` whose value is `BLOBFILE(path, offset)` passes
+  - the direct lane, `validate`/`compile`, on h17 and h16g
+  - the e5rt run lane
+- **File format:** `weight.bin` must be a CoreML blob v2 file:
+  - a 64 B storage header (count, version 2)
+  - then, per blob, a 64-byte-aligned 64 B record (`0xDEADBEEF`, dtype, size,
+    data offset), followed by the data
+  
+  `offset` names the record, not the data.
+- **The run reads the weights:** a BLOBFILE conv returns the same values as the
+  same weights inline (asserted).
+- **Correction:** the earlier "rejected in every spelling" came from the fuzzer's
+  file, not the compiler. The fuzzer (`fuzz.rs`, `weight_blob`) writes 64 zero
+  bytes and then raw fp16, with no record. Such a file is rejected with
+  `Cannot retrieve file blob properties` (asserted).
+- **Path spelling:**
+  - An absolute path works.
+  - `@model_path/…` works and resolves against the MIL's directory.
+  - A bare `weights/weight.bin` resolves against the **current directory**, not
+    the MIL's (asserted both ways).
 
 **Section economy (established).**
 - `#__data` sections = `N + K + plain_out`, where K = number of exposed states.
@@ -553,8 +604,10 @@ For one `main` on h17, macOS 26.7.1:
 2. **Ports at the frontend:** `declared_in + n_states + out + n_exposed_states ≤ 255`.
    Drop dead inputs before validate/compile, because those paths count them.
 3. **States:** `N ≤ 55 − [any plain output or exposed state] − [any plain input]`,
-   so 53 in practice. Inline conv weights and LUT ops don't lower it; BLOBFILE
-   weights are untested.
+   so 53 in practice. Weights don't lower it: inline or BLOBFILE, one weight up to
+   8 MiB and 32 weights are asserted (up to 64 MiB in total, by runner). Neither
+   do LUT ops. Write BLOBFILE weights as blob v2 with an absolute or
+   `@model_path` path.
 4. **State shape:** if `d3 % 32 == 0`, it executes. Otherwise ask
    `state_exec_predict.py`. Shorthand: `d3 ≤ 32 and d0·d1·d2 ≤ 256` is safe; pad
    d3 values like 80 up to 96 or 128. head_dim 64/128 KV layouts
@@ -578,6 +631,13 @@ For one `main` on h17, macOS 26.7.1:
   are untested.
 - **Scope:** one function, one host, one OS build, the e5rt run lane. The CoreML
   lane and multi-function programs are unmeasured.
+- **Weights:** every measured weight is fp16 in a 1×1 conv, plus one `add`
+  const (runner). Not measured:
+  - matmul/linear weights
+  - palettized or quantized blobs
+  - more than one `weight.bin`
+  - hundreds of weight tensors
+  - BLOBFILE through the CoreML lane
 
 ---
 
@@ -599,6 +659,7 @@ For one `main` on h17, macOS 26.7.1:
 | `0x9365` stride `min(2·dim1 + 8, 32)` | **wrong** | `8·min(⌈log2 dim1⌉, 4)`, saturating at dim1 = 9 | 6 |
 | Region `dim1 × 1 MiB` "vmsize reservation, ×4 slots" | reinterpreted | `rowbits << 16` for d3 ≤ 8; LONG/SHORT layouts | 6 |
 | M4 → M5 "identical, the only delta one `0x934a`" | incomplete | same compile-time counts and laws; arch bytes differ in `0x1440`, copy-record tails and block headers | 8 |
+| "`const`+BLOBFILE is rejected on h17" (so BLOBFILE weights were "untested"); also `ane-frontend-h17.md` and upstream's fuzzer findings | **wrong** (2026-10-26) | a blob v2 `weight.bin` is accepted on both lanes; the rejection came from the fuzzer's header-less blob. BLOBFILE weights take no BAR id | 4 |
 | Spec "executable assertions for all of it" | was false | the pass side was vacuous; every headline law now has a line that fails under the old claim | — |
 
 **Second-pass corrections (re-evaluation of this rewrite, same day).** The
@@ -660,7 +721,7 @@ above. The headline items:
 
 ## Open questions
 
-1. **Why 55 BAR ids,** and do BLOBFILE weights consume one?
+1. **Why 55 BAR ids?** (BLOBFILE weights do not consume one; §4.)
 2. **Where 127 and 255 come from,** and whether they are per function. The CoreML
    lane and multi-function programs are unmeasured.
 3. **M4 silicon,** with a toolchain on the 27.0 M4 host. A run there confounds SoC

@@ -17,7 +17,7 @@ re-derive them.
 ## How much to trust each file
 
 1. **`spec_datapoints.json` is the authoritative list.** It holds every
-   assertion the spec makes (102 probes, 219 assertions), exported by
+   assertion the spec makes (123 probes, 272 assertions), exported by
    `scripts/spec_to_json.py`. CI fails if it drifts from the spec. Each entry is
    re-run on hardware by
    `./scripts/evidence-check.sh --require-all docs/spec/ane-port-limits-h17.spec`.

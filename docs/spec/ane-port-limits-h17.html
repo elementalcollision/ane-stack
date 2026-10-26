@@ -68,7 +68,7 @@ ol li,ul li{margin:3px 0}
 <h1>ANE Resource Budgets</h1>
 <div class="sub">What one ANE program can hold on <span class="mono">h17</span> (Apple M5 Max, macOS 26.7.1, build 25G241),
 re-measured 2026-10-22 and re-evaluated the same day. Every number below is asserted by
-<span class="mono">docs/spec/ane-port-limits-h17.spec</span> (102 probes, 219 assertions) unless it is tagged
+<span class="mono">docs/spec/ane-port-limits-h17.spec</span> (123 probes, 272 assertions) unless it is tagged
 <span class="tag warn">runner</span>. Full text: <span class="mono">docs/spec/ane-port-limits-h17.md</span>.</div>
 
 <div class="grid4" style="margin-top:18px">
@@ -100,7 +100,7 @@ re-measured 2026-10-22 and re-evaluated the same day. Every number below is asse
   each returned update costs one more. Separately, each state surface owns one of the <b>55</b> BAR ids. In the packed layout
   (more than 55 sections) all non-state io shares at most two segments, data and const. So
   <span class="mono">N_max = 55 − [any output] − [any plain input]</span>, for the asserted shapes, for fp16/int8 states
-  (int16, uint8 and bool: <span class="tag warn">dataset</span>, <span class="mono">docs/data/…/state_dtype_runs.jsonl</span>), with inline conv weights and with LUT ops. Inside the compiled HWX, every
+  (int16, uint8 and bool: <span class="tag warn">dataset</span>, <span class="mono">docs/data/…/state_dtype_runs.jsonl</span>), with inline or BLOBFILE weights (up to 8 MiB each, 32 tensors) and with LUT ops. Inside the compiled HWX, every
   task block ends with a flat trailer: 12-byte buffer bindings, whose slot word is a BAR ordinal or a special word below
   <span class="mono">0x2300</span>, then 8-byte records.
 </div>
@@ -179,9 +179,11 @@ prunes dead inputs first, so the (255, 1) file still runs. Asserted on <span cla
   <tr><td>54 states, no plain input (fp16 or int8)</td><td><span class="tag good">yes</span></td><td><span class="tag good">yes</span></td></tr>
   <tr><td>55 states, no plain input</td><td><span class="tag bad">free BAR</span></td><td>—</td></tr>
   <tr><td>53 states + an inline conv weight, or + a sigmoid</td><td><span class="tag good">yes</span> (kern shed; asserted for conv)</td><td><span class="tag good">yes</span></td></tr>
+  <tr><td>53 states + BLOBFILE weights (one of 128 B or 8 MiB; or 8 × 2 MiB; or 32 × 128 KiB)</td><td><span class="tag good">yes</span> (kern shed into <span class="mono">__TEXT</span>)</td><td><span class="tag good">yes</span></td></tr>
+  <tr><td>54 states + BLOBFILE weights</td><td><span class="tag bad">free BAR</span></td><td><span class="tag bad">ANECCompile() FAILED</span></td></tr>
   <tr><td>53 states, no update returned (one <span class="mono">0x9344</span> in total)</td><td><span class="tag good">yes</span>; 54 fails</td><td><span class="tag warn">runner</span></td></tr>
 </table></div>
-<p class="note">Why the pool holds 55 is not known. BLOBFILE weights are untested. An intermediate over about 2 MiB adds a
+<p class="note">Why the pool holds 55 is not known. Weights never take a BAR id of their own: all of them share one <span class="mono">__KERN_0</span>, which is kept only while an id is free (2026-10-26). An intermediate over about 2 MiB adds a
 <span class="mono">__DATA</span> scratch segment, which is not a BAR consumer <span class="tag warn">runner</span>.</p>
 
 <h2>4 · Inside the HWX — blocks and trailers</h2>
@@ -294,7 +296,7 @@ v1 is archived at <span class="mono">docs/spec/history/ane-descriptor-economy-v1
 
 <h2>Not covered</h2>
 <ul>
-  <li>BLOBFILE weights, matmul or attention graphs, and multi-function programs. Every probe is an elementwise graph over rank-4 tensors; fp32/int32 ports and rank ≠ 4 are unmeasured.</li>
+  <li>Matmul or attention graphs, palettized or quantized weights, and multi-function programs. Every probe is an elementwise graph over rank-4 tensors; fp32/int32 ports and rank ≠ 4 are unmeasured.</li>
   <li>The CoreML lane.</li>
   <li>M4 silicon: h16g is cross-compiled only, and the M4 host is the only macOS 27.0 host.</li>
   <li>Numerics: a pass means exit 0 plus a timing line. Runtime-position state appends are also untested.</li>
@@ -306,7 +308,7 @@ v1 is archived at <span class="mono">docs/spec/history/ane-descriptor-economy-v1
   <tr><td>SoC</td><td class="mono">Apple M5 Max (Mac17,7, exposes h17); h16g cross-compiled on the same host</td></tr>
   <tr><td>OS</td><td class="mono">macOS 26.7.1 (25G241)</td></tr>
   <tr><td>Compiler</td><td class="mono">zin_ane_compiler v9.510.0 · coremlc 3600.25.1</td></tr>
-  <tr><td>Assertions</td><td class="mono">docs/spec/ane-port-limits-h17.spec — 102 probes / 219 assertions, ~20 s, self-contained</td></tr>
+  <tr><td>Assertions</td><td class="mono">docs/spec/ane-port-limits-h17.spec — 123 probes / 272 assertions, ~35 s, self-contained</td></tr>
   <tr><td>Method</td><td class="mono">hardware runners, a held-out re-evaluation and refutation passes; decisive points re-run by the orchestrator</td></tr>
   <tr><td>Date</td><td class="mono">2026-10-22</td></tr>
 </table></div>

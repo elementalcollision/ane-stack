@@ -1,8 +1,8 @@
 {
  "source": "docs/spec/ane-port-limits-h17.spec",
- "source_sha256": "d786421e623630ff3a4f840f033d3f88bbee7b5e778189368d5c58c8cb9cecba",
- "probes": 102,
- "assertions": 219,
+ "source_sha256": "01fff48c3ef40dba9faf9bbf62344bb45616ae20a1a004a578f6dd1f09789db9",
+ "probes": 123,
+ "assertions": 272,
  "requires": [
   {
    "kind": "require_cmd",
@@ -834,6 +834,449 @@
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
    },
+   "comment": "---- BLOBFILE weights (2026-10-26) ------------------------------------------ A valid weights/weight.bin (CoreML blob v2: a 64 B storage header, then per blob a 64 B record that starts 0xDEADBEEF) is accepted by BOTH lanes with an absolute or @model_path path. The old \"const+BLOBFILE is rejected in every spelling\" came from the fuzzer's header-less blob, which is rejected here.",
+   "run": "rm -rf /tmp/pl_bba && mkdir -p /tmp/pl_bba && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 bpath=mp blobdir=/tmp/pl_bba > /tmp/pl_bba/m.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bba/m.mil --arch h17 2>&1 && vendor/mil_spec/target/release/milc ane run /tmp/pl_bba/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out",
+     "value": "status=0x0 rc=0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^bcv0: 8/8 nonzero, head \\[-0\\.45996094, -0\\.23999023, 0\\.38989258, 0\\.1998291,"
+    }
+   ]
+  },
+  {
+   "index": 40,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "the same weights inline give the same values, so the run read the blob",
+   "run": "python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct conv=1 > /tmp/pl_bbic.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbic.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^cv0: 8/8 nonzero, head \\[-0\\.45996094, -0\\.23999023, 0\\.38989258, 0\\.1998291,"
+    }
+   ]
+  },
+  {
+   "index": 41,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "fuzzer-style blob (64 zero bytes, then raw fp16; no 0xDEADBEEF record): rejected",
+   "run": "rm -rf /tmp/pl_bbh && mkdir -p /tmp/pl_bbh && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bbh > /tmp/pl_bbh/m.mil && python3 -c \"open('/tmp/pl_bbh/weights/weight.bin','wb').write(bytes(64) + bytes(128))\" && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bbh/m.mil --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "Cannot retrieve file blob properties"
+    }
+   ]
+  },
+  {
+   "index": 42,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "a bare relative path resolves against the CWD, not the MIL's directory (only @model_path/ resolves against the MIL's directory)",
+   "run": "rm -rf /tmp/pl_bbr && mkdir -p /tmp/pl_bbr && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 bpath=rel blobdir=/tmp/pl_bbr > /tmp/pl_bbr/m.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bbr/m.mil --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "InvalidMILProgram"
+    }
+   ]
+  },
+  {
+   "index": 43,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "R=$PWD && cd /tmp/pl_bbr && $R/vendor/mil_spec/target/release/milc ane validate m.mil --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out",
+     "value": "status=0x0 rc=0"
+    }
+   ]
+  },
+  {
+   "index": 44,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "BLOBFILE weights do not consume a BAR id: 53 states + 1 in + 1 out + a BLOBFILE conv fill the pool exactly (the weights are shed into __TEXT, kern=0) and run; 54 fail on both lanes. At 52 an id is free and the weights keep one __KERN_0. (A BLOBFILE id would make 53 fail and 52 show fvmlib=55.)",
+   "run": "rm -rf /tmp/pl_bb53 /tmp/pl_bb53c && mkdir -p /tmp/pl_bb53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb53 > /tmp/pl_bb53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb53/m.mil -o /tmp/pl_bb53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bb53c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bb53/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 45,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bb54 /tmp/pl_bb54c && mkdir -p /tmp/pl_bb54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb54 > /tmp/pl_bb54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb54/m.mil -o /tmp/pl_bb54c --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "unable to allocate free BAR"
+    }
+   ]
+  },
+  {
+   "index": 46,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "vendor/mil_spec/target/release/milc ane run /tmp/pl_bb54/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "ANECCompile() FAILED"
+    }
+   ]
+  },
+  {
+   "index": 47,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bb52 /tmp/pl_bb52c && mkdir -p /tmp/pl_bb52 && python3 scripts/gen_states_nd.py 52 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb52 > /tmp/pl_bb52/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb52/m.mil -o /tmp/pl_bb52c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bb52c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bb52/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=54 fvmlib_data=53 fvmlib_const=1 data_sections=106 const_sections=1 kern=1 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 48,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "no plain input: 54 BLOBFILE-conv states fit (no const segment), 55 fail on both lanes",
+   "run": "rm -rf /tmp/pl_bbz54 /tmp/pl_bbz54c && mkdir -p /tmp/pl_bbz54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 0 1 blob=1 blobdir=/tmp/pl_bbz54 > /tmp/pl_bbz54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbz54/m.mil -o /tmp/pl_bbz54c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbz54c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbz54/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=55 fvmlib_const=0 data_sections=110 const_sections=0 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 49,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbz55 /tmp/pl_bbz55c && mkdir -p /tmp/pl_bbz55 && python3 scripts/gen_states_nd.py 55 4 8 1 1 0 1 blob=1 blobdir=/tmp/pl_bbz55 > /tmp/pl_bbz55/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbz55/m.mil -o /tmp/pl_bbz55c --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "unable to allocate free BAR"
+    }
+   ]
+  },
+  {
+   "index": 50,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "vendor/mil_spec/target/release/milc ane run /tmp/pl_bbz55/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "ANECCompile() FAILED"
+    }
+   ]
+  },
+  {
+   "index": 51,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "weight size does not matter: one 8 MiB BLOBFILE weight ([2048,2048,1,1] fp16) still fits 53 states; its bytes are in the HWX (>= 8 MiB) with kern=0; 54 fail; at 52 it keeps one __KERN_0, like a 128-byte weight",
+   "run": "rm -rf /tmp/pl_bbw53 /tmp/pl_bbw53c && mkdir -p /tmp/pl_bbw53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw53 > /tmp/pl_bbw53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw53/m.mil -o /tmp/pl_bbw53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbw53c/m.macho && python3 -c \"import os;print('hwx_holds_weights', os.path.getsize('/tmp/pl_bbw53c/m.macho') >= 8388608)\" && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbw53/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out",
+     "value": "hwx_holds_weights True"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 52,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbw54 /tmp/pl_bbw54c && mkdir -p /tmp/pl_bbw54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw54 > /tmp/pl_bbw54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw54/m.mil -o /tmp/pl_bbw54c --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "unable to allocate free BAR"
+    }
+   ]
+  },
+  {
+   "index": 53,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbw52 /tmp/pl_bbw52c && mkdir -p /tmp/pl_bbw52 && python3 scripts/gen_states_nd.py 52 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw52 > /tmp/pl_bbw52/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw52/m.mil -o /tmp/pl_bbw52c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbw52c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbw52/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=54 fvmlib_data=53 fvmlib_const=1 data_sections=106 const_sections=1 kern=1 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 54,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "weight count does not matter: 8 distinct 2 MiB BLOBFILE weights (16 MiB) share ONE __KERN_0 at 3 states. fvmlib=16 is 15 data (3 states + 3 exposed updates + 1 out + 8 conv outs) + 1 const (the plain input); no segment per weight. At 53 they are shed (kern=0) and 54 fail.",
+   "run": "rm -rf /tmp/pl_bbk3 /tmp/pl_bbk3c && mkdir -p /tmp/pl_bbk3 && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk3 > /tmp/pl_bbk3/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk3/m.mil -o /tmp/pl_bbk3c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk3c/m.macho",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=19 fvmlib=16 fvmlib_data=15 fvmlib_const=1 data_sections=15 const_sections=1 kern=1 scratch=0$"
+    }
+   ]
+  },
+  {
+   "index": 55,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbk53 /tmp/pl_bbk53c && mkdir -p /tmp/pl_bbk53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk53 > /tmp/pl_bbk53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk53/m.mil -o /tmp/pl_bbk53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk53c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbk53/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=115 const_sections=1 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 56,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbk54 /tmp/pl_bbk54c && mkdir -p /tmp/pl_bbk54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk54 > /tmp/pl_bbk54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk54/m.mil -o /tmp/pl_bbk54c --arch h17 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "1"
+    },
+    {
+     "kind": "want_out",
+     "value": "unable to allocate free BAR"
+    }
+   ]
+  },
+  {
+   "index": 57,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "32 distinct weights at 53 states (noupd keeps the run-lane ports at 1 + 53 + 33 = 87 <= 127; exposing 53 updates as well would exceed 127)",
+   "run": "rm -rf /tmp/pl_bbk32 /tmp/pl_bbk32c && mkdir -p /tmp/pl_bbk32 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct noupd blob=32 wch=256 blobdir=/tmp/pl_bbk32 > /tmp/pl_bbk32/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk32/m.mil -o /tmp/pl_bbk32c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk32c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbk32/m.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=86 const_sections=1 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 58,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "large INLINE weights behave the same: a 2 MiB inline weight owns exactly one __KERN_0 at 3 states (the same layout as a 128-byte weight) and is shed at 53",
+   "run": "rm -rf /tmp/pl_bbi3c && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct conv=1 wch=1024 > /tmp/pl_bbi3.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbi3.mil -o /tmp/pl_bbi3c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbi3c/pl_bbi3.macho && python3 -c \"import os;print('hwx_holds_weights', os.path.getsize('/tmp/pl_bbi3c/pl_bbi3.macho') >= 2097152)\"",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=12 fvmlib=9 fvmlib_data=8 fvmlib_const=1 data_sections=8 const_sections=1 kern=1 scratch=0$"
+    },
+    {
+     "kind": "want_out",
+     "value": "hwx_holds_weights True"
+    }
+   ]
+  },
+  {
+   "index": 59,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
+   "comment": "",
+   "run": "rm -rf /tmp/pl_bbi53c && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct conv=1 wch=1024 > /tmp/pl_bbi53.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbi53.mil -o /tmp/pl_bbi53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbi53c/pl_bbi53.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbi53.mil --steps 1 2>&1",
+   "wants": [
+    {
+     "kind": "want_rc",
+     "value": "0"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$"
+    },
+    {
+     "kind": "want_out_re",
+     "value": "^step 0: [0-9]"
+    }
+   ]
+  },
+  {
+   "index": 60,
+   "section": {
+    "n": 4,
+    "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
+   },
    "comment": "split vs packed layout: const+data sections <= 55 -> one segment each; 56 -> one shared const + one shared data segment",
    "run": "python3 scripts/gen_states.py 0 5 50 > /tmp/pl_sp50.mil && rm -rf /tmp/pl_sp50c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sp50.mil -o /tmp/pl_sp50c --arch h17 >/dev/null 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_sp50c/pl_sp50.macho",
    "wants": [
@@ -848,7 +1291,7 @@
    ]
   },
   {
-   "index": 40,
+   "index": 61,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -867,7 +1310,7 @@
    ]
   },
   {
-   "index": 41,
+   "index": 62,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -890,7 +1333,7 @@
    ]
   },
   {
-   "index": 42,
+   "index": 63,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -909,7 +1352,7 @@
    ]
   },
   {
-   "index": 43,
+   "index": 64,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -928,7 +1371,7 @@
    ]
   },
   {
-   "index": 44,
+   "index": 65,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -947,7 +1390,7 @@
    ]
   },
   {
-   "index": 45,
+   "index": 66,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -966,7 +1409,7 @@
    ]
   },
   {
-   "index": 46,
+   "index": 67,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -985,7 +1428,7 @@
    ]
   },
   {
-   "index": 47,
+   "index": 68,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1004,7 +1447,7 @@
    ]
   },
   {
-   "index": 48,
+   "index": 69,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1023,7 +1466,7 @@
    ]
   },
   {
-   "index": 49,
+   "index": 70,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1042,7 +1485,7 @@
    ]
   },
   {
-   "index": 50,
+   "index": 71,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1061,7 +1504,7 @@
    ]
   },
   {
-   "index": 51,
+   "index": 72,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1080,7 +1523,7 @@
    ]
   },
   {
-   "index": 52,
+   "index": 73,
    "section": {
     "n": 4,
     "title": "The BAR pool: 55 ids, one per __FVMLIB segment. A state surface always owns a segment; non-state io packs into one shared data + one shared const segment. So max states = 55 - (shared segments)."
@@ -1099,7 +1542,7 @@
    ]
   },
   {
-   "index": 53,
+   "index": 74,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1122,7 +1565,7 @@
    ]
   },
   {
-   "index": 54,
+   "index": 75,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1153,7 +1596,7 @@
    ]
   },
   {
-   "index": 55,
+   "index": 76,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1172,7 +1615,7 @@
    ]
   },
   {
-   "index": 56,
+   "index": 77,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1191,7 +1634,7 @@
    ]
   },
   {
-   "index": 57,
+   "index": 78,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1214,7 +1657,7 @@
    ]
   },
   {
-   "index": 58,
+   "index": 79,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1237,7 +1680,7 @@
    ]
   },
   {
-   "index": 59,
+   "index": 80,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1256,7 +1699,7 @@
    ]
   },
   {
-   "index": 60,
+   "index": 81,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1275,7 +1718,7 @@
    ]
   },
   {
-   "index": 61,
+   "index": 82,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1294,7 +1737,7 @@
    ]
   },
   {
-   "index": 62,
+   "index": 83,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1313,7 +1756,7 @@
    ]
   },
   {
-   "index": 63,
+   "index": 84,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1336,7 +1779,7 @@
    ]
   },
   {
-   "index": 64,
+   "index": 85,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1355,7 +1798,7 @@
    ]
   },
   {
-   "index": 65,
+   "index": 86,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1374,7 +1817,7 @@
    ]
   },
   {
-   "index": 66,
+   "index": 87,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1397,7 +1840,7 @@
    ]
   },
   {
-   "index": 67,
+   "index": 88,
    "section": {
     "n": 5,
     "title": "Buffer bindings: 0x9344 (primary source) / 0x934a (more sources) / 0x9442 (destination) are 12-byte records; slot word = 0x2300 + 0x80*ordinal of an __FVMLIB segment. 0x9344 is NOT a 54-entry state table."
@@ -1416,7 +1859,7 @@
    ]
   },
   {
-   "index": 68,
+   "index": 89,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1435,7 +1878,7 @@
    ]
   },
   {
-   "index": 69,
+   "index": 90,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1454,7 +1897,7 @@
    ]
   },
   {
-   "index": 70,
+   "index": 91,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1473,7 +1916,7 @@
    ]
   },
   {
-   "index": 71,
+   "index": 92,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1492,7 +1935,7 @@
    ]
   },
   {
-   "index": 72,
+   "index": 93,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1511,7 +1954,7 @@
    ]
   },
   {
-   "index": 73,
+   "index": 94,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1530,7 +1973,7 @@
    ]
   },
   {
-   "index": 74,
+   "index": 95,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1549,7 +1992,7 @@
    ]
   },
   {
-   "index": 75,
+   "index": 96,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1572,7 +2015,7 @@
    ]
   },
   {
-   "index": 76,
+   "index": 97,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1591,7 +2034,7 @@
    ]
   },
   {
-   "index": 77,
+   "index": 98,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1610,7 +2053,7 @@
    ]
   },
   {
-   "index": 78,
+   "index": 99,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1629,7 +2072,7 @@
    ]
   },
   {
-   "index": 79,
+   "index": 100,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1652,7 +2095,7 @@
    ]
   },
   {
-   "index": 80,
+   "index": 101,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1671,7 +2114,7 @@
    ]
   },
   {
-   "index": 81,
+   "index": 102,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1694,7 +2137,7 @@
    ]
   },
   {
-   "index": 82,
+   "index": 103,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1713,7 +2156,7 @@
    ]
   },
   {
-   "index": 83,
+   "index": 104,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1732,7 +2175,7 @@
    ]
   },
   {
-   "index": 84,
+   "index": 105,
    "section": {
     "n": 6,
     "title": "State-copy records. tag = 0x9261 + 0x100*[dim1!=1] + 4*[dim0!=1] - [dim1==16]; stride word = 8*min(ceil(log2 dim1), 4). The update-row record (0x9361 family) carries dim1 and stride: it is NOT a fixed template."
@@ -1751,7 +2194,7 @@
    ]
   },
   {
-   "index": 85,
+   "index": 106,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1770,7 +2213,7 @@
    ]
   },
   {
-   "index": 86,
+   "index": 107,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1789,7 +2232,7 @@
    ]
   },
   {
-   "index": 87,
+   "index": 108,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1808,7 +2251,7 @@
    ]
   },
   {
-   "index": 88,
+   "index": 109,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1827,7 +2270,7 @@
    ]
   },
   {
-   "index": 89,
+   "index": 110,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1846,7 +2289,7 @@
    ]
   },
   {
-   "index": 90,
+   "index": 111,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1865,7 +2308,7 @@
    ]
   },
   {
-   "index": 91,
+   "index": 112,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1884,7 +2327,7 @@
    ]
   },
   {
-   "index": 92,
+   "index": 113,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1903,7 +2346,7 @@
    ]
   },
   {
-   "index": 93,
+   "index": 114,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1922,7 +2365,7 @@
    ]
   },
   {
-   "index": 94,
+   "index": 115,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1941,7 +2384,7 @@
    ]
   },
   {
-   "index": 95,
+   "index": 116,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1960,7 +2403,7 @@
    ]
   },
   {
-   "index": 96,
+   "index": 117,
    "section": {
     "n": 7,
     "title": "State execution page rule: rows (d0*d1*d2) are padded to 64 B; the state executes iff that padding needs no extra 16 KiB page. Compiles regardless."
@@ -1979,7 +2422,7 @@
    ]
   },
   {
-   "index": 97,
+   "index": 118,
    "section": {
     "n": 8,
     "title": "h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice on h17 (+1 per add task, NOT +1 per program)."
@@ -1998,7 +2441,7 @@
    ]
   },
   {
-   "index": 98,
+   "index": 119,
    "section": {
     "n": 8,
     "title": "h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice on h17 (+1 per add task, NOT +1 per program)."
@@ -2021,7 +2464,7 @@
    ]
   },
   {
-   "index": 99,
+   "index": 120,
    "section": {
     "n": 8,
     "title": "h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice on h17 (+1 per add task, NOT +1 per program)."
@@ -2040,7 +2483,7 @@
    ]
   },
   {
-   "index": 100,
+   "index": 121,
    "section": {
     "n": 8,
     "title": "h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice on h17 (+1 per add task, NOT +1 per program)."
@@ -2059,7 +2502,7 @@
    ]
   },
   {
-   "index": 101,
+   "index": 122,
    "section": {
     "n": 8,
     "title": "h16g (M4) vs h17 (M5), cross-compiled on this M5 host: same caps and laws; 0x934a is emitted once per self-add task (add(x, x)) on h16g, twice on h17 (+1 per add task, NOT +1 per program)."
