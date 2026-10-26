@@ -52,6 +52,8 @@ Every file we change gets an entry here. Convention for the in-file header:
 | `vendor/mil_spec/crates/mil_verify/src/lib.rs` | 0003 | applied |
 | `vendor/mil_spec/crates/milc/src/main.rs` | 0004, 0005 | applied |
 | `vendor/mil_spec/crates/milc/tests/run_cli.rs` | 0005 | added (new file) |
+| `vendor/mil_spec/crates/mil_infer/src/fuzz.rs` | 0011, 0019 | applied |
+| `vendor/mil_spec/ANE_FRONTEND_SPEC.md` | 0015, 0019 | applied |
 
 ## Our own code lives OUTSIDE vendor/
 

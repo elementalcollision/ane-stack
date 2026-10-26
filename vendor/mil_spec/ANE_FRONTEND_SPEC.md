@@ -39,6 +39,8 @@ TensorType}], LiveOutputList}]`. Errors: `ErrorList` of
 `InvalidJITShapesFileName` / `CompilationFailure` (+ per-network
 `NetworkErrorList` e.g. `InvalidUnit`).
 
+<!-- FORK(ane-stack): patch 0019 corrects the BLOBFILE bullets in this section and under "Fuzzer findings". Upstream: 20f097f. -->
+
 ## MIL text rules (empirical)
 
 - `program(1.0)`/`func main<ios17>` and `program(1.3)`/`ios18`-`ios19` both
@@ -50,6 +52,13 @@ TensorType}], LiveOutputList}]`. Errors: `ErrorList` of
   under 1.3 (coremlc's own serialization) — but tensor form always works.
 - `BLOBFILE` path resolves against the mil's **containing dir** —
   `weights/weight.bin` must physically exist or the program is rejected.
+  **CORRECTED:** only `@model_path/...` resolves against the mil's directory. A
+  bare relative `weights/weight.bin` resolves against the process's **current
+  directory**, and an absolute path works as written. The file must be a
+  CoreML blob v2 file: a 64 B storage header (count, version 2), then per blob
+  a 64-byte-aligned 64 B metadata record (`0xDEADBEEF`, dtype, size, data
+  offset) followed by the data; `offset =` names the record. Measured on h17
+  and h16g, 2026-10-26 (ane-stack `docs/spec/ane-port-limits-h17.md` §4).
 - Rank-0 outputs may be spelled `fp16 x` or `tensor<fp16, []> x`.
 - Function outputs: fp16/fp32 tensors produced by compute ops. Returning
   int32/bool/string tensors, const outputs, or multi-output tuples
@@ -129,6 +138,16 @@ this machine's ANECompiler build:
   do not survive this frontend build; weights need the
   `FileConstants`/`ExternConstants` dict lane (schema unprobed). Inline
   fp16 list consts are accepted fine.
+  **CORRECTED:** wrong. The rejection came from the fuzzer's own blob, not
+  from `BLOBFILE`: `fuzz.rs`'s `weight_blob` wrote 64 zero bytes + raw fp16,
+  with no blob v2 metadata record, and ANECompiler rejects that file
+  (`Cannot retrieve file blob properties`). The `c64k1.mil` weight.bin has an
+  all-zero storage header as well. A blob v2 `weight.bin` (see the
+  `BLOBFILE` bullet under "MIL text rules") is **accepted** by
+  validate/compile on h17 and h16g, and by the e5rt run lane, with an
+  absolute or `@model_path/...` path. No FileConstants lane is needed.
+  Measured 2026-10-26 on h17 (ane-stack `docs/spec/ane-port-limits-h17.md`
+  §4); the fuzzer's `blobfile_probe` is now a Valid probe.
 - **`gelu` rejected in all spellings** (`mode` first/last, bare `string`
   or `tensor<string, []>` const) despite the matrix listing it OK.
 - **`matmul` requires exactly one transpose flag** — `tx == ty` (both

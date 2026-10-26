@@ -237,6 +237,133 @@ run  python3 scripts/gen_states_nd.py 53 4 4 1 1 1 1 direct lut=sigmoid > /tmp/p
 want_rc      0
 want_out_re  ^step 0: [0-9]
 
+# ---- BLOBFILE weights (2026-10-26) ------------------------------------------
+# A valid weights/weight.bin (CoreML blob v2: a 64 B storage header, then per
+# blob a 64 B record that starts 0xDEADBEEF) is accepted by BOTH lanes with an
+# absolute or @model_path path. The old "const+BLOBFILE is rejected in every
+# spelling" came from the fuzzer's header-less blob, which is rejected here.
+run  rm -rf /tmp/pl_bba && mkdir -p /tmp/pl_bba && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 bpath=mp blobdir=/tmp/pl_bba > /tmp/pl_bba/m.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bba/m.mil --arch h17 2>&1 && vendor/mil_spec/target/release/milc ane run /tmp/pl_bba/m.mil --steps 1 2>&1
+want_rc      0
+want_out     status=0x0 rc=0
+want_out_re  ^bcv0: 8/8 nonzero, head \[-0\.45996094, -0\.23999023, 0\.38989258, 0\.1998291,
+
+# the same weights inline give the same values, so the run read the blob
+run  python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct conv=1 > /tmp/pl_bbic.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbic.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^cv0: 8/8 nonzero, head \[-0\.45996094, -0\.23999023, 0\.38989258, 0\.1998291,
+
+# fuzzer-style blob (64 zero bytes, then raw fp16; no 0xDEADBEEF record): rejected
+run  rm -rf /tmp/pl_bbh && mkdir -p /tmp/pl_bbh && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bbh > /tmp/pl_bbh/m.mil && python3 -c "open('/tmp/pl_bbh/weights/weight.bin','wb').write(bytes(64) + bytes(128))" && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bbh/m.mil --arch h17 2>&1
+want_rc      1
+want_out     Cannot retrieve file blob properties
+
+# the vendored fuzzer's blobfile_probe now writes blob v2 and is a Valid probe
+# (patch 0019). Its tests fail without the patch (header (0,0), Reject, and
+# InvalidMILProgram on h17); MIL_REQUIRE_HW=1 turns a missing framework into a FAIL
+run  cd vendor/mil_spec && MIL_REQUIRE_HW=1 cargo test -q -p mil_infer --lib blobfile_tests 2>&1
+want_rc      0
+want_out_re  ^test result: ok\. 3 passed; 0 failed;
+
+# a bare relative path resolves against the CWD, not the MIL's directory
+# (only @model_path/ resolves against the MIL's directory)
+run  rm -rf /tmp/pl_bbr && mkdir -p /tmp/pl_bbr && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 bpath=rel blobdir=/tmp/pl_bbr > /tmp/pl_bbr/m.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bbr/m.mil --arch h17 2>&1
+want_rc      1
+want_out     InvalidMILProgram
+
+run  R=$PWD && cd /tmp/pl_bbr && $R/vendor/mil_spec/target/release/milc ane validate m.mil --arch h17 2>&1
+want_rc      0
+want_out     status=0x0 rc=0
+
+# BLOBFILE weights do not consume a BAR id: 53 states + 1 in + 1 out + a
+# BLOBFILE conv fill the pool exactly (the weights are shed into __TEXT, kern=0)
+# and run; 54 fail on both lanes. At 52 an id is free and the weights keep one
+# __KERN_0. (A BLOBFILE id would make 53 fail and 52 show fvmlib=55.)
+run  rm -rf /tmp/pl_bb53 /tmp/pl_bb53c && mkdir -p /tmp/pl_bb53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb53 > /tmp/pl_bb53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb53/m.mil -o /tmp/pl_bb53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bb53c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bb53/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+run  rm -rf /tmp/pl_bb54 /tmp/pl_bb54c && mkdir -p /tmp/pl_bb54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb54 > /tmp/pl_bb54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb54/m.mil -o /tmp/pl_bb54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  vendor/mil_spec/target/release/milc ane run /tmp/pl_bb54/m.mil --steps 1 2>&1
+want_rc      1
+want_out     ANECCompile() FAILED
+
+run  rm -rf /tmp/pl_bb52 /tmp/pl_bb52c && mkdir -p /tmp/pl_bb52 && python3 scripts/gen_states_nd.py 52 4 8 1 1 1 1 direct blob=1 blobdir=/tmp/pl_bb52 > /tmp/pl_bb52/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bb52/m.mil -o /tmp/pl_bb52c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bb52c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bb52/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=54 fvmlib_data=53 fvmlib_const=1 data_sections=106 const_sections=1 kern=1 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+# no plain input: 54 BLOBFILE-conv states fit (no const segment), 55 fail on both lanes
+run  rm -rf /tmp/pl_bbz54 /tmp/pl_bbz54c && mkdir -p /tmp/pl_bbz54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 0 1 blob=1 blobdir=/tmp/pl_bbz54 > /tmp/pl_bbz54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbz54/m.mil -o /tmp/pl_bbz54c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbz54c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbz54/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=55 fvmlib_const=0 data_sections=110 const_sections=0 kern=0 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+run  rm -rf /tmp/pl_bbz55 /tmp/pl_bbz55c && mkdir -p /tmp/pl_bbz55 && python3 scripts/gen_states_nd.py 55 4 8 1 1 0 1 blob=1 blobdir=/tmp/pl_bbz55 > /tmp/pl_bbz55/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbz55/m.mil -o /tmp/pl_bbz55c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  vendor/mil_spec/target/release/milc ane run /tmp/pl_bbz55/m.mil --steps 1 2>&1
+want_rc      1
+want_out     ANECCompile() FAILED
+
+# weight size does not matter: one 8 MiB BLOBFILE weight ([2048,2048,1,1] fp16)
+# still fits 53 states; its bytes are in the HWX (>= 8 MiB) with kern=0; 54 fail;
+# at 52 it keeps one __KERN_0, like a 128-byte weight
+run  rm -rf /tmp/pl_bbw53 /tmp/pl_bbw53c && mkdir -p /tmp/pl_bbw53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw53 > /tmp/pl_bbw53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw53/m.mil -o /tmp/pl_bbw53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbw53c/m.macho && python3 -c "import os;print('hwx_holds_weights', os.path.getsize('/tmp/pl_bbw53c/m.macho') >= 8388608)" && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbw53/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$
+want_out     hwx_holds_weights True
+want_out_re  ^step 0: [0-9]
+
+run  rm -rf /tmp/pl_bbw54 /tmp/pl_bbw54c && mkdir -p /tmp/pl_bbw54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw54 > /tmp/pl_bbw54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw54/m.mil -o /tmp/pl_bbw54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+run  rm -rf /tmp/pl_bbw52 /tmp/pl_bbw52c && mkdir -p /tmp/pl_bbw52 && python3 scripts/gen_states_nd.py 52 4 8 1 1 1 1 direct blob=1 wch=2048 blobdir=/tmp/pl_bbw52 > /tmp/pl_bbw52/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbw52/m.mil -o /tmp/pl_bbw52c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbw52c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbw52/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=54 fvmlib_data=53 fvmlib_const=1 data_sections=106 const_sections=1 kern=1 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+# weight count does not matter: 8 distinct 2 MiB BLOBFILE weights (16 MiB) share
+# ONE __KERN_0 at 3 states. fvmlib=16 is 15 data (3 states + 3 exposed updates +
+# 1 out + 8 conv outs) + 1 const (the plain input); no segment per weight.
+# At 53 they are shed (kern=0) and 54 fail.
+run  rm -rf /tmp/pl_bbk3 /tmp/pl_bbk3c && mkdir -p /tmp/pl_bbk3 && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk3 > /tmp/pl_bbk3/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk3/m.mil -o /tmp/pl_bbk3c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk3c/m.macho
+want_rc      0
+want_out_re  ^segments=19 fvmlib=16 fvmlib_data=15 fvmlib_const=1 data_sections=15 const_sections=1 kern=1 scratch=0$
+
+run  rm -rf /tmp/pl_bbk53 /tmp/pl_bbk53c && mkdir -p /tmp/pl_bbk53 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk53 > /tmp/pl_bbk53/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk53/m.mil -o /tmp/pl_bbk53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk53c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbk53/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=115 const_sections=1 kern=0 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+run  rm -rf /tmp/pl_bbk54 /tmp/pl_bbk54c && mkdir -p /tmp/pl_bbk54 && python3 scripts/gen_states_nd.py 54 4 8 1 1 1 1 direct blob=8 wch=1024 blobdir=/tmp/pl_bbk54 > /tmp/pl_bbk54/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk54/m.mil -o /tmp/pl_bbk54c --arch h17 2>&1
+want_rc      1
+want_out     unable to allocate free BAR
+
+# 32 distinct weights at 53 states (noupd keeps the run-lane ports at
+# 1 + 53 + 33 = 87 <= 127; exposing 53 updates as well would exceed 127)
+run  rm -rf /tmp/pl_bbk32 /tmp/pl_bbk32c && mkdir -p /tmp/pl_bbk32 && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct noupd blob=32 wch=256 blobdir=/tmp/pl_bbk32 > /tmp/pl_bbk32/m.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbk32/m.mil -o /tmp/pl_bbk32c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbk32c/m.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbk32/m.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=86 const_sections=1 kern=0 scratch=0$
+want_out_re  ^step 0: [0-9]
+
+# large INLINE weights behave the same: a 2 MiB inline weight owns exactly one
+# __KERN_0 at 3 states (the same layout as a 128-byte weight) and is shed at 53
+run  rm -rf /tmp/pl_bbi3c && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct conv=1 wch=1024 > /tmp/pl_bbi3.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbi3.mil -o /tmp/pl_bbi3c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbi3c/pl_bbi3.macho && python3 -c "import os;print('hwx_holds_weights', os.path.getsize('/tmp/pl_bbi3c/pl_bbi3.macho') >= 2097152)"
+want_rc      0
+want_out_re  ^segments=12 fvmlib=9 fvmlib_data=8 fvmlib_const=1 data_sections=8 const_sections=1 kern=1 scratch=0$
+want_out     hwx_holds_weights True
+
+run  rm -rf /tmp/pl_bbi53c && python3 scripts/gen_states_nd.py 53 4 8 1 1 1 1 direct conv=1 wch=1024 > /tmp/pl_bbi53.mil && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bbi53.mil -o /tmp/pl_bbi53c --arch h17 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_bbi53c/pl_bbi53.macho && vendor/mil_spec/target/release/milc ane run /tmp/pl_bbi53.mil --steps 1 2>&1
+want_rc      0
+want_out_re  ^segments=57 fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=108 const_sections=1 kern=0 scratch=0$
+want_out_re  ^step 0: [0-9]
+
 # split vs packed layout: const+data sections <= 55 -> one segment each;
 # 56 -> one shared const + one shared data segment
 run  python3 scripts/gen_states.py 0 5 50 > /tmp/pl_sp50.mil && rm -rf /tmp/pl_sp50c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_sp50.mil -o /tmp/pl_sp50c --arch h17 >/dev/null 2>&1 && python3 scripts/hwx_layout.py /tmp/pl_sp50c/pl_sp50.macho
