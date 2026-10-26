@@ -32,9 +32,8 @@ The project reverse-engineers the Apple Neural Engine's resource model on an M5 
   - the public datapoints in `docs/data/ane-h17-2026-10-22/`
   - the harness fixes
   - `CLAUDE.md` and `.claude/settings.json`
-- **Redaction follow-up:** branch `claude/redact-host-details` removes the second Mac's host
+- **Redaction:** PR #2 (merged 2026-10-26 as `efb81f9`) removed the second Mac's host
   name, tailnet IP, SSH login and the tailnet device inventory from 10 tracked docs.
-  - Run `gh pr list`. If its PR is still open, ask me before merging it.
   - In docs, call that machine **"host B (M4 Pro, macOS 27.0)"**. Never write a host name,
     IP or login.
 - **Read in this order, and only as far as the task needs:**
