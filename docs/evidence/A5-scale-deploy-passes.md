@@ -5,7 +5,7 @@ Lane: **L-SCHED**. Work item: ADR-0002 A.5.
 **This closes A.5's first re-open condition.** The scale caveat is lifted, not
 merely narrowed.
 
-Hosts: local macOS 26.7.1 (M5) for `ANECCompile`; `davids-mac-mini` macOS
+Hosts: local macOS 26.7.1 (M5) for `ANECCompile`; host B (M4 Pro) macOS
 **27.0** (26A428, M4 Pro) for `_ANEClient loadModel`.
 
 ---

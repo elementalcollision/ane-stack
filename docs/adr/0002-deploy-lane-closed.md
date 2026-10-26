@@ -73,8 +73,8 @@ the OS generation it was captured on.
 
 ## A.1 What changed
 
-A macOS 27.0 host became reachable (`davids-mac-mini`, tailnet `100.127.197.66`,
-user `davidgraham`, **M4 Pro**, build `26A428`) and PROBE-2's probes were re-run
+A macOS 27.0 host became reachable (host B, a second Mac on the owner's private
+network: **M4 Pro**, build `26A428`) and PROBE-2's probes were re-run
 there with the same binaries, so the difference is the OS and not the build.
 Full data: `docs/evidence/PROBE-2-macos27-result.md`.
 
@@ -187,8 +187,8 @@ Concrete, ordered, cheapest first:
 4. ~~**A second 27.0 host** — the current data is n=1 per OS.~~
    **BLOCKED ON HARDWARE (2026-10-22).**
    `docs/evidence/A5-item4-no-second-host.md`. The tailnet has exactly one
-   macOS 27.0 host (`davids-mac-mini`, M4 Pro) and one other Mac
-   (`bev-imac-new`), which is offline and last seen 55 days ago — ping 100 %
+   macOS 27.0 host (host B, M4 Pro) and one other Mac
+   (an older iMac), which is offline and last seen 55 days ago — ping 100 %
    loss, port 22 closed, and it cannot be woken from here. Remaining nodes are
    Windows/Linux/iOS, not Apple Silicon.
 

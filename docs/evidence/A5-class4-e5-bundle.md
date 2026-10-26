@@ -7,7 +7,7 @@ Lane: **L-SCHED**. Work item: ADR-0002 A.5 item 3.
 differently on the same file.** PROBE-2's class-4 claim survives on 27.0, but
 its *framing* ("the same loader refuses everything") was slightly wrong.
 
-Hosts: local macOS **26.7.1** (M5) and `davids-mac-mini` macOS **27.0**
+Hosts: local macOS **26.7.1** (M5) and host B (M4 Pro) macOS **27.0**
 (26A428, M4 Pro).
 
 ## 1. Two loaders, not one

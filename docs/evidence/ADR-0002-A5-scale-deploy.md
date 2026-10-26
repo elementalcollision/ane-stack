@@ -3,7 +3,7 @@
 Lane: **L-SCHED**, at the lane owner's direction. Closes A.5's first re-open
 condition ("a real transformer shard, h16g, through `_ANEClient` on 27.0").
 
-Hosts: local macOS **26.7.1** (M5); `davids-mac-mini` macOS **27.0** (26A428,
+Hosts: local macOS **26.7.1** (M5); host B (M4 Pro) macOS **27.0** (26A428,
 M4 Pro), via `milc ane compile` locally + `dp3`/`deploy_probe` on the mini.
 
 ---

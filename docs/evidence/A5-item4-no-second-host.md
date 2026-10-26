@@ -9,24 +9,25 @@ explicit rather than implied by its absence.
 
 ## 1. What is on the tailnet
 
-`tailscale status` at time of writing:
+The private network's device list at time of writing (device names withheld
+in this public repo):
 
 | host | OS | state |
 |---|---|---|
-| `daves-m5-macbook-pro` | macOS | online — **this machine, 26.7.1** |
-| `davids-mac-mini` | macOS | idle — **the 27.0 box, M4 Pro** |
-| `bev-imac-new` | macOS | **offline, last seen 55 days** |
-| `nuc-amd-bos` | Windows | offline, 29 days |
-| `badger-nas`, `glkvm` | Linux | offline |
-| `iphone182` | iOS | offline, 200 days |
-| `leonardo-newton-uat`, `hello.ts.net` | Linux | online, but not Apple Silicon |
+| this M5 Max | macOS | online — **this machine, 26.7.1** |
+| host B | macOS | idle — **the 27.0 box, M4 Pro** |
+| an older iMac | macOS | **offline, last seen 55 days** |
+| a Windows PC | Windows | offline, 29 days |
+| two Linux devices | Linux | offline |
+| a phone | iOS | offline, 200 days |
+| two Linux servers | Linux | online, but not Apple Silicon |
 
-So there is exactly **one macOS 27.0 host** (`davids-mac-mini`) and exactly one
+So there is exactly **one macOS 27.0 host** (host B) and exactly one
 other Mac, which is off.
 
 ## 2. What was tried for the offline Mac
 
-- Direct ping to `100.112.106.25` → 100 % packet loss.
+- Direct ping to its private-network address → 100 % packet loss.
 - Port 22 → closed.
 - The tailnet still advertises it with a last-seen timestamp, so the node
   exists in the tailnet's memory but is unreachable — no wake attempt was made,
@@ -49,7 +50,7 @@ and will remain so until a third host appears.
 
 ## 4. What would unblock it
 
-Any of: power on `bev-imac-new`; another Apple Silicon Mac on macOS 27.x; or a
+Any of: power on the older iMac; another Apple Silicon Mac on macOS 27.x; or a
 CI runner with macOS 27.x (none configured — checkout `.github/workflows/`).
 
 Until then, treat "open on 27.0" as "**open on this one 27.0 M4 Pro**".

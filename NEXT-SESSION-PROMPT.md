@@ -1,4 +1,4 @@
-# Next-session prompt — ane-stack (written 2026-10-26)
+# Next-session prompt — ane-stack (updated 2026-10-26, after PR #1 merged)
 
 Paste everything below the line into a new Claude Code session opened on this
 repository.
@@ -25,12 +25,18 @@ The project reverse-engineers the Apple Neural Engine's resource model on an M5 
      task needs them.
 
 ## Where things stand
-- **PR #1** (`claude/review-handoff-doc-953eea`, draft, CI green, 10 commits) holds all
-  current work. It has the re-measured spec and writeup, the visual companion, the public
-  datapoints, the harness fixes, `CLAUDE.md` and `.claude/settings.json`.
-- **`main` still carries the old, refuted model** until PR #1 merges.
-- **First:** run `gh pr view 1`. If it is still open, work on its branch, or ask me
-  whether to merge it first. Do not merge without my OK.
+- **`main` is current.** PR #1 was merged on 2026-10-26 as `816a642`, with CI green.
+  `main` has:
+  - the re-measured spec (102 probes, 219 assertions) and the writeup
+  - the visual companion
+  - the public datapoints in `docs/data/ane-h17-2026-10-22/`
+  - the harness fixes
+  - `CLAUDE.md` and `.claude/settings.json`
+- **Redaction follow-up:** branch `claude/redact-host-details` removes the second Mac's host
+  name, tailnet IP, SSH login and the tailnet device inventory from 10 tracked docs.
+  - Run `gh pr list`. If its PR is still open, ask me before merging it.
+  - In docs, call that machine **"host B (M4 Pro, macOS 27.0)"**. Never write a host name,
+    IP or login.
 - **Read in this order, and only as far as the task needs:**
   1. `CLAUDE.md`
   2. `HANDOFF-2026-10-22.md` §3–§5
@@ -47,10 +53,9 @@ bash tests/evidence-harness.sh                                                 #
 Pass `--arch h17` to `milc ane validate|compile`, which default to h16g.
 
 ## Decisions waiting on me — ask, don't act
-- **Merge PR #1** into `main`.
-- **Redact** the tailnet IP, the macOS-27 host name and the SSH login from the 10 tracked docs
-  that publish them (ADR-0002, BUILD_PLAN, several `docs/evidence/*`). No history rewrite
-  without an explicit go-ahead.
+- **Git history** still contains the redacted host details: they are in commits before the
+  redaction, and the repo is public. Never rewrite history or force-push without my
+  explicit go-ahead.
 - **The `ori` page `ane-descriptor-economy` stays as it is.** Don't re-save it; the repo
   copy `docs/spec/ane-port-limits-h17.html` is canonical.
 
@@ -83,7 +88,8 @@ Pass `--arch h17` to `milc ane validate|compile`, which default to h16g.
 - **Public repo:** scrub private paths, hosts, IPs, logins and emails from anything you commit.
 - **Commits:** `lane/<name>: <what>`, with the body saying what failed before, how it was
   verified, and the work-item ID.
-- **Push as you go** and keep PR #1's description current.
+- **Branch from `main`, push as you go**, and keep the open PR's description current.
+  Ask me before merging any PR.
 - **Each task is done when:**
   - `./scripts/evidence-check.sh --all --require-all` passes
   - the harness passes

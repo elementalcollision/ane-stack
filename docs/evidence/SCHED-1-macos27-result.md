@@ -17,8 +17,8 @@ explains why no 27.x planner could be found locally).
 
 | | Host | OS | HW |
 |---|---|---|---|
-| **A** | local (`daves-m5-macbook-pro`) | macOS **26.7.1** (25G241) | Apple M5 (h17) |
-| **B** | `davids-mac-mini` (tailnet `100.127.197.66`) | macOS **27.0** (26A428) | Apple M4 Pro |
+| **A** | local (this M5 Max) | macOS **26.7.1** (25G241) | Apple M5 (h17) |
+| **B** | a second Mac on the owner's private network | macOS **27.0** (26A428) | Apple M4 Pro |
 
 Same `milc` binary on both (copied, arm64 Mach-O, no rebuild) — so any
 difference is the OS, not the build. `dyld_info` confirms 98 `MLComputePlan`
@@ -105,7 +105,8 @@ either inherited from `mil_lint`'s `Unit` verdicts or left unvalidated.
 - Blob-backed corpus entries (`conv1x1`, `rmsnorm`, `matmul_chain`) were omitted
   here as on A, for the same reason (`coremlc` refuses `@model_path/weights`
   references). Both hosts therefore measured 6 package names, 10 comparable ops.
-- Access was `davidgraham@100.127.197.66` over the tailnet. Keys on the local
+- Access was over SSH on the private network (host, address and login
+  deliberately not recorded in this public repo). Keys on the local
   Mac that do *not* work there are recorded in the git history of this session,
   so nobody re-tries them.
 

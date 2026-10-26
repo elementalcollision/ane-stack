@@ -8,8 +8,8 @@ Hosts:
 
 | | Host | OS | HW |
 |---|---|---|---|
-| **A** | local (`daves-m5-macbook-pro`) | macOS **26.7.1** (25G241) | Apple M5 (h17) |
-| **B** | `davids-mac-mini` (tailnet `100.127.197.66`) | macOS **27.0** (26A428) | Apple M4 Pro |
+| **A** | local (this M5 Max) | macOS **26.7.1** (25G241) | Apple M5 (h17) |
+| **B** | a second Mac on the owner's private network | macOS **27.0** (26A428) | Apple M4 Pro |
 
 Same `dp3` / `deploy_probe` binaries on both (copied, arm64 macOS, no rebuild) —
 the probes `dlopen` the frameworks at runtime — so any difference is the OS.
@@ -120,7 +120,8 @@ amended rather than left standing as an absolute.
 
 - Method: probes `scp`'d to B, artifacts `scp`'d to B, no toolchain installed on
   that machine. Keys that do *not* work for B are recorded in git history so
-  nobody re-tries them; the working credential is `davidgraham@100.127.197.66`.
+  nobody re-tries them. Access was over SSH on the private network (host, address
+  and login deliberately not recorded in this public repo).
 - **Request to L-RUN:** patch 0014's `AneLoadError::take_code` mis-parses macOS
   27.0's message (returns `Some(19)` from the underlying value). A 27.x
   correction is needed before the typed error is trusted there.

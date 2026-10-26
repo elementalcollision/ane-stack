@@ -7,7 +7,7 @@ capability").
 on a provenance label.** And it is not a signature check either — the artifacts
 are ours, produced locally by `ANECCompile`.
 
-Hosts: local macOS 26.7.1 (M5) compiles; `davids-mac-mini` macOS **27.0**
+Hosts: local macOS 26.7.1 (M5) compiles; host B (M4 Pro) macOS **27.0**
 (26A428, M4 Pro) loads.
 
 ---
