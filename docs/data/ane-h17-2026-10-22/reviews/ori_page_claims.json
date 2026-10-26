@@ -1,0 +1,1010 @@
+[
+ {
+  "unit": "classify",
+  "claims": [
+   {
+    "id": "v1-1",
+    "page": "v1,v2,v3",
+    "claim": "Subtitle: measured on h17 = Apple M5 Max, macOS 26.7.1",
+    "status": "holds",
+    "evidence": "writeup line 26-27: '| SoC | Apple M5 Max (Mac17,7, exposes `h17`) |' and '| macOS | 26.7.1 (25G241) |'",
+    "current_doc": "Build provenance table, lines 24-35"
+   },
+   {
+    "id": "v1-2",
+    "page": "v1,v2,v3",
+    "claim": "'Every number is reproduced from a compiled artifact - nothing here is guessed'",
+    "status": "partially_true",
+    "evidence": "Coverage contract lines 9-16 grades laws 'tentative: fitted on few points'; open questions lines 527-542; several laws are '(runner-only)' or 'strong' not established",
+    "current_doc": "Coverage contract (lines 7-16); Open questions (527-542)"
+   },
+   {
+    "id": "v1-3",
+    "page": "v1,v2,v3",
+    "claim": "Card: descriptor table cap 54 slots; 53 states + 1 header compile; a 54th state fails 'unable to allocate free BAR'",
+    "status": "partially_true",
+    "evidence": "line 52: '55 BAR ids = 55 __FVMLIB segments ... 53 states with a plain input, 54 without'; line 185: '54 states + 1 plain in + 1 out ... no: ZinBarIdManager::GetNextAvailableBarId(): unable to allocate free BAR'. The '+1 header' and '54 slots' parts are refuted at line 498-500",
+    "current_doc": "Section 4 count table (lines 182-186); Corrections lines 498, 500"
+   },
+   {
+    "id": "v1-4",
+    "page": "v1,v2,v3",
+    "claim": "Card: cost per state = 2 __data segs + 1 slot (persistent surface + read/update working buffer + one descriptor-list record)",
+    "status": "refuted",
+    "evidence": "line 235: '#__data sections = N + K + plain_out, where K = number of exposed states. The old outputs + 2N is the K = N case.' line 499 corrects the '2 x states' law as a 'special case'",
+    "current_doc": "Section 4 Section economy (lines 234-238); Corrections line 499"
+   },
+   {
+    "id": "v1-5",
+    "page": "v1,v2,v3",
+    "claim": "Callout one-line model: __data segments = outputs + 2 x states",
+    "status": "refuted",
+    "evidence": "line 235: sections = N + K + plain_out (K = N only gives 2N); line 499: '__data segments = outputs + 2 x states ... special case ... sections = N + exposed + outputs'",
+    "current_doc": "Section 4 Section economy (235); Corrections line 499"
+   },
+   {
+    "id": "v1-6",
+    "page": "v1,v2,v3",
+    "claim": "ZinBarIdManager descriptor table holds 54 descriptor-list slots",
+    "status": "refuted",
+    "evidence": "line 52 and 211-212: the pool is 55 BAR ids (0..54), one per __FVMLIB segment; line 500: '0x9344 = states + 1 header; the table holds 54 - wrong'",
+    "current_doc": "Section 4 Mechanism (210-212); Corrections line 500"
+   },
+   {
+    "id": "v1-7",
+    "page": "v1,v2,v3",
+    "claim": "53 states is the hard ceiling",
+    "status": "refuted",
+    "evidence": "line 52: '54 without' a plain input; line 186: '54 states, no plain input ... 55 yes yes'; line 222: 'Without a plain input ... N + 1 <= 55 => N <= 54'",
+    "current_doc": "Section 4 count table (186); Section 4 Mechanism (221-222)"
+   },
+   {
+    "id": "v1-8",
+    "page": "v1,v2,v3",
+    "claim": "The ceiling is independent of io",
+    "status": "refuted",
+    "evidence": "line 497: 'Plain io does not share the state budget' is marked 'wrong for execution'; line 144: execution budget counts each state as one io port; line 170 of count table: 53 states + 32 in + 32 out compiles but does not run",
+    "current_doc": "Section 3 States cost io ports (137-166); Corrections line 497"
+   },
+   {
+    "id": "v1-9",
+    "page": "v1,v2,v3",
+    "claim": "The ceiling is independent of dtype",
+    "status": "unverified",
+    "evidence": "Section 4 breadth (line 196-201) covers state shape, op chains, plain io 1-100, unreturned updates, exposed count, h16g; dtype is not among them. Section 7 (417-421) states dtype support for execution only, not BAR-pool effect",
+    "current_doc": "Section 4 breadth (196-201); Section 7 State dtype (417-421)"
+   },
+   {
+    "id": "v1-10",
+    "page": "v1,v2,v3",
+    "claim": "The ceiling is independent of stripe width",
+    "status": "holds",
+    "evidence": "line 196-197: 'the runners found the same boundary across: state shape: dim0 4..256, dim1 1..64, mixed shapes'",
+    "current_doc": "Section 4 breadth (196-201)"
+   },
+   {
+    "id": "v1-11",
+    "page": "v1,v2,v3",
+    "claim": "The ceiling is independent of total segment count",
+    "status": "refuted",
+    "evidence": "line 459 (rule 3): 'N <= 55 - [any plain output or exposed state] - [any plain input]'; the cap depends on the output and input count, not only on state count",
+    "current_doc": "Section 9 planning rule 3 (line 463-465)"
+   },
+   {
+    "id": "v1-12",
+    "page": "v1,v2,v3",
+    "claim": "Layer: Mach-O sections = the __FVMLIB.__data segment table",
+    "status": "holds_reinterpreted",
+    "evidence": "line 235: '#__data sections'; line 213-215: sections are packed into one segment when B > 55; a segment is a BAR id, not a section table entry",
+    "current_doc": "Section 4 Mechanism (210-217); Section economy (234-238)"
+   },
+   {
+    "id": "v1-13",
+    "page": "v1,v2,v3",
+    "claim": "Layer: segments = outputs + 2 x states",
+    "status": "refuted",
+    "evidence": "line 235: sections = N + K + plain_out; line 499 correction",
+    "current_doc": "Section 4 Section economy (235); Corrections line 499"
+   },
+   {
+    "id": "v1-14",
+    "page": "v1,v2,v3",
+    "claim": "Layer: __text records are the 0x93xx descriptor records in the instruction stream",
+    "status": "partially_true",
+    "evidence": "line 252-253: 12-byte bindings '[tag u16][bar_word u16]...'; line 280-281: flat members of a per-block trailer; the 0x93xx family is real but the 'instruction stream' framing is not stated",
+    "current_doc": "Section 5 (246-282); Section 6 tag (316-335)"
+   },
+   {
+    "id": "v1-15",
+    "page": "v1,v2,v3",
+    "claim": "Layer: 0x9344 = states + 1 (and 0x9361/0x9365 = states each)",
+    "status": "refuted",
+    "evidence": "line 288: '0x9344 = K + max(1, min(in, out))' (N >= 1); line 293: a 53-state noupd program has 1; line 294: '0x9344 is therefore not a state table and does not cap at 54'",
+    "current_doc": "Section 5 Counts (287-294)"
+   },
+   {
+    "id": "v1-16",
+    "page": "v1,v2,v3",
+    "claim": "Layer: 0x9361 and 0x9365 = states each",
+    "status": "partially_true",
+    "evidence": "line 343: one update-row copy per state (first state has none if source is computed; N+1 in fan-out regime); line 347-348: one state-out copy per returned update, none in a noupd program",
+    "current_doc": "Section 6 Roles (341-348)"
+   },
+   {
+    "id": "v1-17",
+    "page": "v1,v2,v3",
+    "claim": "Layer: descriptor fields are fully decoded",
+    "status": "refuted",
+    "evidence": "line 389-390: 'cost-like field ... meaning unknown'; line 339: 'The cause is unknown; other special values may exist'; open question 5 (537-539) lists unresolved sub-laws",
+    "current_doc": "Section 6 (389-390); Open questions Q5 (537-539)"
+   },
+   {
+    "id": "v1-18",
+    "page": "v1,v2,v3",
+    "claim": "Tree: one state compiles to this record tree in __text, with 0x9344 as root and 0x9361/0x9365 as working buffers",
+    "status": "refuted",
+    "evidence": "line 280-282: 'These are flat members of a per-block descriptor trailer ... Nothing is embedded inside 0x9344 or 0x9361'",
+    "current_doc": "Section 5 (276-282)"
+   },
+   {
+    "id": "v1-19",
+    "page": "v1,v2,v3",
+    "claim": "0x9361 is the state-copy (read) record, 1 per state, the read working buffer",
+    "status": "refuted",
+    "evidence": "line 332-335: '0x9365 and 0x9361 are not write-side/read-side kinds. They are the same record with different fields present'; line 505 correction",
+    "current_doc": "Section 6 Tag (318-335); Corrections line 505"
+   },
+   {
+    "id": "v1-20",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 is the state-copy (write) record: shape + stride + region size, decoded",
+    "status": "partially_true",
+    "evidence": "line 350-353 decodes the header fields (strong); line 370-373: region is 'a packed row-width field, not a vmsize reservation'; SHORT/LONG layouts open (374-378)",
+    "current_doc": "Section 6 Header and Row width (350-373)"
+   },
+   {
+    "id": "v1-21",
+    "page": "v1,v2,v3",
+    "claim": "0x934a x2 are embedded sub-records (constant) under the 0x9344 root",
+    "status": "partially_true",
+    "evidence": "count holds: line 299-300 '2 per task on h17, 1 on h16g'; 'embedded' and 'constant' fail: line 280-282 flat members; line 309-313 trailer byte is a flags byte with values 0x21, 0xe1, 0xc1",
+    "current_doc": "Section 5 0x934a (299-300); Trailer flag byte (309-313)"
+   },
+   {
+    "id": "v1-22",
+    "page": "v1,v2,v3",
+    "claim": "0x9442, 0x1340, 0x1341 carry a constant payload 0x21",
+    "status": "refuted",
+    "evidence": "line 276-278: 0x9442 is 'the task's destination' binding; line 309-313: 0x21 is a flags byte in 0x1340/0x1341/0x1440 with values 0xe1/0xc1 also seen; Corrections line 504",
+    "current_doc": "Section 5 table (276-278); Trailer flag byte (309-313)"
+   },
+   {
+    "id": "v1-23",
+    "page": "v1,v2,v3",
+    "claim": "0x1440 carries a constant payload 0x21",
+    "status": "refuted",
+    "evidence": "line 313: 'Only 0x1440 differs between arches: bit 0x10 is set on h16g'; line 504: 'Embedded children carry constant payload 0x21 - wrong: a flags byte'",
+    "current_doc": "Section 5 Trailer flag byte (309-313); Corrections line 504"
+   },
+   {
+    "id": "v1-24",
+    "page": "v1,v2,v3",
+    "claim": "Every field of 0x9365 decoded across 10 state shapes (training + 4 held-out, all exact)",
+    "status": "partially_true",
+    "evidence": "header decode is 'strong' (line 350-353); the 10-shape / all-exact count is not in the writeup; cost-like field and d3/dim2 sub-laws remain open (389-390, 537-539)",
+    "current_doc": "Section 6 (350-353, 389-390); Open questions Q5 (537-539)"
+   },
+   {
+    "id": "v1-25",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x00: record tag 0x9365 (4-D state-copy)",
+    "status": "holds_reinterpreted",
+    "evidence": "line 320-323: tag = 0x9261 + 0x100*[dim1 != 1] + 0x004*[dim0 != 1]; gives 0x9365 for dim1 = 4, dim0 = 4. The tag is a presence-flag word, not a record kind (line 332-333)",
+    "current_doc": "Section 6 Tag (318-335)"
+   },
+   {
+    "id": "v1-26",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x02..+0x09 = 01 00 00 00 01 00 00 00, flags/type constants, constant",
+    "status": "holds_reinterpreted",
+    "evidence": "line 350-352: +0x02 is dim3 and +0x06 is dim2 (LE u32); the bytes are dim3 = 1 and dim2 = 1 for this shape, and line 366 says dim2/dim3 vary, so they are not constants",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v1-27",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x0a u32 dim1 (inner dim) = 4",
+    "status": "holds",
+    "evidence": "line 350-352: header order is dim3 (+0x02), dim2 (+0x06), then dim1 (if flagged), then dim0",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v1-28",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x0e u32 dim0 (stripe / rows) = 4",
+    "status": "holds",
+    "evidence": "line 350-352: 'then dim0 (if flagged)' after dim1",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v1-29",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x1c packed inner-row stride = min(2*dim1 + 8, 32) = 16 at dim1 = 4",
+    "status": "partially_true",
+    "evidence": "offset +0x1c holds (line 353); the value 16 holds at dim1 = 4; formula refuted: line 357-362 stride = 8*min(ceil(log2 dim1), 4); line 364: old law 'agrees only at dim1 = 4, 8 and >= 12'; Corrections line 506",
+    "current_doc": "Section 6 Stride (357-364); Corrections line 506"
+   },
+   {
+    "id": "v1-30",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x30 u8 flag byte = 0",
+    "status": "unverified",
+    "evidence": "the writeup gives no 0x9365 byte at +0x30; the trailer flag byte it describes (line 309-313) is in 0x1340/0x1341/0x1440 only; v2 places the flag byte at +0x33 instead (see v2-9)",
+    "current_doc": "Section 5 Trailer flag byte (309-313)"
+   },
+   {
+    "id": "v1-31",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x40 u32 shape-class selector (dim1 <= 4 vs >= 8), value 0x0142803c",
+    "status": "unverified",
+    "evidence": "the writeup names no shape-class selector field in the 0x9365 header (line 350-353)",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v1-32",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x44 u32 constant 0x00100000",
+    "status": "refuted",
+    "evidence": "line 375-376 (LONG layout): 'its +0x48 holds 1 MiB, and dim1 MiB sits at +0x44'. So +0x44 tracks dim1 (4 MiB at dim1 = 4), not a constant. Caveat: the writeup does not say which layout this record is",
+    "current_doc": "Section 6 SHORT/LONG layouts (374-377)"
+   },
+   {
+    "id": "v1-33",
+    "page": "v1,v2,v3",
+    "claim": "0x9365 +0x48/+0x4c/+0x50/+0x5c u32 x4: region vmsize = dim1 x 1 MiB (x4 identical reservations) = 4194304",
+    "status": "partially_true",
+    "evidence": "line 370-371: with d3 <= 8, region = rowbits << 16 = dim1 MiB (value holds); line 372-373: 'This is a packed row-width field, not a vmsize reservation'; the x4 count is not stated; v2 puts these fields at +0x4a..+0x5e (see v2-11)",
+    "current_doc": "Section 6 Row width and region (368-373)"
+   },
+   {
+    "id": "v1-34",
+    "page": "v1,v2,v3",
+    "claim": "0x9344 +0x00: record tag + slot word (slot_index << 8) | (copy << 7)",
+    "status": "holds_reinterpreted",
+    "evidence": "line 253: bar_word = 0x2300 + 0x80*ordinal; line 257-259: '(slot_index << 8) | (copy << 7) is the same bits ... there is no slot holding two records'",
+    "current_doc": "Section 5 Format (246-259)"
+   },
+   {
+    "id": "v1-35",
+    "page": "v1,v2,v3",
+    "claim": "0x9344 +0x0c / +0x18: 0x934a x2 are two embedded sub-records (constant payload)",
+    "status": "refuted",
+    "evidence": "line 280-282: flat members of a per-block trailer, 'Nothing is embedded inside 0x9344'; 0x934a is one per binary-add task (line 299-300)",
+    "current_doc": "Section 5 (276-300)"
+   },
+   {
+    "id": "v1-36",
+    "page": "v1,v2,v3",
+    "claim": "0x9344 +0x24: 0x9442 is a constant sub-record",
+    "status": "refuted",
+    "evidence": "line 276-278: 0x9442 is 'the task's destination'; Corrections line 502: '0x9442 ... one destination binding per __data section'",
+    "current_doc": "Section 5 table (276-278); Corrections line 502"
+   },
+   {
+    "id": "v1-37",
+    "page": "v1,v2,v3",
+    "claim": "0x9344 +0x30/+0x38/+0x40: structural tags 0x1340/0x1341/0x1440, payload 0x21 (33, constant)",
+    "status": "refuted",
+    "evidence": "line 309-313: '0x21 = buffer with a single consumer; 0xe1/0xc1 = shared by >= 2 tasks'; the byte is not constant",
+    "current_doc": "Section 5 Trailer flag byte (309-313)"
+   },
+   {
+    "id": "v1-38",
+    "page": "v1,v2,v3",
+    "claim": "0x9344 +0x68..+0x7c u32 tail: small integer fields (1, 3, 1, 1, 1, 4)",
+    "status": "unverified",
+    "evidence": "the writeup gives no 0x9344 tail field map; section 8 (441-449) only says 0x9344 is byte-identical across arches",
+    "current_doc": "Section 8 (441-449)"
+   },
+   {
+    "id": "v1-39",
+    "page": "v1,v2,v3",
+    "claim": "The descriptor table is an array of slots, each holding up to two records",
+    "status": "refuted",
+    "evidence": "line 257-259: 'there is no slot holding two records'; line 501: 'Slot word ... reinterpreted: the bits are a segment's BAR ordinal'",
+    "current_doc": "Section 5 (257-259); Corrections line 501"
+   },
+   {
+    "id": "v1-40",
+    "page": "v1,v2,v3",
+    "claim": "Slot word: word = (slot_index << 8) | (copy << 7), the (slot, position) coordinate",
+    "status": "holds_reinterpreted",
+    "evidence": "line 257-259: same bits; slot_index = 0x23 + ordinal/2, copy = ordinal & 1",
+    "current_doc": "Section 5 (257-259)"
+   },
+   {
+    "id": "v1-41",
+    "page": "v1,v2,v3",
+    "claim": "Slot table: states -> 0x9344 records -> slots used -> full slots -> singletons (rows 1, 2, 16, 32, 53)",
+    "status": "refuted",
+    "evidence": "no slot-pairing concept exists (line 257-259, 501); 0x9344 = K + max(1, min(in, out)) (line 288), so the record column equals states + 1 only at in = out = 1",
+    "current_doc": "Section 5 (257-259, 288); Corrections lines 500-501"
+   },
+   {
+    "id": "v1-42",
+    "page": "v1,v2,v3",
+    "claim": "records = states + 1 (the +1 header); slots = ceil(records / 2)",
+    "status": "refuted",
+    "evidence": "line 288: 0x9344 = K + max(1, min(in, out)); line 500: 'wrong'; line 501: slot pairing reinterpreted",
+    "current_doc": "Section 5 (288); Corrections lines 500-501"
+   },
+   {
+    "id": "v1-43",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 0 states: 1 __data segment, 0 0x9344 records, compile ok",
+    "status": "partially_true",
+    "evidence": "one output gives sections = N + K + plain_out = 1 (line 235); 0x9344 = min(in, out) for N = 0, out >= 1 (line 290), so 0 records holds only with no plain io; a stateless program with no output is rejected (line 133-135)",
+    "current_doc": "Section 2 (133-135); Section 5 Counts (290); Section 4 (235)"
+   },
+   {
+    "id": "v1-44",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 1 state: 3 segments, 2 records, ok",
+    "status": "partially_true",
+    "evidence": "sections = 1 + 1 + 1 = 3 (line 235) and 0x9344 = K + max(1, min(in, out)) = 2 (line 288), both at in = out = 1 only",
+    "current_doc": "Section 4 Section economy (235); Section 5 Counts (288)"
+   },
+   {
+    "id": "v1-45",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 8 states: 17 segments, 9 records, ok",
+    "status": "holds",
+    "evidence": "sections = 8 + 8 + 1 = 17 (line 235), below the 55-id packing threshold (line 213-215), so one segment per section; 0x9344 = 9 at in = out = 1 (line 288)",
+    "current_doc": "Section 4 (213-215, 235); Section 5 (288)"
+   },
+   {
+    "id": "v1-46",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 32 states: 65 segments, 33 records, ok",
+    "status": "partially_true",
+    "evidence": "records 33 holds (line 288); 65 sections exceed 55 BAR ids so they are packed (line 213-217), and 0x9344 is K + max(1, min(in, out))",
+    "current_doc": "Section 4 Mechanism (213-217); Section 5 (288)"
+   },
+   {
+    "id": "v1-47",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 53 states: 107 segments, 54 records, ok (the ceiling)",
+    "status": "partially_true",
+    "evidence": "107 is the section count (line 235) but the count table gives 55 __FVMLIB segments at 53 states (line 184); 54 records holds at in = out = 1 (line 292); the ceiling is 53 only with a plain input (line 52)",
+    "current_doc": "Section 4 count table (184); Section 5 (292)"
+   },
+   {
+    "id": "v1-48",
+    "page": "v1,v2,v3",
+    "claim": "Scaling row 54 states: 109 (would be) segments, 55 (would be) records, free BAR",
+    "status": "partially_true",
+    "evidence": "'unable to allocate free BAR' holds (line 185); the 109 and 55 counts are not the mechanism: the pool is 55 BAR ids (line 211-212), and records are not capped (line 294)",
+    "current_doc": "Section 4 count table (185); Section 4 Mechanism (211-222)"
+   },
+   {
+    "id": "v1-49",
+    "page": "v1,v2,v3",
+    "claim": "Why 154 segments can pass while 109 fail: 52 states + 50 out = 154 segments compiles; 54 states = 109 segments fails",
+    "status": "refuted",
+    "evidence": "line 211-212: every __FVMLIB segment is one BAR id and there are 55 ids, so 154 segments cannot be a count of pool members; the 52+50 program is not in the writeup",
+    "current_doc": "Section 4 Mechanism (210-222)"
+   },
+   {
+    "id": "v1-50",
+    "page": "v1,v2,v3",
+    "claim": "The table that overflows is the state-descriptor allocator, not the segment table",
+    "status": "refuted",
+    "evidence": "line 185 names ZinBarIdManager::GetNextAvailableBarId, whose ids are the __FVMLIB segments (line 211-212): the BAR-id pool is the segment table, not separate from it",
+    "current_doc": "Section 4 Mechanism (210-222)"
+   },
+   {
+    "id": "v1-51",
+    "page": "v1,v2,v3",
+    "claim": "out_cap(in) = max(63, 127 - in)",
+    "status": "refuted",
+    "evidence": "line 85: 'There is no floor'; line 49 and line 495: the cap is 'live_in + out <= 127, no floor'",
+    "current_doc": "Section 1 (49, 85); Corrections line 495"
+   },
+   {
+    "id": "v1-52",
+    "page": "v1,v2,v3",
+    "claim": "Outputs capped against a ~127-port budget shared with inputs, floored at 63",
+    "status": "refuted",
+    "evidence": "line 85: 'There is no floor'; line 112-115: the floor was an artifact of dead inputs; Corrections line 495 'wrong'",
+    "current_doc": "Section 1 (85, 112-115); Corrections line 495"
+   },
+   {
+    "id": "v1-53",
+    "page": "v1,v2,v3",
+    "claim": "The ANECCompile frontend accepts 200+ io ports; the limit bites at execute_sync, not compile",
+    "status": "partially_true",
+    "evidence": "line 119-121: frontend cap declared_in + out <= 255, so 200+ is accepted; but validate/compile reject at 256 (line 120-121), so compile does bite; the 127 cap is at execution (line 49)",
+    "current_doc": "Section 2 (117-135); Corrections line 496"
+   },
+   {
+    "id": "v1-54",
+    "page": "v1,v2,v3",
+    "claim": "Sibling io budget measured on the e5rt lane",
+    "status": "holds",
+    "evidence": "line 487: 'one function, one host, one OS build, the e5rt run lane'",
+    "current_doc": "Section 9 What this does not cover (477-487)"
+   },
+   {
+    "id": "v1-55",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: coremlc 3600.25.1",
+    "status": "holds",
+    "evidence": "writeup line 28: 'coremlc 3600.25.1'",
+    "current_doc": "Build provenance (28)"
+   },
+   {
+    "id": "v1-56",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: OS macOS 26.7.1 (25G91)",
+    "status": "partially_true",
+    "evidence": "version 26.7.1 holds (line 27); build string is 25G241 (line 27 and 35), so 25G91 is refuted",
+    "current_doc": "Build provenance (27)"
+   },
+   {
+    "id": "v1-57",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: probes milc ane validate|compile|run + generated program(1.3) MIL",
+    "status": "holds",
+    "evidence": "line 30: 'milc ane validate | compile | run on generated program(1.3) MIL'",
+    "current_doc": "Build provenance (30)"
+   },
+   {
+    "id": "v1-58",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: generators gen_states.py, gen_mix_ports.py, gen_states_width.py",
+    "status": "holds",
+    "evidence": "line 31 lists gen_live_ports.py, gen_mix_ports.py, gen_states.py, gen_states_width.py, gen_states_nd.py, gen_state_dtype.py",
+    "current_doc": "Build provenance (31)"
+   },
+   {
+    "id": "v1-59",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: decoders count_desc_records.py, decode_9365.py, decode_slot_word.py",
+    "status": "partially_true",
+    "evidence": "line 32 lists count_desc_records.py, decode_slot_ordinals.py, hwx_layout.py, decode_copy_records.py, state_exec_predict.py; decode_9365.py and decode_slot_word.py are not listed",
+    "current_doc": "Build provenance (32)"
+   },
+   {
+    "id": "v1-60",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: assertions docs/spec/ane-port-limits-h17.spec pass via evidence-check.sh",
+    "status": "holds",
+    "evidence": "line 34: '84 probes, 176 assertions, PASS in ~18 s'; line 548 gives the evidence-check.sh command. Not re-run (no hardware for this unit)",
+    "current_doc": "Build provenance (34); Reproduce (546-548)"
+   },
+   {
+    "id": "v1-61",
+    "page": "v1,v2,v3",
+    "claim": "Provenance: Date 2026-10-21",
+    "status": "refuted",
+    "evidence": "line 35: 'Date | 2026-10-22'; lines 18-20 say the page predates the same-day re-measurement",
+    "current_doc": "Build provenance (35); header (18-20)"
+   },
+   {
+    "id": "v1-62",
+    "page": "v1,v2,v3",
+    "claim": "Callout: 'Every number here is re-derived ... a drifted claim fails the run. This is the difference between documentation and evidence'",
+    "status": "refuted",
+    "evidence": "lines 5-6: 'five of its headline laws did not reproduce'; line 509: 'Spec executable assertions for all of it was false; the pass side was vacuous'",
+    "current_doc": "Header (5-6); Corrections line 509"
+   },
+   {
+    "id": "v2-1",
+    "page": "v2",
+    "claim": "Pointer targets: the two state-copy records are not symmetric; the write side carries geometry, the read side is a fixed template",
+    "status": "refuted",
+    "evidence": "line 332-335: same record with different fields present; line 384-387: the update-row record carries dim1, stride word, rowbits and a buffer binding; Corrections line 505",
+    "current_doc": "Section 6 (332-335, 384-387); Corrections line 505"
+   },
+   {
+    "id": "v2-2",
+    "page": "v2",
+    "claim": "Table: 0x9361 read-side carries no shape and is byte-identical across all shapes and counts",
+    "status": "refuted",
+    "evidence": "line 386-387: 'The old byte-identical across shapes and counts compared only two programs that differed in dim0'; line 505: '0x9361 ... fixed template ... wrong'",
+    "current_doc": "Section 6 (386-387); Corrections line 505"
+   },
+   {
+    "id": "v2-3",
+    "page": "v2",
+    "claim": "Table: 0x9365 write-side carries shape (dim0, dim1, stride, region)",
+    "status": "partially_true",
+    "evidence": "dim0, dim1 and stride are header fields (line 350-353); region is a packed row-width field (line 370-373); the write/read labels are refuted (line 332-335)",
+    "current_doc": "Section 6 (332-335, 350-373)"
+   },
+   {
+    "id": "v2-4",
+    "page": "v2",
+    "claim": "Table: 0x9365 varies in 9 bytes across shapes, all on decoded fields",
+    "status": "refuted",
+    "evidence": "line 389-390: cost-like field, meaning unknown; line 386-387: the byte comparison covered only two programs differing in dim0; open question 5 (537-539)",
+    "current_doc": "Section 6 (386-390); Open questions (537-539)"
+   },
+   {
+    "id": "v2-5",
+    "page": "v2",
+    "claim": "Structural reading: the read needs no geometry; the write must place the update, so it carries the shape",
+    "status": "refuted",
+    "evidence": "line 341-343: the update-row copy writes the [1, dim1] row into the state; line 384-387: that record carries dim1, stride, rowbits and binding. The read/write split is not a writeup concept (line 332-335)",
+    "current_doc": "Section 6 Roles (341-343); (384-387)"
+   },
+   {
+    "id": "v2-6",
+    "page": "v2",
+    "claim": "Byte table: +0x0a dim1 (channels) 04 -> 08",
+    "status": "holds",
+    "evidence": "line 350-352: dim1 field follows dim2 at +0x06, so it sits at +0x0a",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v2-7",
+    "page": "v2",
+    "claim": "Byte table: +0x0e dim0 (rows) 04 -> 20",
+    "status": "holds",
+    "evidence": "line 350-352: dim0 field follows dim1 at +0x0e",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v2-8",
+    "page": "v2",
+    "claim": "Byte table: +0x1c inner-row stride 10 -> 18 (16 -> 24)",
+    "status": "holds",
+    "evidence": "stride = 8*min(ceil(log2 dim1), 4) gives 16 (0x10) at dim1 = 4 and 24 (0x18) at dim1 = 8 (line 357-362); stride word at +0x1c (line 353)",
+    "current_doc": "Section 6 Stride (353, 357-362)"
+   },
+   {
+    "id": "v2-9",
+    "page": "v2",
+    "claim": "Byte table: +0x33 flag byte 01 -> 02",
+    "status": "unverified",
+    "evidence": "the writeup gives no 0x9365 flag byte at +0x33; v1 places a flag byte at +0x30 instead, so the two pages disagree on this offset",
+    "current_doc": "Section 5 Trailer flag byte (309-313)"
+   },
+   {
+    "id": "v2-10",
+    "page": "v2",
+    "claim": "Byte table: +0x42 shape-class selector 0x42 -> 0x62",
+    "status": "unverified",
+    "evidence": "the writeup names no shape-class selector (line 350-353)",
+    "current_doc": "Section 6 Header (350-353)"
+   },
+   {
+    "id": "v2-11",
+    "page": "v2",
+    "claim": "Byte table: four region reservations at +0x4a/+0x4e/+0x52/+0x5e, 0x40 -> 0x80 (4 MiB -> 8 MiB)",
+    "status": "partially_true",
+    "evidence": "region = dim1 MiB for d3 <= 8 (line 370-371) gives 4 -> 8 MiB; 'reservations' label refuted (line 372-373); v1 puts the same fields at +0x48/+0x4c/+0x50/+0x5c, so the two pages disagree on offsets",
+    "current_doc": "Section 6 Row width and region (368-373)"
+   },
+   {
+    "id": "v2-12",
+    "page": "v2",
+    "claim": "All 9 varying bytes are accounted for; the field map is complete; the read record 0x9361 is a constant template",
+    "status": "refuted",
+    "evidence": "line 389-390: cost-like field unknown; line 537-539: copy-record sub-laws open; line 386-387: the template claim is wrong; Corrections line 505",
+    "current_doc": "Section 6 (386-390); Open questions (537-539); Corrections line 505"
+   },
+   {
+    "id": "v3-1",
+    "page": "v3",
+    "claim": "Why 54: the ZinBarIdManager descriptor-list table holds 54 records",
+    "status": "refuted",
+    "evidence": "line 52 and 211-212: the pool is 55 BAR ids, one per __FVMLIB segment; Corrections line 498 names '55-id BAR pool'",
+    "current_doc": "Section 4 Mechanism (211-212); Corrections line 498"
+   },
+   {
+    "id": "v3-2",
+    "page": "v3",
+    "claim": "0x9344 record scales as N + 1 (one per state plus one header)",
+    "status": "refuted",
+    "evidence": "line 288: 0x9344 = K + max(1, min(in, out)); line 294: '0x9344 is therefore not a state table'; Corrections line 500",
+    "current_doc": "Section 5 Counts (288-294); Corrections line 500"
+   },
+   {
+    "id": "v3-3",
+    "page": "v3",
+    "claim": "53 states + 1 header = 54 records compile; a 54th state needs a 55th record and fails with unable to allocate free BAR",
+    "status": "partially_true",
+    "evidence": "53 states compile (line 184) and 54 states fail with unable to allocate free BAR (line 185) both hold; the record-count mechanism fails: the limit is BAR-id allocation (line 216-222), and records are not capped (line 294)",
+    "current_doc": "Section 4 count table (184-185); Mechanism (216-222); Section 5 (294)"
+   },
+   {
+    "id": "v3-4",
+    "page": "v3",
+    "claim": "The cap is a raw record count, not a slot-id range and not a byte-extent",
+    "status": "refuted",
+    "evidence": "line 52 and 211-212: the cap is a 55-id BAR pool, one id per __FVMLIB segment; line 498 corrects the record-count reading",
+    "current_doc": "Section 4 (52, 211-212); Corrections line 498"
+   },
+   {
+    "id": "v3-5",
+    "page": "v3",
+    "claim": "Slot-id space 0x23..0x3e packs 2 records per slot = 56 record capacity",
+    "status": "partially_true",
+    "evidence": "slot_index = 0x23 + ordinal/2 (line 257-259) gives 0x23..0x3e for 55 ids, so the slot range holds; 'two records per slot' is refuted by 'there is no slot holding two records' (line 257-259)",
+    "current_doc": "Section 5 (257-259)"
+   },
+   {
+    "id": "v3-6",
+    "page": "v3",
+    "claim": "__text vmsize grows linearly with states (no fixed region size)",
+    "status": "unverified",
+    "evidence": "the writeup gives compile-time size caps as tentative (line 423-425) and states no vmsize law",
+    "current_doc": "Section 7 Compile-time size caps (423-425)"
+   },
+   {
+    "id": "v3-7",
+    "page": "v3",
+    "claim": "M4 vs M5: the 53-state program has an identical descriptor economy (same record counts, same slot model, same 54-record cap; both fail at 54 states)",
+    "status": "partially_true",
+    "evidence": "same counts and same BAR pool at 54 with a plain input hold (line 436: 'the same BAR pool (asserted at 54 with a plain input)'; line 441: record counts other than 0x934a equal); 'same slot model' is refuted (line 257-259, 501); 'same 54-record cap' is refuted (line 52, 498)",
+    "current_doc": "Section 8 (434-441); Corrections lines 498, 501"
+   },
+   {
+    "id": "v3-8",
+    "page": "v3",
+    "claim": "Record-family table: 0x9344 / 0x9361 / 0x9365 = 54 / 53 / 53 on h16g and h17",
+    "status": "partially_true",
+    "evidence": "cross-arch equality holds (line 441, 449); the values follow the count laws (line 288, 343) at in = out = 1, but the writeup does not state these table numbers",
+    "current_doc": "Section 8 (441-449); Section 5 (288); Section 6 (343)"
+   },
+   {
+    "id": "v3-9",
+    "page": "v3",
+    "claim": "Record-family table: 0x1340 / 0x1342 / 0x135a = 54 / 53 / 53 on both arches",
+    "status": "partially_true",
+    "evidence": "line 449: 0x1340 is byte-identical across arches; the 0x1342 and 0x135a counts are not in the writeup",
+    "current_doc": "Section 8 (449)"
+   },
+   {
+    "id": "v3-10",
+    "page": "v3",
+    "claim": "Record-family table: 0x1440 / 0x9442 (region/segment) = 107 / 107 on both arches",
+    "status": "partially_true",
+    "evidence": "0x9442 = number of __data sections (line 237) = 107 at 53 states (line 235), holds; 'region/segment' label refuted (line 276-278: destination binding); 0x1440 count equality holds (line 441) but its value 107 is not stated",
+    "current_doc": "Section 5 (276-278); Section 4 (235, 237); Section 8 (441)"
+   },
+   {
+    "id": "v3-11",
+    "page": "v3",
+    "claim": "0x934a: 1 record on h16g vs 2 on h17",
+    "status": "holds",
+    "evidence": "line 299-300: 2 per binary-add task on h17, 1 on h16g; line 439: '0x934a 1 vs 2 per binary-add task (asserted)'",
+    "current_doc": "Section 5 0x934a (299-300); Section 8 (439)"
+   },
+   {
+    "id": "v3-12",
+    "page": "v3",
+    "claim": "11 singleton records: 1 on each arch",
+    "status": "unverified",
+    "evidence": "the writeup gives no singleton count for the 53-state program",
+    "current_doc": "Section 8 (441-449)"
+   },
+   {
+    "id": "v3-13",
+    "page": "v3",
+    "claim": "The delta is exactly one extra 0x934a per program on M5, fixed per program, independent of state count",
+    "status": "refuted",
+    "evidence": "line 299-300: 2 per binary-add task (not per program); line 300: 'gen_states 53 32 32 gives 64 vs 32'; Corrections line 503: '+1 per binary-add task on h17'",
+    "current_doc": "Section 5 0x934a (299-300); Corrections line 503"
+   },
+   {
+    "id": "v3-14",
+    "page": "v3",
+    "claim": "The first 0x9344 descriptor-list record embeds 0x934a twice on h17, once on h16g",
+    "status": "refuted",
+    "evidence": "line 280-282: flat members, nothing embedded inside 0x9344; 0x934a counts are per binary-add task (line 299-300)",
+    "current_doc": "Section 5 (280-300)"
+   },
+   {
+    "id": "v3-15",
+    "page": "v3",
+    "claim": "The resource model is portable M4 -> M5",
+    "status": "partially_true",
+    "evidence": "compile-time equivalence holds (line 434-439); runtime caps and loading are unmeasured on M4 (line 429-432): 'compiler-output equivalence, not M4 behaviour'",
+    "current_doc": "Section 8 (429-439)"
+   },
+   {
+    "id": "v3-16",
+    "page": "v3",
+    "claim": "The 53-state program was compiled for h16g (M4) and h17 (M5)",
+    "status": "holds_reinterpreted",
+    "evidence": "line 29: 'h16g (M4) data cross-compiled on this M5 host only. Nothing was loaded or run on M4 silicon'",
+    "current_doc": "Build provenance (29); Section 8 (429-432)"
+   },
+   {
+    "id": "v3-17",
+    "page": "v3",
+    "claim": "The only difference across all 20 record families is 0x934a",
+    "status": "refuted",
+    "evidence": "line 441-449 names other byte deltas: Mach-O cpusubtype 7 -> 9, the 0x1440 flag bit 0x10, the last u16 of each copy record, a middle-block header word, and ModelMaxDramUsage; Corrections line 508",
+    "current_doc": "Section 8 (441-449); Corrections line 508"
+   }
+  ],
+  "new_facts": [],
+  "notes": "Classification is text-only against the current writeup at <repo>/docs/spec/ane-port-limits-h17.md; no milc run (NO hardware for this unit). Line numbers are as printed by the Read tool. Shared claims carry page v1,v2,v3 and are numbered under v1; v2-only (Pointer targets section) and v3-only (Why 54 and M4->M5 sections) carry their own ids. Internal inconsistencies between the page versions, which the writeup does not settle: (1) the 0x9365 flag byte is at +0x30 in v1 but +0x33 in v2; (2) the 0x9365 region fields are at +0x48/+0x4c/+0x50/+0x5c in v1 but +0x4a/+0x4e/+0x52/+0x5e in v2; (3) v1 and v2 differ in which sections they include, so the Pointer targets rows (v2) and M4->M5 rows (v3) are unique to one version. Claim v1-32 (+0x44 constant) is refuted under the LONG-layout reading of writeup lines 374-377; the writeup does not say which layout that record is, so this is the least certain refutation. Unverified rows that would need measurement (not settled by the writeup): dtype effect on the BAR pool (v1-9), flag bytes and shape selector offsets (v1-30, v1-31, v2-9, v2-10), the 0x9344 tail (v1-38), __text vmsize (v3-6), singleton count (v3-12). The spec evidence-check.sh was not re-run."
+ },
+ {
+  "unit": "hw-layout",
+  "claims": [
+   {
+    "id": "L1a",
+    "page": "v1 (and v3 'embeds 0x934a twice on h17, once on h16g')",
+    "claim": "The 0x9344 'descriptor-list record' has embedded sub-records at +0x0c/+0x18 (0x934a x2), +0x24 (0x9442), +0x30/+0x38/+0x40 (0x1340, 0x1341, 0x1440).",
+    "status": "holds_reinterpreted",
+    "current_doc": "ane-port-limits-h17.md §5: 'flat members of a per-block descriptor trailer [9344][934a]*[9442][1340][1341][1440]; nothing is embedded' (labelled strong, runner).",
+    "evidence": "Program: gen_states.py 53 1 1, `milc ane compile --arch h17`, decoded by my WD parser (WD=<wd>/ori/lay/, trl.py / decode_block_trailers.py). BASE = the u16 tag of the FIRST 0x9344 = __text+0xd4 (file 0x640d4; __text file offset 0x64000). Offsets from BASE, h17: 9344@+0x00 (12B: 44 93 00 3e 00..), 934a@+0x0c, 934a@+0x18, 9442@+0x24 (42 94 80 3d 00 40 0d 00 ..), 1340@+0x30 (40 13 00 22 21 00 00 00), 1341@+0x38, 1440@+0x40 (40 14 00 22 21 00 00 01); trailer ends @+0x48. These are exactly v1's offsets, but they are just cumulative sizes (12,12,12,12,8,8,8) of flat consecutive records: 0x9344 is 12 bytes and the next member starts at +0x0c. The trailer ends exactly at the end of block 0 (block end = __text+0x11c). Only ONE of the 54 0x9344 trailers has this shape; the other 53 are [9344@+0x00, 9442@+0x0c, 1340@+0x18, 1440@+0x20] (end +0x28) and there are 53 more [9442,1440] trailers with no 0x9344 (decode_block_trailers.py: `53x[9442,1440] 53x[9344,9442,1340,1440] 1x[9344,934a,934a,9442,1340,1341,1440]`). Same offsets in N=1,2,10,53 and gen_states.py 53 32 32. Invariant check over 137 compiled programs (2771 blocks, h17+h16g): every trailer is flat, in canonical order, ends exactly at its block end, and no trailer tag occurs outside a trailer; parsed tag totals equal count_desc_records.py in all 20 core programs."
+   },
+   {
+    "id": "L1b",
+    "page": "v1 (offsets are h17-specific)",
+    "claim": "On h16g (one 0x934a) the same table shifts: 0x9442 sits at +0x18, not +0x24.",
+    "status": "holds",
+    "current_doc": "Not stated in the writeup; implied by §8 (0x934a 1 vs 2).",
+    "evidence": "gen_states.py 53 1 1 `--arch h16g`; BASE = first 0x9344 tag = __text+0xd4 (file 0x640d4), same position as h17. h16g offsets: 9344@+0x00, 934a@+0x0c, 9442@+0x18, 1340@+0x24, 1341@+0x2c, 1440@+0x34, end@+0x3c (block 0 end = __text+0x110, already 16-aligned, so the next block header is at +0x3c). Re-confirmed on g1_1_1, g2_1_1, g10_1_1, g53_32_32 (all h16g: same signature). h17 count of 0x934a is 2 and h16g is 1 in every N=1,2,10,53 program."
+   },
+   {
+    "id": "L1c",
+    "page": "v1",
+    "claim": "'+0x68..+0x7c u32 tail (1, 3, 1, 1, 1, 4) - type/count constants' are fields of the 0x9344 record.",
+    "status": "refuted",
+    "current_doc": "Writeup does not discuss them. Block framing is not in the writeup either (it only says 'a middle-block header word' differs, §8).",
+    "evidence": "BASE = first 0x9344 tag (h17, gen_states 53 1 1, text+0xd4). The 0x80 bytes from BASE (u32 LE): +0x00..+0x47 = the 7-member trailer; +0x48 = 0 (4 pad bytes to 16-alignment); +0x4c = 0x00270001 -> NEXT BLOCK HEADER (u16 idx=1, u16 size=0x27=39 words, block = text+0x120..0x1bc); +0x50..+0x67 = 24 zero bytes; +0x68=0x1, +0x6c=0x30001, +0x70=0x10001, +0x74=0x1, +0x78=0x1, +0x7c=0x4; +0x80 = 0x93618005 (the 0x8005 frame + tag 0x9361 of that block's state-copy record). v1's six numbers equal the larger u16 half of each of those six u32 words. So they are bytes block1+0x1c..+0x30 of the NEXT block's body, immediately before its first 0x8005-framed record. They are position-dependent: on h16g the next block header is at +0x3c so the same words are at +0x58..+0x6c and +0x68 holds (1,4,0x93618005,..). Constant across N: identical words (1,0x30001,0x10001,1,1,4) at +0x68 for N=1,2,10,53 (gen_states 1/2/10/53 1 1) and in 105 of 107 copy blocks of N=53. NOT constant across shapes. They mirror the copy record's own header: w3=d3, w4=d2, w5=d1 (elided when d1=16), w1 high half = min(ceil(log2 d1),4)+1, independent of d0. Grid, gen_states_nd.py 3 d0 d1 d2 d3 1 1 direct, h17, words block1+0x1c up to frame: [4,4,1,1]=1,30001,10001,1,1,4; [4,5,1,1]=1,40001,10001,1,1,5; [4,9,1,1]=1,50001,10001,1,1,9; [4,64,1,1]=1,50001,10001,1,1,40; [4,4,1,8]=1,30001,10001,8,1,4; [4,4,2,1]=1,30001,10001,1,2,4; [4,4,4,4]=1,30001,10001,4,4,4; [4,8,2,8]=1,40001,10001,8,2,8; [4,1,1,1]=1,10001,10001,1,1,1; [4,2,1,1]=1,20001,10001,1,1,2; [4,16,1,1]=1,50001,8001,1,1 then frame at block+0x30 (tag 0x9360, no d1 word); d0 = 1,2,4,8,16 all identical. High half of w1 for d1=1,2,3,4,5,8,9,16,17,32,64 = 1,2,3,3,4,4,5,5,5,5,5 (all 11 match min(ceil(log2 d1),4)+1 = stride/8+1). Also identical on h16g (words at the shifted position). For a stateless program (z0_1_1) __text ends at the trailer end, so there is no 'tail' at all."
+   },
+   {
+    "id": "L1d",
+    "page": "v1",
+    "claim": "0x1340/0x1341/0x1440 are 'structural tags, payload 0x21 (33, constant)'.",
+    "status": "refuted",
+    "current_doc": "Writeup §5 trailer flag byte: 0x21 single consumer, 0xe1/0xc1 shared, arch bit 0x10 on 0x1440 (strong, runner-only).",
+    "evidence": "Same gen_states.py 53 1 1 h17: the first trailer has 1340 = 40 13 00 22 21 00 00 00 and 1440 = 40 14 00 22 21 00 00 01 (flag 0x21), but the second 0x9344 trailer (text+0x278) has 1340 = 40 13 00 22 c1 00 02 10 and 1440 = 40 14 00 22 21 00 02 01 (flag 0xc1 on 1340). On h16g the first 1440 = 40 14 00 22 31 00 00 01 (flag 0x31). So the flag byte is not constant; the 8-byte form is [tag u16][0x2200 u16][flag u8 + 3 bytes], verified for every 8B member of the 137 programs (the parser requires 0x2200 at +2)."
+   },
+   {
+    "id": "L1e",
+    "page": "v3",
+    "claim": "The h16g->h17 delta is exactly one extra 0x934a per program, fixed and independent of state count.",
+    "status": "partially_true",
+    "current_doc": "Writeup §5/§8: +1 per binary-add task on h17 (2 vs 1), gen_states 53 32 32 gives 64 vs 32.",
+    "evidence": "count_desc_records.py 0x934a, h17 vs h16g: gen_states 1/2/10/53 1 1 -> 2 vs 1 (the 'once vs twice' holds for the first trailer); gen_states 53 32 32 -> 64 vs 32; gen_states_nd 10 4 4 1 1 1 5 direct noupd -> 10 vs 5; gen_states_nd 3 8 16 1 32 2 2 -> 4 vs 2; nd5_d9 -> 4 vs 2. It scales with the number of binary-add tasks (the 0x1341 count), not per program."
+   },
+   {
+    "id": "L2a",
+    "page": "v1",
+    "claim": "0x9344 = 0 records for 0 states (stateless).",
+    "status": "refuted",
+    "current_doc": "Writeup §5: 0x9344 = min(in,out) for N=0 (out>=1); no spec line for N=0.",
+    "evidence": "Every compilable stateless program has at least 1 0x9344 (h17 and h16g identical; count_desc_records.py + decode_slot_ordinals.py + hwx_layout.py): gen_states.py 0 1 1 -> 1 (data_sections=1 const_sections=1); 0 3 2 -> 2 (data 2, const 3); gen_states_nd.py 0 4 4 1 1 1 1 -> 1; 0 1 5 -> 1; 0 5 1 -> 1; 0 5 50 -> 5; NO plain input, fill source + one output: gen_states.py 0 0 1 -> 1 (records=1 bars=1 special=1 format_ok=1, data_sections=1 const_sections=0, bar_word 0x2080 at text-rel 0xf4: 44 93 80 20 ..), gen_states_nd.py 0 4 4 1 1 0 1 -> 1, gen_states.py 0 0 3 -> 1. Hand-written stateless variants with one plain input (mul by const, sub self, relu, add->mul chain, two outputs, two inputs fanning to 1 or 3 outputs) and fill-only / fill->mul outputs: all exactly 1. No program with >=1 output gives 0 (zero outputs is rejected by the frontend per §2). Compiles repeated: __text byte-identical across independent compiles."
+   },
+   {
+    "id": "L2b",
+    "page": "v1",
+    "claim": "A stateless program has '__data 1' (one __data segment).",
+    "status": "holds",
+    "current_doc": "Writeup §4: #__data sections = N + K + plain_out.",
+    "evidence": "hwx_layout.py on gen_states.py 0 1 1 (h17 and h16g): fvmlib_data=1 data_sections=1; 0 0 1: data_sections=1; 0 3 2: data_sections=2 (= out); 0 1 5: 5; 0 5 50: 50. It is the output count, equal to 1 only because the example has one output."
+   },
+   {
+    "id": "L2c",
+    "page": "writeup",
+    "claim": "0x9344 = min(in, out) for N = 0 (out >= 1), plain input present.",
+    "status": "holds",
+    "current_doc": "Writeup §5 Counts (established) but no spec line covers N=0.",
+    "evidence": "gen_states.py 0 1 1 -> 1, 0 3 2 -> 2, 0 1 5 -> 1, 0 5 1 -> 1, 0 5 50 -> 5, gen_states_nd 0 4 4 1 1 1 1 -> 1, on h17 and h16g; with a direct-input update source (gen_states.py N 1 O) N=1,2,3 give 2,3,4 (= N + max(1,min(in,out))) for out=1 and 2."
+   },
+   {
+    "id": "L2d",
+    "page": "writeup",
+    "claim": "With no plain input the raw 0x9344 count is K + 2 (one special).",
+    "status": "partially_true",
+    "current_doc": "Writeup §5: 'With no plain input, the raw count is K + 2 (one special).'",
+    "evidence": "gen_states.py N 0 O on h17 (out=1 and 2 identical): N=0 -> 1, N=1 -> 2, N=2 -> 4, N=3 -> 5, N=4 -> 6, N=5 -> 7, N=6 -> 8, N=10 -> 12; decode_slot_ordinals.py reports special=1 in all. So K+2 holds for N>=2 but N=0 and N=1 are K+1. (K=N here.)"
+   },
+   {
+    "id": "L3a",
+    "page": "v1",
+    "claim": "The 53-state ceiling is independent of dtype.",
+    "status": "holds",
+    "current_doc": "Writeup §7: fp16/int16/int8/uint8/bool states compile and run; the cap was never tested with non-fp16 states.",
+    "evidence": "New WD generator gen_state_dtype_prop.py (N states [4,4,1,1] of one dtype, update source = plain input x0 of that dtype, y0 = add(cast(x0),cast(x0)) in fp16, updates returned; N=1 output byte-identical to scripts/gen_state_dtype.py for all 7 dtypes). h17, run twice, 0 flips. For dtype in fp16(control), int8, int16, uint8, bool: N=53 compile rc=0 (hwx_layout: fvmlib=55 fvmlib_data=54 fvmlib_const=1 data_sections=107 const_sections=1, same as fp16) and `milc ane run --steps 1` rc=0 with 'step 0: ~1.1-1.4ms'; N=54 compile rc=1 'error: Compiler internal error: ZinBarIdManager::GetNextAvailableBarId(): unable to allocate free BAR' and `ane run` rc=1 'ANECCompile() FAILED'. Same with noupd for int8/int16/bool (53 compile+run, 54 fail; data_sections=54). int8 states of shape [8,16,1,32] and [16,64,1,32]: N=53 compile+run rc=0, N=54 free-BAR failure. fp32 (CompilationFailure, status=0x1) and int32 (InvalidMILProgram: 'Unsupported tensor data type: int32') are rejected at N=1, so the claim is vacuous there. Domain: update sources are plain inputs of the state dtype; shapes [4,4,1,1] plus the two int8 shapes above."
+   },
+   {
+    "id": "L3b",
+    "page": "v1/writeup",
+    "claim": "The N=53 int8 program runs.",
+    "status": "holds",
+    "current_doc": "Writeup §7 asserts int8 only at N=1.",
+    "evidence": "`milc ane run dt/int8_53.mil --steps 1` rc=0, 'step 0: 1.127084ms' (pass 1) and 'step 0: 1.120958ms' (pass 2); noupd variant 'step 0: 852.708us'. Ports: 53+1+53+1 = 108 <= 127."
+   },
+   {
+    "id": "L3c",
+    "page": "writeup",
+    "claim": "54 states fit when there is no plain input (N_max = 55 - [any output] - [any plain input]); check for non-fp16 states.",
+    "status": "holds",
+    "current_doc": "Writeup §4 (asserted for fp16 fill / nested const).",
+    "evidence": "gen_state_dtype_prop.py DTYPE N noin (update source = fp16 fill cast to DTYPE, because a fill with an int/bool value is InvalidMILProgram). For int8, int16, uint8, bool: N=54 compile rc=0 (fvmlib=55 fvmlib_data=55, data_sections=109) and `ane run` rc=0 ('step 0: 1.07-1.27ms'); N=55 compile rc=1 'unable to allocate free BAR'. Two repetitions, 0 flips."
+   }
+  ],
+  "new_facts": [
+   {
+    "statement": "Block framing of __TEXT.__text: a 0x10-byte preamble (01 00 00 00 + 12 zero bytes, in all 137 programs), then blocks that each begin with [u16 idx][u16 size], idx = 0,1,2,..., size = length in u32 words INCLUDING that header word; the next block header is at align16(start + 4*size); the chain ends exactly at the end of __text. Every block ends with a descriptor trailer: a flat run of [9344 12B][934a 12B]*[9442 12B][1340 8B][1341 8B][1440 8B] (any subset, this order) that ends exactly at the block end (before the pad). No trailer tag occurs outside a trailer. #blocks = #0x9442 = #0x1440 in programs without a cast op; a cast block (state-dtype programs: cast(x0) int->fp16) adds one block with trailer [9344][1340] and no 0x9442, so #blocks = #0x9442 + 1 there.",
+    "confidence": "established",
+    "evidence": "137 HWX files / 2771 blocks (h17 and h16g): gen_states 1/2/10/53 1 1, 53 32 32, gen_states_nd shapes grid (24 shapes), noupd, in=0, stateless variants, 9 dtype programs; idx sequential, chain end == len(__text), trailers flat+ordered+ending at block end, stray-tag count 0, parsed tag totals == count_desc_records.py (20 core programs, both arches). Example gen_states.py 53 1 1 h17: 107 blocks, hdr idx0 at text+0x10 size 67w (end 0x11c, next 0x120), idx1 size 39w, idx2 56w, idx3 37w, ..., idx106 64w ends at 0x50c0 = len(__text). Per-trailer block counts: 53x[9442,1440] 53x[9344,9442,1340,1440] 1x[9344,934a,934a,9442,1340,1341,1440] (h16g: the single full trailer has one 934a).",
+    "proposed_spec": "New script scripts/decode_block_trailers.py (draft at WD/decode_block_trailers.py), then spec lines (tested by a path-substituted copy through evidence-check, PASS x2; mutations of the expected strings FAIL):\nrun  python3 scripts/gen_states.py 53 1 1 > /tmp/pl_bt53.mil && rm -rf /tmp/pl_bt53c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bt53.mil -o /tmp/pl_bt53c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_block_trailers.py /tmp/pl_bt53c/pl_bt53.macho\nwant_rc      0\nwant_out     blocks=107 chain_ok=1\nwant_out     53x[9442,1440]\nwant_out     53x[9344,9442,1340,1440]\nwant_out     1x[9344,934a,934a,9442,1340,1341,1440]\nwant_out     first9344: block=0 9344@+0x00 934a@+0x0c 934a@+0x18 9442@+0x24 1340@+0x30 1341@+0x38 1440@+0x40 end@+0x48 nexthdr@+0x4c\n(and the same with --arch h16g and /tmp/pl_bt53g:)\nwant_out     first9344: block=0 9344@+0x00 934a@+0x0c 9442@+0x18 1340@+0x24 1341@+0x2c 1440@+0x34 end@+0x3c nexthdr@+0x3c"
+   },
+   {
+    "statement": "The first 0x9344 of gen_states-shaped programs sits in block 0 (the plain-output compute task), which holds the program's only full trailer (7 members on h17: 9344@+0x00, 934a@+0x0c, 934a@+0x18, 9442@+0x24, 1340@+0x30, 1341@+0x38, 1440@+0x40, end +0x48; 6 members on h16g: 9344@+0x00, 934a@+0x0c, 9442@+0x18, 1340@+0x24, 1341@+0x2c, 1440@+0x34, end +0x3c). All other 0x9344 trailers have 4 members [9344@+0x00, 9442@+0x0c, 1340@+0x18, 1440@+0x20, end +0x28]. The v1 field table describes only that single trailer and only on h17.",
+    "confidence": "established",
+    "evidence": "gen_states.py 1/2/10/53 1 1 and 53 32 32 on both arches: identical signature of the first trailer (decode_block_trailers.py 'first9344:' line); BASE = first 0x9344 tag = __text+0xd4 (file 0x640d4). In other program families the first 0x9344 can be in a 4-member trailer at a different position (nd10 noupd: __text+0xbc, [9344,9442,1340,1440]).",
+    "proposed_spec": "Covered by the block-trailer lines in the previous fact; add `want_out first9344: ...` strings as given there."
+   },
+   {
+    "statement": "The 'u32 tail' words are the next block's pre-frame field window (block+0x1c up to its first 0x8005 frame). In a state-copy block they mirror the record header: [1][(min(ceil(log2 d1),4)+1)<<16 | 1][0x10001, or 0x8001 when d1 = 16][d3][d2][d1 (absent when d1 = 16)], then the frame 0x8005 + tag. They do not depend on N or d0 and are identical on h16g and h17 (the arch difference in that block is the word at block+0x10: 0 vs 0x20). For [4,4,1,1] they read (1, 0x30001, 0x10001, 1, 1, 4), which is v1's (1,3,1,1,1,4).",
+    "confidence": "strong",
+    "evidence": "Shape grid of 24 gen_states_nd.py 3 d0 d1 d2 d3 1 1 direct programs on h17 (d1 in 1,2,3,4,5,8,9,16,17,32,64; d0 in 1,2,4,8,16; d3 in 1,2,8,16,32; d2 in 1,2,4) plus h16g spot checks; 105/107 blocks of N=53 identical; the other two blocks (compute task with frame tag 0x9541, and the last SHORT state-out block with frame at block+0x3c) have different first words. Not tested beyond those value sets; compute-block (0x954x) windows also appear to mirror d3,d2,d1 (nd3_8_16_32: 1,1,0x8001,0x20,1) but were not swept.",
+    "proposed_spec": "Uses scripts/decode_block_trailers.py (nextblock: line):\nrun  python3 scripts/gen_states.py 10 1 1 > /tmp/pl_bt10.mil && rm -rf /tmp/pl_bt10c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_bt10.mil -o /tmp/pl_bt10c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_block_trailers.py /tmp/pl_bt10c/pl_bt10.macho\nwant_rc      0\nwant_out     nextblock: idx=1 size=39 prewords=1,30001,10001,1,1,4 frame=0x9361\n(same line for gen_states.py 1 1 1 and 53 1 1 on h17 and h16g;)\nrun  python3 scripts/gen_states_nd.py 3 4 9 1 1 1 1 direct > /tmp/pl_bd9.mil && ... --arch h17 ... decode_block_trailers.py /tmp/pl_bd9c/pl_bd9.macho\nwant_out     nextblock: idx=1 size=39 prewords=1,50001,10001,1,1,9 frame=0x9361\nrun  python3 scripts/gen_states_nd.py 3 4 4 1 8 1 1 direct ... (/tmp/pl_bd3)\nwant_out     nextblock: idx=1 size=39 prewords=1,30001,10001,8,1,4 frame=0x9361\nrun  python3 scripts/gen_states_nd.py 3 4 16 1 1 1 1 direct ... (/tmp/pl_bd16)\nwant_out     nextblock: idx=1 size=37 prewords=1,50001,8001,1,1 frame=0x9360"
+   },
+   {
+    "statement": "Every compilable stateless program (N=0, at least one output) has at least one 0x9344. With a plain input it is min(in,out). With no plain input and a fill source it is exactly 1, a special binding (bar_word 0x2080, special=1). __data sections = out. No program gives 0.",
+    "confidence": "established",
+    "evidence": "See claim L2a/L2c: gen_states.py 0 1 1, 0 3 2, 0 1 5, 0 5 1, 0 5 50, 0 0 1, 0 0 3, gen_states_nd 0 4 4 1 1 1 1, 0 4 4 1 1 0 1, plus 9 hand-written stateless variants, h17 and h16g; repeated compiles give identical __text.",
+    "proposed_spec": "Existing tools only:\nrun  python3 scripts/gen_states.py 0 1 1 > /tmp/pl_z011.mil && rm -rf /tmp/pl_z011c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_z011.mil -o /tmp/pl_z011c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_z011c/pl_z011.macho && python3 scripts/hwx_layout.py /tmp/pl_z011c/pl_z011.macho\nwant_rc      0\nwant_out_re  0x9344 records: 1$\nwant_out     data_sections=1 const_sections=1\nrun  python3 scripts/gen_states.py 0 3 2 > /tmp/pl_z032.mil && (same compile) ... count_desc_records.py ... hwx_layout.py\nwant_out_re  0x9344 records: 2$\nwant_out     data_sections=2 const_sections=3\nrun  python3 scripts/gen_states.py 0 0 1 > /tmp/pl_z001.mil && (same compile) ... count_desc_records.py && decode_slot_ordinals.py && hwx_layout.py\nwant_out_re  0x9344 records: 1$\nwant_out     format_ok=1 special=1\nwant_out     data_sections=1 const_sections=0"
+   },
+   {
+    "statement": "No plain input, raw 0x9344 count by state count N (gen_states.py N 0 O): N=0 -> 1, N=1 -> 2, N=2 -> 4, N=3 -> 5, N=4 -> 6, N=5 -> 7, N=6 -> 8, N=10 -> 12 (independent of O=1,2); i.e. K+2 for N>=2 but K+1 for N=0 and N=1. The writeup's 'K + 2' should say N >= 2.",
+    "confidence": "strong",
+    "evidence": "count_desc_records.py + decode_slot_ordinals.py (special=1 each time) on 16 programs, h17; one generator family.",
+    "proposed_spec": "run  python3 scripts/gen_states.py 1 0 1 > /tmp/pl_i101.mil && rm -rf /tmp/pl_i101c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_i101.mil -o /tmp/pl_i101c --arch h17 >/dev/null 2>&1 && python3 scripts/count_desc_records.py /tmp/pl_i101c/pl_i101.macho\nwant_rc      0\nwant_out_re  0x9344 records: 2$\n(gen_states.py 2 0 1 -> 'records: 4$'; gen_states.py 3 0 1 -> 'records: 5$', same pattern with /tmp/pl_i201, /tmp/pl_i301)"
+   },
+   {
+    "statement": "The BAR-pool cap is independent of state dtype. For fp16, int8, int16, uint8 and bool states (update source a plain input of that dtype, fp16 output via cast): 53 states compile (fvmlib=55) and run, 54 fail with 'ZinBarIdManager::GetNextAvailableBarId(): unable to allocate free BAR' (run lane: 'ANECCompile() FAILED'). With no plain input (update source = fp16 fill cast to the dtype) 54 compile and run, 55 fail. Same for noupd (int8, int16, bool) and for int8 states of shapes [8,16,1,32] and [16,64,1,32] (53 ok, 54 fail). fp32/int32 states are rejected at N=1, so there is nothing to compare.",
+    "confidence": "established",
+    "evidence": "Claims L3a-L3c. Two full repetitions, 0 flips. Counts: int8_53 data_sections=107 const_sections=1 (=N+K+plain_out); noupd data_sections=54.",
+    "proposed_spec": "Needs scripts/gen_state_dtype.py extended to `DTYPE [N] [noupd] [noin]` (draft at WD/gen_state_dtype_prop.py; default output byte-identical to the current script for fp16, fp32, int8, int16, int32, uint8, bool):\nrun  python3 scripts/gen_state_dtype.py int8 53 > /tmp/pl_d8_53.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_d8_53.mil --steps 1 2>&1\nwant_rc      0\nwant_out_re  ^step 0: [0-9]\nrun  python3 scripts/gen_state_dtype.py int8 54 > /tmp/pl_d8_54.mil && rm -rf /tmp/pl_d8_54c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d8_54.mil -o /tmp/pl_d8_54c --arch h17 2>&1\nwant_rc      1\nwant_out     unable to allocate free BAR\nrun  vendor/mil_spec/target/release/milc ane run /tmp/pl_d8_54.mil --steps 1 2>&1\nwant_rc      1\nwant_out     ANECCompile() FAILED\n(identical pairs for int16 /tmp/pl_d16_53,54 and bool /tmp/pl_db_53,54;)\nrun  python3 scripts/gen_state_dtype.py int8 54 noin > /tmp/pl_d8n54.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_d8n54.mil --steps 1 2>&1\nwant_rc      0\nwant_out_re  ^step 0: [0-9]\nrun  python3 scripts/gen_state_dtype.py int8 55 noin > /tmp/pl_d8n55.mil && rm -rf /tmp/pl_d8n55c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_d8n55.mil -o /tmp/pl_d8n55c --arch h17 2>&1\nwant_rc      1\nwant_out     unable to allocate free BAR"
+   },
+   {
+    "statement": "A stateless program with no plain input and no state (output computed only from a fill) compiles on h17 and h16g (HWX with one special 0x9344) but does not run: `milc ane run` exits 1 at 'e5_compiler_compile -> 11 ... Espresso exception: \"Not implemented\": Some ops are not supported on any of the specified backends'. Stateful no-input programs (gen_states.py 3 0 2, gen_states_nd 4 4 4 1 1 0 1) run.",
+    "confidence": "strong",
+    "evidence": "5 stateless programs (gen_states.py 0 0 1, 0 0 3, gen_states_nd 0 4 4 1 1 0 1, hand-written fill-only and fill->mul), each run twice: rc=1 every time; stateful no-input programs rc=0 'step 0: 239.7us / 381.5us'. Mechanism unknown, one family.",
+    "proposed_spec": "run  python3 scripts/gen_states.py 0 0 1 > /tmp/pl_z001r.mil && vendor/mil_spec/target/release/milc ane run /tmp/pl_z001r.mil --steps 1 2>&1\nwant_rc      1\nwant_out     e5_compiler_compile"
+   }
+  ],
+  "notes": "Everything is compile + byte decode on the host (M5 Max, macOS 26.7.1 25G241) except the dtype runs, which executed on the ANE. WD = <wd>/ori/lay/ . Files there: decode_block_trailers.py (proposed new script), gen_state_dtype_prop.py (proposed extension of scripts/gen_state_dtype.py; N=1 default output is byte-identical for all 7 dtypes), proposed.spec (22 run blocks, with /tmp/pl_ paths in the text), proposed.test.spec (same with paths substituted into the WD and tp_ names), ec.sh (copy of evidence-check.sh with root pointed at the repo), plus the analysis scripts hx.py blk.py trl.py tail.py gridtail.py allflat.py. The proposed spec passed through ec.sh twice (PASS) and mutated expectations (wrong prewords, wrong offset, wrong count, wrong N) FAIL, so the new lines are not vacuous. I did not run the repo's own spec because it writes /tmp/pl_*. Byte-offset bases: trailer offsets are from the u16 tag of the first 0x9344 (__text+0xd4, file 0x640d4 in gen_states 53 1 1; __text file offset 0x64000); block header offsets are __text-relative; the preamble is __text+0x00..0x0f. Caveats: (1) The grid for the pre-frame window used d0=4 except the d0 sweep (1,2,4,8,16 at d1=4); the d1/d2/d3 value sets are those listed, not exhaustive, hence 'strong'. (2) The int8 'cast of fp16 fill' no-input variant is used because a dtype fill is InvalidMILProgram; update sources that are not plain inputs were only tested in that form. (3) The int32 failure is a MIL validation error ('Unsupported tensor data type: int32', InvalidMILProgram), which also prints status=0x1 rc=1, so the existing spec line still matches. (4) The v1 page says macOS 25G91; this host is 25G241. (5) v3's 0x1342/0x135a counts and the other 'record families' were not evaluated here. (6) Side observations from the environment, not mine: /tmp/pl_* files exist from other units and an untracked docs/spec/history/ appeared in the worktree during my run; I wrote nothing under the repo or the artifact dir and nothing at /tmp/pl_*.\""
+ },
+ {
+  "unit": "hw-copyfields",
+  "claims": [
+   {
+    "id": "cf-01",
+    "page": "v1 (also v2, v3) Field breakdown row '+0x40'",
+    "claim": "+0x40 u32 is a 'shape-class selector — dim1 <= 4 vs >= 8', example value 0x0142803c",
+    "status": "holds_reinterpreted",
+    "current_doc": "Writeup sec.6 only says the last state-out record of a direct program is SHORT; decode_copy_records.py:24 says the word after the 0x1041 marker selects SHORT (0x803c) or LONG (0x803e). The writeup text never mentions the second word 0x0142/0x0162.",
+    "new_fact": "The u32 at tag+0x40 is the SHORT form pair (u16 0x803c, u16 0x0142). It does not depend on dim0 or dim1.",
+    "evidence": "Bases: tag = the u16 after the 0x8005 frame word (file 0x81fe in a one-state program); marker 0x1041 at tag+0x3e. One-state direct programs (gen_states_nd.py 1 D0 D1 1 1 1 1 direct, --arch h17) for (D0,D1) = (4,4)(32,8)(4,8)(32,4)(4,2)(4,64)(64,4): decode_copy_records.py gives form=short for all; tag+0x3c..+0x47 bytes are identical in all: 00 01 41 10 3c 80 42 01 00 00 10 00 (u16s 0100 1041 803c 0142 0000 0010; u32@+0x44=0x00100000). (4,16) is tag 0x9364 (no dim1 field), so the same words sit 4 bytes earlier (marker at tag+0x3a). Old generator path (gen_states_width.py 1 {4,32,64}; gen_states.py 1 1 1/1 1 0; gen_states_nd 1 D0 D1 1 1 1 0 direct for dim1!=4): the state-out record's first 0x70 bytes are md5-identical to the nd-path record of the same shape (e.g. 230a6183 for [4,4], 39321881 for [32,4], fb273196 for [32,8]). Sweeps: dim0 in {1,2,4,8,16,32,64}, dim1 in {1..9,12,16,17,24,32,33,64,128,256,512,1000,1023,1024,1025,2048,4096}, d3 up to 255: all 84 one-state programs have (1041,803c,0142). So dim1<=4 vs >=8 does not select anything; the LONG value 0x0162803e only appears in non-last records of multi-state direct programs. Tools: WD/dump.py, f1tab.py, allform2.py."
+   },
+   {
+    "id": "cf-02",
+    "page": "v2 (also v3) table 'the 9 varying bytes'",
+    "claim": "+0x42 'shape-class selector' goes 0x42 -> 0x62 when the state changes from [4,4,1,1] to [32,8,1,1]",
+    "status": "refuted",
+    "current_doc": "Not in the writeup. The word is the second SHORT/LONG form word (0x0142 SHORT, 0x0162 LONG), set by the record's position in the program, not by shape.",
+    "new_fact": "tag+0x42 is 0x42 in both [4,4] and [32,8] SHORT records; 0x62 is the low byte of the LONG second word 0x0162, which appears on non-last records of multi-state programs for every shape.",
+    "evidence": "Like-for-like pair (one-state direct): WD/v2pos.py columns for tag offsets 0x0a 0x0e 0x1c 0x33 0x42 0x4a 0x4e 0x52 0x5e: nd_4_4 rec1 short = 04 04 10 01 42 40 40 40 40; nd_32_8 rec1 short = 08 20 18 02 42 80 80 80 80 (0x42 unchanged). Byte diff of the two records over the 0x7e-byte core (bytediff2.py): differing offsets = 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77 (n=9), no 0x42. 3-state direct (gen_states_nd.py 3 D0 D1 1 1 1 1 direct): rec0/rec1 are LONG with 0x62 and rec2 is SHORT with 0x42 for [4,4], [32,8], [4,8], [4,2], [4,64], [64,4], [32,4]: nd3_4_4 long 04 04 10 01 62 10 40 40 4a; nd3_32_8 long 08 20 18 02 62 10 80 80 4a. A SHORT[4,4]-vs-LONG[32,8] pair differs in 40 bytes, not 9, and a scan of all 321 0x9365 records I compiled finds none with (08 20 18 02 62 80 80 80 80). Computed-source runs (adN2..8, shapes 4,4/4,8/32,8/32,4) give identical form sequences for all four shapes at each N. Conclusion: option (a) as to meaning (it is the form word); the v2 row itself cannot have come from a 9-byte-diff pair, it looks like a wrong offset for +0x77."
+   },
+   {
+    "id": "cf-03",
+    "page": "v2 (also v3) text under the table",
+    "claim": "All 9 varying bytes in 0x9365 land on decoded fields; there is no unexplained shape data; the field map is complete",
+    "status": "partially_true",
+    "current_doc": "Writeup sec.6 does not list byte positions beyond the header, stride, rowbits and the SHORT/LONG layouts.",
+    "new_fact": "Real varying set between one-state direct [4,4] and [32,8] (tag-relative): 0x0a dim1, 0x0e dim0, 0x1c stride, 0x33 and 0x77 (two copies of the slice word), 0x4a/0x4e/0x52/0x5e (rowbits u16s). dim0 alone changes only 0x0e.",
+    "evidence": "decode_copy_words.py --diff (WD copy): [4,4] vs [32,8] -> 'diff: 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77'; [4,4] vs [32,4] -> 'diff: 0x0e'; [4,4] vs [4,8] -> 'diff: 0x0a 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77'. dim0 sweep {2,8,16,32,64} at dim1=4: union of varying offsets = {0x0e}. dim1 sweep {2,3,5,8,9,32,64,128,256,1000} at dim0=4: union = {0x0a,0x0b,0x1c,0x32,0x33,0x4a,0x4b,0x4e,0x4f,0x52,0x53,0x5e,0x5f,0x76,0x77}. So the count 9 is right, 8 offsets are right, the 9th is +0x77 not +0x42."
+   },
+   {
+    "id": "cf-04",
+    "page": "v1 (also v2, v3) rows '+0x30 u8 flag byte 0' and v2 '+0x33 flag byte 01 -> 02'",
+    "claim": "+0x30 is a flag byte (value 0) and +0x33 is a flag byte that goes 01 -> 02 for [4,4] -> [32,8]",
+    "status": "holds_reinterpreted",
+    "current_doc": "Not in the writeup.",
+    "new_fact": "tag+0x32 (2-byte aligned) holds a u32 'slice' = 64*dim1*ceil(d3/32); +0x33 is its second byte. tag+0x2e holds a u32 'pitch' = 64*ceil(d3/32), whose zero upper half is the +0x30/+0x31 'flag byte'. A second copy of slice sits 8 bytes before the end of the core (tag+0x76 in SHORT). Present only when dim0 != 1 and dim1 != 1.",
+    "evidence": "Base: 0x9365 tag (marker m = tag+0x3e; the fields are m-0x10 pitch, m-0x0c slice, so they sit at tag+0x2e / +0x32 for 0x9365 and 4 bytes earlier for 0x9364). Bytes tag+0x30..0x33: [4,4] 00 00 00 01, [32,8] 00 00 00 02, [4,2] 00 00 80 00, [4,64] 00 00 00 10. Sweep of 24 dim1 values at dim0=4 and dim0 in {2..64} at dim1=4 (one state, direct): u32@tag+0x32 = 64*dim1 exactly (dim1=2:128, 3:192, 4:256, 5:320, 8:512, 16:1024, 17:1088, 33:2112, 64:4096, 1023:65472, 1024:65536 (spills into tag+0x34), 4096:262144), independent of dim0 (identical for dim0 2..64), of total size ([8,4] gives 0x100 but [4,8] gives 0x200), and of record form (LONG and SHORT in 3-state programs equal) and of mode. Over all 329 state-out records compiled (207 programs; d2=1): fitf2b.py: 328/328 records with dim0!=1 && dim1!=1 satisfy u32@m-0x10 = 64*ceil(d3/32) and u32@m-0x0c = pitch*dim1, and fitcopy2.py: u32@core_end-8 equals it. d3 sweep (dim1=4): slice 0x100 for d3<=32, 0x200 for 33..64, 0x300 for 65..96, 0x400 for 97..128, 0x500 at 129, 0x800 at 255. Elision: dim0=1 (tag 0x9361/0x9360) and dim1=1 (0x9265) records carry flag word 0x8008 / 0x8020 (vs 0x8028) and no slice word; dim0=dim1=1 has flag word 0x0000 and no pitch either. d2=2 (one program) gives flag word 0x802c and an extra word, so only d2=1 is characterised."
+   },
+   {
+    "id": "cf-05",
+    "page": "v1 (also v2, v3) row '+0x44'",
+    "claim": "+0x44 u32 is a constant 0x00100000",
+    "status": "partially_true",
+    "current_doc": "Writeup sec.6: 'LONG is 4 bytes longer: its +0x48 holds 1 MiB, and dim1 MiB sits at +0x44' (so +0x44 is 1 MiB only in SHORT).",
+    "new_fact": "tag+0x44 = 1 MiB only in SHORT records with d3 <= 8; in SHORT it equals ceil(d3/8) MiB; in direct LONG records tag+0x44 is rowbits<<16 and the 1 MiB word moves to +0x48; in computed-source LONG records it is neither.",
+    "evidence": "SHORT, (4,4) d3 sweep: u32@+0x44 = 0x100000 for d3 in {1,2,7,8}; 0x200000 for 9,16; 0x300000 for 17,24; 0x400000 for 25,32; 0x500000 at 33; 0x800000 at 64; 0x1000000 at 128; 0x2000000 at 255 (d3sweep via d3tab.py). Direct LONG (nd3_4_4 rec0: +0x44=0x00400000, +0x48=0x00100000). Computed-source single state (gen_states_nd.py 1 4 4 1 1 2 3 add): form 803e/0142, +0x44 = 0x00400010."
+   },
+   {
+    "id": "cf-06",
+    "page": "v1 (also v2, v3) row '+0x48 / +0x4c / +0x50 / +0x5c'",
+    "claim": "Four u32s at +0x48/+0x4c/+0x50/+0x5c are a 'region vmsize' = dim1 x 1 MiB, four identical reservations",
+    "status": "partially_true",
+    "current_doc": "Writeup sec.6: region = rowbits<<16 (= dim1 MiB only for d3 <= 8), a packed row-width field, not a vmsize reservation. Confirmed here.",
+    "new_fact": "In SHORT records exactly four u32 words equal rowbits<<16, at tag+0x48, +0x4c, +0x50 and +0x5c (the last after the 0x9052 tag at +0x56). In direct LONG records exactly four equal rowbits<<16 at +0x44, +0x4c, +0x50, +0x54, plus 2*rowbits<<16 at +0x60 (9052 tag at +0x5a). No Mach-O segment size tracks them.",
+    "evidence": "WD/f3.py and decode_copy_words.py on one-state and 3-state direct programs, dim1=4 and 8: SHORT 'map=1M,RB,RB,RB|RB' (offsets 0x44,0x48,0x4c,0x50 | 0x5c), count of words == rowbits<<16 in [+0x40,+0x64) = 4; LONG 'map=RB,1M,RB,RB,RB|2RB' (0x44,0x48,0x4c,0x50,0x54 | 0x60), count = 4 (+ one 2RB). Checked for (4,4),(4,8),(32,8),(4,2),(4,64),(64,4),(32,4) in 3-state direct. d3 sweep at (4,4): d3=9 -> rowbits=128 and the four words are 0x00800000 (8 MiB, not dim1 MiB = 4 MiB); rowbits = 16*dim1*ceil(d3/8) for d3 in {1..255} tested at dim1=4 (no saturation seen up to 255), and decode_copy_records.py prints region=8388608 for d3=9. Mach-O: all four __FVMLIB segments have vmsize 16384 for [4,4], [4,16], [4,64] and d3=9 alike (parsed LC_SEGMENT_64), so nothing there equals dim1 MiB. The 'vmsize' label is unsupported."
+   },
+   {
+    "id": "cf-07",
+    "page": "v2 (also v3) table row '+0x4a / +0x4e / +0x52 / +0x5e'",
+    "claim": "Four region reservations go 0x40 -> 0x80 (4 MiB -> 8 MiB) for [4,4] -> [32,8]",
+    "status": "holds_reinterpreted",
+    "current_doc": "Writeup sec.6 rowbits (u16 16*dim1, three equal copies before the 0x9052 tag); region = rowbits<<16.",
+    "new_fact": "In SHORT records tag+0x4a/+0x4e/+0x52 are the three equal rowbits u16s before the 0x9052 tag and +0x5e is the rowbits u16 after it. These offsets are SHORT-only.",
+    "evidence": "One-state direct: nd_4_4 bytes at those offsets 40 40 40 40; nd_32_8 80 80 80 80 (= 16*dim1). In LONG records the same offsets hold 10 / rowbits / rowbits / 4a (nd3_4_4 rec0: 10 40 40 4a; nd3_32_8 rec0: 10 80 80 4a), because the 1 MiB word moved to +0x48 and 0x014a follows the 9052 tag."
+   },
+   {
+    "id": "cf-08",
+    "page": "task summary of writeup sec.6 / decoder comment",
+    "claim": "The word after the 0x1041 marker selects SHORT (0x803c, then 0x0142) vs LONG (0x803e, then 0x0162)",
+    "status": "partially_true",
+    "current_doc": "Writeup text contains no 0x0142/0x0162; scripts/decode_copy_records.py:24,35 name only 0x803c / 0x803e. The 4-byte length difference follows the FIRST word.",
+    "new_fact": "The two words are separate fields. Observed (marker, form, second) over 329 state-out records / 207 programs: (803c,0142) x207, (803e,0162) x98, (803e,0142) x24, (803c,0162) x0. (803e,0142) is the state-out record of a one-state computed-source program with >= 2 plain inputs and >= 2 outputs.",
+    "evidence": "WD/allpairs.py tally. pairs.py over gen_states_nd.py 1 4 4 1 1 NI NO add: NI=1 -> 803c/0142 for NO 0..6; NI=2: NO<=1 SHORT, NO>=2 803e/0142; NI=3,4: NO<=1 SHORT, NO>=2 803e/0142; the same programs in direct mode are 803c/0142 for every NI,NO. (32,8) with NI=2,NO=3 and NI=3,NO=3 also 803e/0142. Multi-state, NI=2 NO=3 add N=3: 803e/0162, 803e/0142, 803c/0142; N=4: 0162,0162,0142(long),SHORT; direct N=3: 0162,0162,SHORT. The LONG length is set by 803e: 9052 tag at tag+0x5a in both 803e variants, tag+0x56 in 803c. Shape (4,4) vs (32,8) gives the same words in every case."
+   },
+   {
+    "id": "cf-09",
+    "page": "writeup sec.6 'SHORT/LONG layouts'",
+    "claim": "When the update source is a plain input used directly, only the last state-out record is SHORT; in a single-state direct program the only state-out record is SHORT",
+    "status": "holds",
+    "current_doc": "Writeup sec.6; spec asserts records=53 long=52 short=1.",
+    "evidence": "84 one-state programs (direct, add with NI=1, old generators, dim0 1..64, dim1 1..4096, d3 up to 255): last family record is (1041,803c,0142) in 84/84 (allform2.py). Direct N=3: LONG, LONG, SHORT for 8 shapes (decode_copy_records.py summary 'records=3 long=2 short=1' for nd3_4_4, nd3_32_8, nd3_4_8). Repeated: 10 programs recompiled in fresh dirs gave identical per-record md5 of the first 0x70 bytes. Programs also ran on the ANE: milc ane run --steps 1 rc=0 with a 'step 0:' line for nd_4_4, nd_32_8, nd_4_8, nd3_4_4, nd3_32_8, sc_add_2_3, mi_add_3_2_3_4_4."
+   },
+   {
+    "id": "cf-10",
+    "page": "writeup sec.6 'Row width and region'",
+    "claim": "With d3 <= 8, rowbits = 16*dim1 and region = rowbits<<16 = dim1 MiB; with d3 > 8, rowbits = 16*dim1*ceil(d3/8) up to a dim1-dependent saturation (tentative); LONG is 4 bytes longer with 1 MiB at +0x48 and dim1 MiB at +0x44",
+    "status": "holds",
+    "current_doc": "Writeup sec.6.",
+    "new_fact": "Direct LONG records also carry 2*rowbits<<16 at tag+0x60 (u16 at +0x62 = 32*dim1); no saturation up to d3=255 at dim1=4.",
+    "evidence": "d3 sweep (4,4): rowbits 64 (d3<=8), 128 (9..16), 192 (17..24), 256 (25..32), 320 (33), 512 (64), 1024 (128), 2048 (255) = 64*ceil(d3/8). Direct LONG nd3_4_4: +0x44 RB, +0x48 1M, +0x60 = 0x00800000 (2RB); nd3_32_8: +0x60 = 0x01000000."
+   }
+  ],
+  "new_facts": [
+   {
+    "statement": "In one-state programs whose update source is a plain input (direct), and in computed-source programs with one plain input, the state-out copy record is SHORT: words after the 0x1041 marker are 803c, 0142, then a 1 MiB u32 (tag+0x44 when d3 <= 8). Tag+0x3c..+0x47 is byte-identical for every (dim0,dim1) tested; only the u32 at tag+0x48 (= rowbits<<16) follows dim1. dim0 enters the SHORT record only at the header word tag+0x0e. Direct non-last records of multi-state programs are LONG (803e, 0162); the pattern is identical for every shape.",
+    "confidence": "established",
+    "evidence": "84/84 one-state programs (WD allform2.py); 8 shapes x 2 generator paths (WD f1tab.py); direct N=3 LONG,LONG,SHORT for 7 shapes; computed-source N=2..8 form sequences equal for (4,4),(4,8),(32,8),(32,4); byte diffs [4,4] vs [32,4] = {0x0e}. Recompiled in fresh dirs and ran 'milc ane run' (rc=0, 'step 0:') for representative programs.",
+    "proposed_spec": "# sec.6 (requires new helper scripts/decode_copy_words.py, see notes)\nrun  for s in \"4 4\" \"32 8\" \"4 8\" \"32 4\" \"4 2\" \"4 16\" \"4 64\" \"64 4\"; do set -- $s; python3 scripts/gen_states_nd.py 1 $1 $2 1 1 1 1 direct > /tmp/pl_cf1.mil && rm -rf /tmp/pl_cf1c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf1.mil -o /tmp/pl_cf1c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf1c/pl_cf1.macho | sed 's/.* form=//'; done | sort | uniq -c\nwant_rc      0\nwant_out_re  ^ *8 803c/0142 map=1M,RB,RB,RB[|]RB$\n\nrun  for w in 4 32 64; do python3 scripts/gen_states_width.py 1 $w > /tmp/pl_cf1w.mil && rm -rf /tmp/pl_cf1wc && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf1w.mil -o /tmp/pl_cf1wc --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf1wc/pl_cf1w.macho | sed 's/.* form=//'; done | sort | uniq -c\nwant_rc      0\nwant_out_re  ^ *3 803c/0142 map=1M,RB,RB,RB[|]RB$\n\nrun  for s in \"4 4\" \"32 8\" \"4 8\" \"4 2\" \"4 64\"; do set -- $s; python3 scripts/gen_states_nd.py 3 $1 $2 1 1 1 1 direct > /tmp/pl_cf3.mil && rm -rf /tmp/pl_cf3c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf3.mil -o /tmp/pl_cf3c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf3c/pl_cf3.macho | sed 's/.* form=//'; done | sort | uniq -c\nwant_rc      0\nwant_out_re  ^ *10 803e/0162 map=RB,1M,RB,RB,RB[|]2RB$\nwant_out_re  ^ *5 803c/0142 map=1M,RB,RB,RB[|]RB$"
+   },
+   {
+    "statement": "The two form words are independent. Pairs seen over 329 state-out records: (803c,0142) x207, (803e,0162) x98, (803e,0142) x24, never (803c,0162). (803e,0142) is the lone state-out record of a one-state computed-source program with >= 2 plain inputs and >= 2 outputs (and the second-to-last record in some multi-state computed-source programs); its tag+0x44 and post-0x9052 words are not RB/2RB (0x00400010 and 0x00800040 at (4,4); 0x00800010 and 0x01000040 at (32,8)). The record length follows the first word. Neither word depends on shape. The writeup does not mention the second word.",
+    "confidence": "established",
+    "evidence": "WD allpairs.py (207 programs); pairs.py scan sc_add_{1..4}_{0,1,2,3,4,6} and sc_direct_*; mi_add_*/mi_dir_* multi-state sequences; f3.py map for io_add_2_3_4_4: 'map=0x00400010,1M,RB,RB,RB|0x00800040'. What decides 0162 vs 0142 or 803e vs 803c in computed-source programs is not solved.",
+    "proposed_spec": "run  for s in \"4 4\" \"32 8\"; do set -- $s; python3 scripts/gen_states_nd.py 1 $1 $2 1 1 2 3 add > /tmp/pl_cf2.mil && rm -rf /tmp/pl_cf2c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf2.mil -o /tmp/pl_cf2c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf2c/pl_cf2.macho | sed 's/.* form=//; s/0x[0-9a-f]*/X/g'; done | sort | uniq -c\nwant_rc      0\nwant_out_re  ^ *2 803e/0142 map=X,1M,RB,RB,RB[|]X$"
+   },
+   {
+    "statement": "Between two one-state direct SHORT state-out records the bytes that differ (offsets from the 0x9365 tag) are exactly: [4,4] vs [32,8] -> 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77; dim0 only ([4,4] vs [32,4]) -> 0x0e; dim1 only ([4,4] vs [4,8]) -> 0x0a 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77. The v2 page's list (0x42 in place of 0x77) is wrong. A SHORT/LONG pair differs in about 40 bytes.",
+    "confidence": "established",
+    "evidence": "WD bytediff2.py and decode_copy_words.py --diff; dim0 sweep {2,8,16,32,64} union = {0x0e}; dim1 sweep union listed in claim cf-03.",
+    "proposed_spec": "run  for s in \"4 4\" \"32 8\" \"32 4\" \"4 8\"; do set -- $s; python3 scripts/gen_states_nd.py 1 $1 $2 1 1 1 1 direct > /tmp/pl_cfd$1_$2.mil && rm -rf /tmp/pl_cfd$1_$2c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cfd$1_$2.mil -o /tmp/pl_cfd$1_$2c --arch h17 >/dev/null 2>&1; done; for t in 32_8 32_4 4_8; do echo \"[4,4] vs [${t/_/,}]: $(python3 scripts/decode_copy_words.py /tmp/pl_cfd4_4c/pl_cfd4_4.macho --diff /tmp/pl_cfd${t}c/pl_cfd${t}.macho)\"; done\nwant_rc      0\nwant_out     [4,4] vs [32,8]: diff: 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77\nwant_out     [4,4] vs [32,4]: diff: 0x0e\nwant_out     [4,4] vs [4,8]: diff: 0x0a 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77"
+   },
+   {
+    "statement": "Pitch/slice words (the old '+0x30..+0x33 flag byte'). Flag word after the 0x1342 tag = 0x8000 | 0x08*[dim1!=1] | 0x20*[dim0!=1] (0x8028 for a 0x9365 record, at tag+0x28). Then u32 pitch = 64*ceil(d3/32) at tag+0x2e (zero upper half = the +0x30/+0x31 bytes), then, only when dim0!=1 and dim1!=1, u32 slice = pitch*dim1 = 64*dim1*ceil(d3/32) at tag+0x32 (+0x33 is its second byte: dim1/4 for dim1 in 4..1020). A second copy of slice sits at core_end-8 (tag+0x76 in SHORT; equals pitch=64 when slice is elided). Independent of dim0 (2..64), of total size, of SHORT/LONG form and of mode. dim0=dim1=1 has flag word 0 and no pitch. Marker-relative: pitch at m-0x10 (m-0x0c if slice elided), slice at m-0x0c.",
+    "confidence": "established",
+    "evidence": "Measured d2=d3=1 for dim1 in 2..4096 (24 values) and dim0 1..64; d3 in 1..255 at dim1=4; 328/328 records (207 programs) with dim0!=1 && dim1!=1 fit pitch/slice/second copy (WD fitf2b.py, fitcopy2.py); 7 elided records checked. Meaning (bytes of one dim0-slice with 64-B padded rows) is tentative; d2>1 inserts a further word (flag word 0x802c) and is not characterised.",
+    "proposed_spec": "run  for s in \"2 4\" \"8 4\" \"64 4\" \"4 2\" \"4 3\" \"4 4\" \"4 8\" \"4 16\" \"4 32\" \"4 64\" \"4 1024\"; do set -- $s; python3 scripts/gen_states_nd.py 1 $1 $2 1 1 1 1 direct > /tmp/pl_cf4.mil && rm -rf /tmp/pl_cf4c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf4.mil -o /tmp/pl_cf4c --arch h17 >/dev/null 2>&1 && echo \"d0=$1 d1=$2 $(python3 scripts/decode_copy_words.py /tmp/pl_cf4c/pl_cf4.macho | sed 's/.* flagw=/flagw=/; s/ form=.*//')\"; done\nwant_rc      0\nwant_out     d0=2 d1=4 flagw=8028 pitch=64 slice=256 slice2=256\nwant_out     d0=8 d1=4 flagw=8028 pitch=64 slice=256 slice2=256\nwant_out     d0=64 d1=4 flagw=8028 pitch=64 slice=256 slice2=256\nwant_out     d0=4 d1=2 flagw=8028 pitch=64 slice=128 slice2=128\nwant_out     d0=4 d1=3 flagw=8028 pitch=64 slice=192 slice2=192\nwant_out     d0=4 d1=4 flagw=8028 pitch=64 slice=256 slice2=256\nwant_out     d0=4 d1=8 flagw=8028 pitch=64 slice=512 slice2=512\nwant_out     d0=4 d1=16 flagw=8028 pitch=64 slice=1024 slice2=1024\nwant_out     d0=4 d1=32 flagw=8028 pitch=64 slice=2048 slice2=2048\nwant_out     d0=4 d1=64 flagw=8028 pitch=64 slice=4096 slice2=4096\nwant_out     d0=4 d1=1024 flagw=8028 pitch=64 slice=65536 slice2=65536\n\nrun  for d3 in 33 65; do python3 scripts/gen_states_nd.py 1 4 4 1 $d3 1 1 direct > /tmp/pl_cf5.mil && rm -rf /tmp/pl_cf5c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf5.mil -o /tmp/pl_cf5c --arch h17 >/dev/null 2>&1 && echo \"d3=$d3 $(python3 scripts/decode_copy_words.py /tmp/pl_cf5c/pl_cf5.macho | sed 's/.* flagw=/flagw=/; s/ form=.*//')\"; done\nwant_rc      0\nwant_out     d3=33 flagw=8028 pitch=128 slice=512 slice2=512\nwant_out     d3=65 flagw=8028 pitch=192 slice=768 slice2=768\n\nrun  python3 scripts/gen_states_nd.py 1 1 4 1 1 1 1 direct > /tmp/pl_cf6.mil && rm -rf /tmp/pl_cf6c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf6.mil -o /tmp/pl_cf6c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf6c/pl_cf6.macho --last\nwant_rc      0\nwant_out     tag=0x9361 dim0=1 dim1=4 flagw=8008 pitch=64 slice=- slice2=64\n\nrun  python3 scripts/gen_states_nd.py 1 4 1 1 1 1 1 direct > /tmp/pl_cf7.mil && rm -rf /tmp/pl_cf7c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf7.mil -o /tmp/pl_cf7c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf7c/pl_cf7.macho --last\nwant_rc      0\nwant_out     tag=0x9265 dim0=4 dim1=1 flagw=8020 pitch=64 slice=- slice2=64"
+   },
+   {
+    "statement": "The SHORT 1 MiB word at tag+0x44 is ceil(d3/8) MiB (1 MiB only for d3 <= 8); the four rowbits<<16 words track 16*dim1*ceil(d3/8) (8 MiB at dim1=4, d3=9, not dim1 MiB). Direct LONG layout from the tag: +0x44 RB, +0x48 1M, +0x4c/+0x50/+0x54 RB, 0x9052 tag at +0x5a, +0x60 = 2*rowbits<<16. SHORT: +0x44 1M, +0x48/+0x4c/+0x50 RB, 0x9052 tag at +0x56, +0x5c RB. Exactly four RB words in both layouts. Mach-O __FVMLIB vmsize is a constant 16 KiB regardless of dim1 or d3, so 'region vmsize' has no Mach-O counterpart.",
+    "confidence": "established",
+    "evidence": "d3 sweep (4,4) over 18 d3 values (WD d3tab.py); nd3_4_4/nd3_4_8/nd3_32_8 LONG records (f3.py); parsed LC_SEGMENT_64 for nd_4_4, nd_4_64, nd_4_16, sw3_4_4_1_9: four __FVMLIB segments of 16384 bytes each. No saturation seen up to d3=255 at dim1=4; saturation at larger dim1 not tested.",
+    "proposed_spec": "run  python3 scripts/gen_states_nd.py 1 4 4 1 9 1 1 direct > /tmp/pl_cf8.mil && rm -rf /tmp/pl_cf8c && vendor/mil_spec/target/release/milc ane compile /tmp/pl_cf8.mil -o /tmp/pl_cf8c --arch h17 >/dev/null 2>&1 && python3 scripts/decode_copy_words.py /tmp/pl_cf8c/pl_cf8.macho && python3 scripts/decode_copy_records.py /tmp/pl_cf8c/pl_cf8.macho | head -1\nwant_rc      0\nwant_out     map=0x00200000,RB,RB,RB|RB\nwant_out     dim1=4 stride=16 region=8388608"
+   }
+  ],
+  "notes": "Setup. Host Apple M5 Max, macOS 26.7.1 (25G241); milc ane compile ... --arch h17. WD = <wd>/ori/cf/ . 207 programs compiled (NAME.mil, NAMEc/NAME.macho), 329 state-out records decoded. Nothing was written under the worktree or the artifacts dir; no /tmp/pl_* was written. The worktree shows an untracked docs/spec/history/ (ane-descriptor-economy-v1.html) that appeared during the run and is not from this unit.\n\nOffset bases. Every offset is from the tag word (the u16 after the 0x8005 frame word); a one-state program has the state-out frame at file 0x81fc, tag at 0x81fe, marker 0x1041 at tag+0x3e. Tags with an absent dim1 or dim0 field (0x9364, 0x9361, 0x9360) are 4 bytes shorter per absent field, which moves everything after the header 4 bytes earlier; marker-relative offsets (m = 0x1041 word) are stable across tags and are what decode_copy_words.py uses. dim1=16 therefore reads tag+0x3c/+0x3e for the form words.\n\nWhere v2 went wrong. Its 9-byte diff cannot be reproduced: the true 9 differing bytes between SHORT [4,4] and SHORT [32,8] include +0x77 and not +0x42. +0x42 is real as a value (0x42 SHORT / 0x62 LONG) but is the low byte of the second form word, set by the record's place in the program. No compiled record has v2's [32,8] column (08 20 18 02 62 80 80 80 80). I could not identify the program v2 read; a mixed SHORT/LONG pair would differ in 40 bytes, so the v2 row looks like an offset error rather than a mixed-form comparison. v1's '+0x40 dim1 <= 4 vs >= 8' is the same field mis-read as a shape class.\n\nDoc gaps. Writeup sec.6 does not mention the second form word (0x0142/0x0162) at all; decode_copy_records.py comments mention only 0x803c/0x803e. Suggested writeup edits: (1) add the second word and state that it is independent of the first, with the (803e,0142) computed-source case; (2) add the pitch/slice words and flag word; (3) add the LONG +0x60 = 2*RB word and 'exactly four RB words in each layout'; (4) say +0x44 is ceil(d3/8) MiB (1 MiB only for d3 <= 8). The existing statements about SHORT-only-last in direct programs, rowbits<<16 and the LONG +0x44/+0x48 swap are confirmed.\n\nProposed spec helper. The proposed lines need a new file scripts/decode_copy_words.py (imports decode_copy_records from its own dir, sets dont_write_bytecode, prints one line per state-out record: tag, dim0, dim1, flagw, pitch, slice, slice2, form words, map; --last shows the last family record, needed when dim0=1; --diff OTHER prints the differing tag-relative offsets). Tested source: WD/decode_copy_words.py. Full proposed spec file: WD/proposed.spec (45 run/want lines). I ran it through a copy of scripts/evidence-check.sh in WD/harness (symlinks to the repo's generators/decoder, /tmp/pl_ replaced by WD paths): PASS twice, and two deliberately wrong expectations (slice=250, swapped LONG map) FAIL as they should. The harness run executed the spec's own 'rm -rf <wd>/harness/pl_*' lines, all inside WD. My first attempt at 'rm -rf $WD/...' in the shell was blocked by the safety check and I did not repeat it; all other compiles went to fresh directories (milc overwrites an existing -o directory without error, so the rm in the repo-style spec lines is not needed for correctness).\n\nMinor observations. (1) milc output .macho files differ byte-wise between compiles of the same MIL outside the copy records; the per-record bytes (first 0x70 B) were identical across repeat compiles for 10 programs. (2) decode_copy_records.py --reads reports form=other (first=0) for the first update-row of programs with no plain output (gen_states_width.py, gen_states.py 1 1 0), whereas gen_states.py 1 1 1 gives first=1; decoder limit, not examined further. (3) The v2 page's provenance lists macOS build 25G91; this host is 25G241. (4) Of F1's request, the old-path comparison used gen_states_width.py 1 {4,32,64} for [W,4], gen_states.py 1 1 {0,1} for [4,4], and gen_states_nd.py ... 1 0 direct for dim1 != 4; the state-out record is byte-identical to the nd path in every case (the update-row record differs because the plain y output is absent)."
+ }
+]

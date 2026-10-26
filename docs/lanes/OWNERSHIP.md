@@ -13,7 +13,7 @@ on an unclaimed lane without claiming it.
 | **L-TOOL** | dave (initiator) | 2026-10-21 | TOOL-4 ✅ → TOOL-2 ✅ → TOOL-3 ✅ |
 | **L-IR** | another model | 2026-10-21 | IR-2 ✅ → IR-3 ✅ → IR-4 ✅ |
 | **L-TEST** | dave (initiator) | 2026-10-21 | TEST-1 ✅ → TEST-2 ✅ |
-| **L-PROBE** | dave (initiator) | 2026-10-21 | PROBE-1 (re-probe dialect on h17) → PROBE-2 → PROBE-3 |
+| **L-PROBE** | dave (initiator) | 2026-10-21 | PROBE-1 ✅ → PROBE-2 ✅ → PROBE-3 ✅ → io/BAR budgets ✅ (re-measured 2026-10-22, `docs/spec/ane-port-limits-h17.*`) |
 | **L-RUN** | dave (initiator) | 2026-10-21 | RUN-2 ✅ (state lifecycle) → RUN-1 ✅ (loader errors) → RUN-3 → RUN-4 |
 | **L-SCHED** | dave (initiator) | 2026-10-21 | SCHED-1 ⛔ blocked (finding delivered) → SCHED-2 → SCHED-3 → SCHED-4 |
 

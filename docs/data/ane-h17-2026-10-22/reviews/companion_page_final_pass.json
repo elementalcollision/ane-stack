@@ -1,0 +1,236 @@
+[
+ {
+  "unit": "page-crosscheck",
+  "checked": 150,
+  "findings": [
+   {
+    "severity": "medium",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L98-99 (callout 'The model in one paragraph')",
+    "claim": "A program executes iff its live ports fit in 127 and its declared ports fit in 255.",
+    "reality": "The 255 bound applies to declared ports only at validate and compile. The run path prunes dead inputs first, so a file with declared ports above 255 still executes. The page says this itself at L133-136, and the writeup says the 255 applies to live ports on the run path (md L129-131).",
+    "evidence": "ane-port-limits-h17.spec L128-135: gen_mix_ports 255 1 is rejected by validate (rc 1, MaxLiveInLiveOutExceeded) and runs (rc 0, step 0) on the run path. md L129-131.",
+    "fix": "State two conditions: execution needs live_in + n_states + unique_out + n_exposed_states <= 127; validate and compile additionally need declared_in + n_states + out + n_exposed_states <= 255."
+   },
+   {
+    "severity": "medium",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L251 (row [1,300,1,31]) and L254 (row [1,86,1,80])",
+    "claim": "rows <= 256 is sufficient, not necessary.",
+    "reality": "Sufficiency holds only when d3 <= 32. The page's own row [1,86,1,80] has 86 rows (<= 256) and fails with status=0x1d. The spec header says rows <= 256 is SUFFICIENT when d3 <= 32 (spec L15), and md L478 has the same qualifier.",
+    "evidence": "ane-port-limits-h17.spec L516-518 (gen_states_nd 1 1 86 1 80 gives status=0x1d); spec L15.",
+    "fix": "Write: rows <= 256 is sufficient when d3 <= 32."
+   },
+   {
+    "severity": "medium",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L102-103 (callout), L211 (8 B trailer member), L222-224 (special slot words)",
+    "claim": "Every task block ends with a flat trailer of 12-byte buffer bindings whose slot word is a BAR id.",
+    "reality": "The trailer also holds three 8-byte records (0x1340, 0x1341, 0x1440), which the page's own section 4 diagram shows at L211. Slot words below 0x2300 are special, not BAR ids, as the page's own note at L222-224 and md L271-276 say. The word 'every' is not asserted: spec L321-322 asserts only the 1x full-trailer line, not the 53x and 53x counts, and decode_block_trailers.py trailer() and main loop accept an empty trailer.",
+    "evidence": "md L294-296 (trailer = [9344 12B][934a 12B]* [9442 12B][1340 8B][1341 8B][1440 8B], any subset); scripts/decode_block_trailers.py trailer() and main loop (no empty-trailer check); spec L321-322.",
+    "fix": "Describe the flat trailer as 12-byte bindings followed by 8-byte records, any subset; slot word is a BAR ordinal or a special word below 0x2300."
+   },
+   {
+    "severity": "medium",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L102 ('any state shape'), L182-183 (__DATA scratch note), L223-224 (>2 MiB scratch words), L211 (flag bytes), L288 (arch bytes differ)",
+    "claim": "Untagged statements. The page header at L71-72 says every number is spec-asserted unless tagged runner.",
+    "reality": "The writeup labels these runner-only or strong with no spec line. 'Any state shape' is runner (md L205-211; the spec covers a handful of shapes). The ~2 MiB __DATA scratch that is not a BAR consumer is strong, runner plus orchestrator (md L232-235). Scratch special words are strong (md L274-275). Trailer flag bytes 0x21/0xe1/0xc1/0x31 are strong and runner-only (md L347-352). Arch byte deltas are runner (md L511-517). The N_max formula's zero-output cases are runner-only (md L213-217).",
+    "evidence": "grep of the spec finds no 'scratch', '0x21' or '0xe1' assertion. No spec line checks an intermediate over 2 MiB or a flags byte.",
+    "fix": "Add the runner tag to these items, or add probes: an intermediate over 2 MiB with hwx_layout scratch=1, a flags-byte assertion, and a shape sweep."
+   },
+   {
+    "severity": "medium",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L101-102 (callout dtype list), L257 (section 6 dtype line), L175 (section 3 int16 row), L264 (section 7 rule 3 'for any allowed dtype')",
+    "claim": "fp16, int16, int8, uint8 and bool states compile and run; the 53-state limit holds for any allowed dtype; a 53-state int16 program compiles and runs.",
+    "reality": "The spec has no uint8 probe. 'uint8' appears only in the header comment (spec L16). int16 appears only as a 54-state compile failure (spec L293-295). There is no int16 53-state run and no int16 run anywhere. md L202-203 labels uint8 runner-only, and md L487-489 says only int8 and bool are asserted. The page tags none of these.",
+    "evidence": "grep 'uint8' in the spec returns L16 only; grep 'int16' returns L16, L283, L293.",
+    "fix": "Tag uint8 and int16 as runner, or add gen_state_dtype probes: uint8 53 run, and int16 53 compile and run."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L134-136 (section 2, 'These hold on --arch h17 and h16g')",
+    "claim": "The frontend boundaries (127/128 accepted, 255/1 rejected, 126 vs 127 exposed states) hold on h16g as well as h17.",
+    "reality": "The spec asserts h16g only for the 128+128 rejection (spec L560-562). The 127/128 acceptance, the 255/1 rejection and the 126/127 exposed-state boundary are asserted on h17 only (spec L115-130, L148-154). md L124-126 makes the same overclaim.",
+    "evidence": "ane-port-limits-h17.spec L560-562 is the only h16g validate line.",
+    "fix": "Say that h16g asserts only the 256-sum rejection and that the rest is h17-only."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L100-101 (callout 'all non-state io packs into at most two shared segments') vs L170 (section 3 caption)",
+    "claim": "Non-state io packs into at most two shared segments (data and const).",
+    "reality": "This holds only in the packed layout, used when const plus data sections exceed 55. When sections are 55 or fewer, each section gets its own segment: spec L240-244 (gen_states 0 5 50) gives fvmlib=55 with fvmlib_data=50 and fvmlib_const=5. The page's own caption at L170 and md L222-225 say so. N_max is unaffected.",
+    "evidence": "ane-port-limits-h17.spec L240-244; md L222-225.",
+    "fix": "Qualify it: 'in the packed layout (more than 55 sections)'."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L227-229 (section 5 tag formula)",
+    "claim": "tag = 0x9261 + 0x100·[dim1 != 1] + 0x004·[dim0 != 1] − 0x001·[dim1 = 16], applied to a state.",
+    "reality": "The [dim0 != 1] term tests presence of the state-out record's dim0 field. The update-row (read) record never has a dim0 field (md L363-366, L379-386). Read literally with dim0=4, the formula gives 0x9365 for the read record, but spec L446 asserts 0x9361 for the read and 0x9365 for the write (gen_states_nd 1 4 4 1 255 1 1).",
+    "evidence": "ane-port-limits-h17.spec L446; md L363-366 and L380.",
+    "fix": "Name the role: '[dim0 field present]', which applies to the state-out record only; the update-row record has no dim0 field."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L239 (rowbits row), L246 (page-rule formula), L254 and L265 (head_dim 80 padding advice)",
+    "claim": "The rowbits formula, the page rule and the 'pad head_dim 80 to a multiple of 32' advice are presented as asserted.",
+    "reality": "md L406-411 labels rowbits for d3 > 8 tentative, with a dim1-dependent saturation. md L460-461 labels the page rule strong with 9 points asserted. Only the 1M word is asserted, at d3=33 and d3=1 (spec L458-461); the RB word values are not asserted. The padding advice has no probe: the spec tests only d3=80 at 85 and 86 rows (L511-518), and nothing at d3=96 or 128. The rule hard-codes 2-byte fp16 elements (rows·d3·2), while the page lists int8 and bool states as running.",
+    "evidence": "md L406-411, L460-461, L481-482; spec L458-461, L511-518.",
+    "fix": "Tag rowbits as tentative and the rule as strong; add a d3=96 probe or drop the advice."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L218-220 (section 4 count table)",
+    "claim": "0x9442 = one per __data section; the 0x9344 and 0x934a counts hold without qualifier.",
+    "reality": "0x9442 also counts one per intermediate spilled to __DATA scratch (md L247-248). The 0x9344 and 0x934a counts are established only outside the tentative fan-out regime (md L316-317, L342-345). The page's 52+50 example sits inside that regime per md L345, although spec L388-391 still asserts its 154.",
+    "evidence": "md L247-248, L316-317, L342-345; spec L388-391.",
+    "fix": "Add the scratch term and the fan-out qualifier."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L92 (top card '64 B pitch') vs L236 (pitch = 64·⌈d3/32⌉ bytes)",
+    "claim": "State rows have a 64 B pitch.",
+    "reality": "The pitch is 64 B only for d3 <= 32. The page's own formula gives 128 B at d3=33, and spec L460-461 checks pitch=128 at d3=33.",
+    "evidence": "ane-port-limits-h17.spec L460-461; page L236.",
+    "fix": "Say '64 B row granule' or give the formula on the card."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L99 (callout 'Every state<> costs one port')",
+    "claim": "Every state<> costs one port.",
+    "reality": "md L170-173: a state costs a port when the program uses it. A declared state that is never referenced is pruned at execution and costs no port there (strong, runner-only).",
+    "evidence": "md L170-173.",
+    "fix": "Say 'every state the program uses costs one port'."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L180 (noupd 53, 1 in, 1 out: runs yes), L229-230 (dim2=256 still runs), L179 (sigmoid kern shed), L222-224 (0x2080 value), L238 (803e/0162 LONG)",
+    "claim": "Each is presented as asserted.",
+    "reality": "spec L376-380 compiles and counts the noupd 53 program with 1 out but never runs it; the run is asserted only for the 73-out variant (L169-171). dim2=256 is compiled and tag-checked (L440-442) but run only for dim3=256 (L433-438). The sigmoid case is run-only (L236-238); kern=0 is checked only for conv (L226-230). The 0x2080 value is not asserted (L363-367 checks special=1 only). The 803e/0162 pair is not asserted (only 803e/0142 at L472-474).",
+    "evidence": "ane-port-limits-h17.spec lines cited in reality.",
+    "fix": "Add these probes, or tag them runner."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L302-307 (provenance table), L306 ('adversarial skeptics'), L272 ('measured on hardware')",
+    "claim": "Provenance values and method are asserted; the 8 open claims were 'measured on hardware'; the method names adversarial skeptics.",
+    "reality": "Spec L41-44 labels the provenance run informational and asserts only rc 0, so Mac17,7, 26.7.1 (25G241), the compiler versions and ~20 s are not asserted. The values are true on this host (read-only check: hw.model = Mac17,7; sw_vers 26.7.1 / 25G241). The writeup mentions one skeptic (md L528), not adversarial skeptics, and says the 8 claims were 'measured' (md L615), not measured on hardware.",
+    "evidence": "ane-port-limits-h17.spec L41-44; md L528, L615.",
+    "fix": "Tag provenance rows as informational or add want_out lines; drop 'adversarial'; reword L272."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.html L291-297 (Not covered) and L69-72 (header)",
+    "claim": "The page's scope statement covers the measured domain.",
+    "reality": "md L110-112 says the io-cap probes are fp16 rank-4 with one main function; fp32/int32 ports and rank != 4 are not measured. md L548-551 says all probes are elementwise over fp16 rank-4 tensors. The page's Not-covered list omits these.",
+    "evidence": "md L110-112, L548-551.",
+    "fix": "Add fp32/int32 ports, rank != 4, and elementwise-only graphs to Not covered."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/history/ane-descriptor-economy-v1.html L58-67 (banner)",
+    "claim": "The banner says the claim-by-claim account is in the writeup's 'Corrections' section.",
+    "reality": "The claim-by-claim section is 'The ori pages (v1-v3), claim by claim' (md L597). 'Corrections to the previous version' (md L561) is a different section. The archived v1 diff against the ori original shows only the 10 added banner lines (58-67); the rest is byte-identical, and the sha256 ac3179c2…3418d0e matches.",
+    "evidence": "diff of <ori-store> against the archived copy; md L561, L597.",
+    "fix": "Point the banner at the 'ori pages (v1-v3), claim by claim' heading."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.md L602 (sha256 list)",
+    "claim": "v3 sha256 is '1ab9a17b…418cfb7'.",
+    "reality": "The real v3 sha256 ends in '…64ccfb7' (full value 1ab9a17b7e9330843fbf0ed976d373e966a5ef958dac611071f9bb17d64ccfb7). The v1 (ac3179c2…3418d0e) and v2 (4e1e932e…bc7112) suffixes match.",
+    "evidence": "shasum -a 256 of <ori-store>",
+    "fix": "Replace the v3 suffix with 64ccfb7."
+   },
+   {
+    "severity": "low",
+    "where": "<repo>/docs/spec/ane-port-limits-h17.spec L17-18 and L539-541; page L219; md L337-338",
+    "claim": "Spec: 0x934a is emitted once per 'binary-add task' on h16g and twice on h17.",
+    "reality": "The writeup and page define the task as self-add: a binary add whose two operands are the same tensor (md L337-338; page L219). The spec's programs are self-adds only: gen_states.py emits y = add(x, x). The spec wording is broader than what it measures.",
+    "evidence": "scripts/gen_states.py passthrough line add(x = src, y = src); md L337-338.",
+    "fix": "Change the spec comments to 'binary-add task whose operands are the same tensor (self-add)'."
+   }
+  ],
+  "confirmed": [
+   "Archived v1 vs ori v1 (<ori-store> diff shows only the 10 added banner lines (archive L58-67); the rest is byte-identical. sha256 ac3179c2…3418d0e matches the banner.",
+   "ori v2 sha256 4e1e932e…bc7112 and v3 prefix 1ab9a17b match the writeup (v3 suffix is wrong, see finding).",
+   "91-claim classification 37 refuted / 26 partially true / 14 hold / 6 reinterpreted / 8 open (sums to 91) is consistent across writeup md L604-613, page L271-272 and handoff L96.",
+   "Probe and assertion counts: the spec has 100 'run' lines and 214 'want_' lines (want_rc 100, want_out 71, want_out_re 43). Page header L71, page provenance L305, writeup L36 and handoff L91 all state 100 probes and 214 assertions. Caveat: 92 of the 100 run lines invoke milc; 8 are sysctl or decoder runs (spec L43, 310, 319, 365, 371, 450, 477, 497).",
+   "Section 1 tables match the spec exactly: boundaries (1,126)/(1,127), (32,95)/(32,96), (65,62)/(65,63), (100,27)/(100,28), (126,1)/(127,1), 16 KiB port boundary (spec L51-110), and the states table rows 127/128/127/127/170 (spec L160-197).",
+   "Section 2 numbers match: (127,128) accepted, (128,128) and (255,1) rejected, (255,1) runs on the run path, 126 exposed states validate and 127 do not (spec L115-154).",
+   "Section 3 BAR counts match: 53 with plain input (fvmlib=55), 54 fails with 'unable to allocate free BAR', 54 with no plain input compiles and runs, 55 fails, conv gives kern=0, noupd 53 compiles with one 0x9344 (spec L204-263, L226-238, L376-384).",
+   "Section 4 diagram offsets and next-block values match spec L323-324 verbatim (0x9344 @+0x00, +0x0c, +0x18, +0x24, +0x30, +0x38, +0x40, end +0x48, nexthdr +0x4c; next block idx 1 size 39, prewords 1,30001,10001,1,1,4). The h16g +0x18 and +0x3c values match spec L329.",
+   "Section 4 counts match: 0x9344 = 54 at 53 states, 85 at 32/32, 1 with no update returned, >=1 when stateless (spec L312, 342-348, 373, 380); 0x934a 64 vs 32 and 2 vs 1 (spec L545, 549); 0x9442 = 154 for 52 states + 50 out (spec L388-391).",
+   "Section 5 copy-record values match: stride 8/24/32 at dim1 2/5/9 (spec L405-413), region values 2097152/5242880/9437184, flag word 8028, pitch 64/128, slice 128/512, nine differing offsets 0x0a 0x0e 0x1c 0x33 0x4a 0x4e 0x52 0x5e 0x77 (spec L460-468), tags 0x9360/0x9364/0x9261/0x9265/0x9361/0x9365 (spec L423-446), dim3=256 emits no record (spec L435-438).",
+   "Section 6 table rows match spec L485-518: [4,64,1,1] runs, [4,65,1,1] fails 0x1d, [1,300,1,31] runs, [1,260,1,31] fails, [1,85,1,80] runs, [1,86,1,80] fails, [4,128,1,32] runs. Section 6 fp32 and int32 rejections match spec L530-536; int8 and bool runs match spec L522-528.",
+   "Section 8 cross-arch numbers match spec: 0x934a 1 vs 2 (L547-549), stride at dim1=5 on h16g (L556-558), 128+128 rejection on h16g (L560-562), h16g 54-state BAR failure (L552-554), h16g slot-ordinal decode (L547-550).",
+   "Section 8 ori table (12 rows) matches writeup L620-634 in status and substance. The page's 12 rows are a subset of the writeup's 17.",
+   "Provenance host facts checked read-only: hw.model Mac17,7, brand 'Apple M5 Max', sw_vers 26.7.1 build 25G241 (page L302-303 correct).",
+   "milc default arch is h16g in source (vendor/mil_spec/crates/milc/src/main.rs lines 209 and 1399), so the page note at L136 and writeup L32 are correct. Checked by source only: 'milc ane validate --help' is rejected as an unknown flag.",
+   "decode_block_trailers.py enforces 16-byte alignment of the next block header, an exact chain end, and no stray trailer tags, so chain_ok=1 (spec L321) backs the page's 'Each block starts 16-byte aligned' and 'Nothing is nested'.",
+   "Referenced files exist: scripts/evidence-check.sh (its --require-all form matches page L310), docs/evidence/SPEC.md, docs/spec/ane-frontend-h17.md, and all 14 generator and decoder scripts named in the spec and writeup.",
+   "No milc or hardware run was made. Only read-only commands (sysctl, sw_vers, diff, shasum, grep, sed, python source reads) were used. Nothing was written to the repo or to /tmp/pl_*."
+  ]
+ },
+ {
+  "unit": "hw-breaker",
+  "checked": 479,
+  "findings": [
+   {
+    "severity": "high",
+    "where": "ane-port-limits-h17.md §6 'Word-level fields' table (flag word, slice rows); ane-port-limits-h17.html §5 table rows 'flag word' and 'slice'; contradicts the header comment of scripts/decode_copy_words.py",
+    "claim": "flag word = 0x8000 | 0x08·[dim1≠1] | 0x20·[dim0≠1]; slice = pitch·dim1 (present when dim0≠1 and dim1≠1). Labeled 'established', no dim2 domain given, and the page says every number is spec-asserted.",
+    "reality": "Both laws hold only at dim2 = 1 with (dim0, dim1) ≠ (1, 1). (a) dim2 > 1: flag word gains 0x04 (0x802c, not 0x8028) and the slice word changes. +0x32 becomes pitch·d2, and a new word at +0x36 holds pitch·d1·d2. So slice = pitch·dim1 is wrong there. (b) dim0 = dim1 = 1 (d2 = 1): flag word is 0x0000 and no pitch or slice words exist. The pitch word at +0x2e = 64·⌈d3/32⌉ does hold at d2 = 2, 3, 5, but decode_copy_words.py prints pitch='-' for d2 ≠ 1, so 'padded = rows·pitch' (§7) for d2 > 1 cannot be read from the tool. The decoder's own header documents both exceptions ('| 0x04 when dim2 > 1; 0x0000 when dim0 == dim1 == 1'), so tool and writeup disagree. d2 > 1 is the KV layout [2L,kvh,S,hd] that §9 rule 4 cites.",
+    "evidence": "gen_states_nd.py 1 4 7 3 33 1 1 direct (h17), read at tag+0x28/+0x2e/+0x32/+0x36 of the first 0x9365 record: flagw=0x802c, pitch=128, +0x32=384 (=128·3), +0x36=2688 (=128·3·7). The law predicts slice=896 and flagw=0x8028. Same pattern at [4,7,3,96] (576/4032), [4,3,5,65] (960/2880), [4,7,2,31] (128/896), each twice. gen_states_nd.py 1 4 5 3 33: decode_copy_words.py gives flagw=802c pitch=- slice=-. gen_states_nd.py 1 1 1 1 33 (and gen_states_nd.py 2 1 1 1 33 with --last): flagw=0000 pitch=- slice=-. gen_states_nd.py 1 1 1 3 33: flagw=8004. Raw dump of [4,5,3,33] vs [4,5,1,33] in WD/rec.py output.",
+    "fix": "State the domain: flag word = 0x8000|0x08[d1≠1]|0x20[d0≠1]|0x04[d2>1], and 0 when d0=d1=d2=1. State slice = pitch·dim1 for d2 = 1, and that at d2 > 1 the words are pitch·d2 and pitch·d1·d2. State that pitch holds at d2 > 1 but the decoder does not print it. Apply the same fix to the HTML rows."
+   },
+   {
+    "severity": "medium",
+    "where": "ane-port-limits-h17.md §6 'SHORT word map ... 1M is ⌈d3/8⌉ MiB' and 'Row width' bullets; ane-port-limits-h17.html §5 row 'row width: rowbits = 16·dim1·⌈d3/8⌉' (untagged, so claimed spec-asserted)",
+    "claim": "The first SHORT word is ⌈d3/8⌉ MiB, and rowbits = 16·dim1·⌈d3/8⌉. The md calls the 1M word 'established' with no domain, and hedges rowbits only as 'up to a dim1-dependent saturation (tentative)'. The HTML gives the rowbits formula with no qualifier.",
+    "reality": "Both laws hold for d3 ≤ 128 at every dim1 tried (2 to 300). Beyond that they break. The first word saturates: 32 MiB (0x02000000) for dim1 = 2 at every d3 from 257 to 4097. At dim1 ≥ 8 it caps at 16 MiB (0x01000000) from d3 = 129. At dim1 = 8 the pattern is non-monotone: d3 = 129, 160, 192 give 16 MiB, but 224 gives 28 and 255 gives 32. rowbits caps the same way. Separately, rowbits is a u16 that wraps mod 2^16 rather than saturating. The md's word 'saturation' is imprecise. The spec's 'RB' label is self-referential (it compares to the decoder-read rowbits), so no spec line asserts 16·dim1·⌈d3/8⌉ for d3 > 8.",
+    "evidence": "decode_copy_words.py first word on gen_states_nd.py 1 4 D1 1 D3 1 1 direct (predicted ⌈d3/8⌉ MiB): [4,64,1,129] 16 MiB (pred 17); [4,64,1,255] 16 MiB (pred 32); [4,8,1,129] 16 (pred 17); [4,8,1,192] 16 (pred 24); [4,8,1,224] 28 OK; [4,2,1,257] 32 (pred 33); [4,2,1,512] 32 (pred 64); [4,2,1,4097] 32 (pred 513). Repeated twice. decode_copy_records.py rowbits: [4,64,1,255] = 16384 (pred 32768); [4,8,1,129] = 2048 (pred 2176); [4,1000,1,33] = 14464 (=80000 mod 65536); [4,4096,1,9] = 0. In-domain points all matched (d3 = 8, 9, 16, 17, 64, 96, 128).",
+    "fix": "Add the domain (d3 ≤ 128) to the 1M law, or state the cap (16 MiB for dim1 ≥ 8, 32 MiB for dim1 = 2 and 4). Say that rowbits is u16-wrapped and capped. Tag the HTML 'row width' row tentative/runner."
+   },
+   {
+    "severity": "medium",
+    "where": "ane-port-limits-h17.md §6 'SHORT word map: 1M, RB, RB, RB | RB' and 'In both layouts exactly four words equal rowbits << 16'; HTML §5 'row width' row ('four words = rowbits << 16, SHORT: 1M, RB, RB, RB | RB')",
+    "claim": "The SHORT map is 1M,RB,RB,RB|RB, and exactly four words equal rowbits<<16 in both layouts. The 'Direct' qualifier appears only on the LONG bullet.",
+    "reality": "True only for a directly-used plain-input update source. For a computed update source (the generator default 'add' mode), SHORT records carry extra low bits. The first word is 1M|0x10 and the last is RB|0x40, so only three words equal RB. The computed LONG form 803e/0142 also differs from the stated maps.",
+    "evidence": "gen_states_nd.py 1 4 4 1 D3 1 3 add, decode_copy_words.py: D3=1 gives form=803c/0142 map=0x00100010,RB,RB,RB|0x00400040; D3=9 gives 0x00200010,RB,RB,RB|0x00800040; D3=33 gives 0x00500010,RB,RB,RB|0x01400040 (twice each). The same shapes with 'direct' give 1M / 0x00200000 / 0x00500000, RB,RB,RB|RB. gen_states_nd.py 1 4 4 1 1 2 2 add gives form=803e/0142 map=0x00800040,1M,RB,RB,RB|0x00c00000, and (3,2) gives 0x00900010,1M,RB,RB,RB|0x00d00040. The 803e/0142-needs-≥2-in-≥2-out claim itself held at (2,2),(3,2),(2,5),(4,4) and failed to appear at (1,x),(x,1).",
+    "fix": "Mark both maps and the 'four words' sentence as direct-source only, and note the computed-source SHORT map (1M|0x10 … RB|0x40) and LONG map. Or drop the 'in both layouts' wording."
+   },
+   {
+    "severity": "low",
+    "where": "ane-port-limits-h17.md §5 'u32 tail ... is the next block's pre-frame window ... [1][(stride class+1)<<16|1][0x10001][d3][d2][d1]. It is independent of N and dim0, and identical on both arches'",
+    "claim": "The pre-frame window of the block after the first 0x9344 block is the 6-word copy-header mirror, with the stated word values and no stated domain.",
+    "reality": "The law held at dim1 in {1,2,3,5,9,33,64}, d3=3, N in {1,2,3,7,53}, dim0 in {1,4,8}, on h17 and h16g, twice each. It fails at three edges. (1) dim1 = 16: the window has only 5 words, '1,50001,8001,3,1', with the d1 word absent and the third word 0x8001. This is the same elision as tag 0x9360. The md gives only the 0x10001 form, and the 0x8001 variant appears only in the task text, not the md. (2) When the next block is a compute block rather than a copy record, the second word is 1, not (class+1)<<16|1: window '1,1,10001,d3,d2,d1', frame 0x9541 or 0x9d41. This affects 4 of the 6 varied programs run: no-input, conv=1, lut=sigmoid, packed (gen_states 0 5 51), and also a plain 'add' with 2 in 2 out. (3) 'stride class' is not a function of dim1 alone: it follows the stride word, which gains bits at d2 > 1 or d3 ≥ 129. The spec asserts only dim1 = 4 and 9.",
+    "evidence": "decode_block_trailers.py 'nextblock' line. gen_states_nd.py 3 4 16 1 3 1 1 direct: prewords=1,50001,8001,3,1 frame=0x9360 (h17 and h16g, twice; raw dump shows 8005 at +0x30, with no d1 word). gen_states.py 3 0 1: prewords=1,1,10001,1,1,4 frame=0x9d41. gen_states_nd.py 3 4 4 1 1 1 1 add conv=1 and lut=sigmoid: prewords=1,1,10001,1,1,4 frame=0x9541. gen_states.py 0 5 51: same. gen_states_nd.py 3 4 5 1 3 2 2 add: prewords=1,1,10001,3,1,5 frame=0x9541. gen_states_nd.py 3 4 5 2 33 1 1 direct: prewords=1,50001,10001,21,2,5 (law gives 40001). gen_states_nd.py 3 4 3 1 129 1 1 direct: 1,40001,... (law gives 30001).",
+    "fix": "Scope the sentence to 'when the next block is a state-copy block and dim2 = 1, d3 < 129', and add the dim1 = 16 form (5 words, 0x8001, no d1). Note that compute-framed blocks show 1,1,10001,d3,d2,d1."
+   },
+   {
+    "severity": "low",
+    "where": "ane-port-limits-h17.md §5 'Nothing is embedded inside 0x9344 or 0x9361. No trailer tag occurs outside a trailer.' and decode_block_trailers.py chain_ok; also count_desc_records.py as the basis of the '0x9344 = K + max(1, min(in,out))' count law",
+    "claim": "No trailer tag value occurs outside a trailer, so chain_ok=1 holds for all valid programs, and 0x9344 counts are raw record counts.",
+    "reality": "A state dimension equal to a tag value appears as a 2-byte-aligned u16 in the copy-record header. The decoder's 'stray tag' check then reports chain_ok=0 (exit 1) although idx chain, end alignment and trailer parsing are all valid. The raw-u16 scan in count_desc_records.py also inflates counts. This is an edge case (huge or specially chosen dims), but the sentence is false as written.",
+    "evidence": "gen_states_nd.py 2 4 4 1 4928 1 1 direct gives blocks=5 chain_ok=0. Also d3=4929 (0x1341), d3=5184 (0x1440) and [4,4928,1,32]; d3=4960 gives chain_ok=1. A custom stray scan shows u32 0x1340 at block+0x28 and +0x38, with chain(idx+end)=True. gen_states_nd.py 1 4 4 1 37700 1 1 direct (37700 = 0x9344): count_desc_records.py prints '0x9344 records: 8' while the trailers contain 2 (d3=4096 gives 2).",
+    "fix": "Say the invariant holds for dims that do not collide with tag values, or make the decoder test the stray tags by parsed field positions. Note that the count law was measured with a raw u16 scan."
+   },
+   {
+    "severity": "low",
+    "where": "ane-port-limits-h17.md §6 '(2 MiB at d3 = 9, 5 MiB at d3 = 33; asserted)'; ane-port-limits-h17.html §6 state table 'pitch' column (opening claim: every number is spec-asserted unless tagged runner)",
+    "claim": "2 MiB at d3 = 9 is spec-asserted. The pitch values in the page's state table are spec-asserted.",
+    "reality": "The values are correct. The label 'asserted' is not supported for them. The spec asserts the first word only at d3 = 1 ('1M') and d3 = 33 (0x00500000). Nothing asserts d3 = 9 (the '2097152' at spec line 405 is region at dim1 = 2, not the first word). The spec asserts pitch only at (d3=1, dim1=2) and (d3=33, dim1=4). The table's pitch values 64 at d3 = 31 and 32 and 192 at d3 = 80 are closed-form values with no spec line. Reproducing the d0 = 1 rows' pitch needs 'decode_copy_words.py --last'. The default invocation prints nothing for those states because they have no dim0 flag, and neither document says so.",
+    "evidence": "Measured: gen_states_nd.py 1 4 4 1 9 1 1 direct gives first word 0x00200000 (twice). Pitch for [1,300,1,31] / [1,260,1,31] / [1,85,1,80] / [1,86,1,80] / [4,64,1,1] / [4,65,1,1] / [4,128,1,32] = 64/64/192/192/64/64/64 (twice, via --last for d0=1). Default invocation for d0=1 states printed '<none>'. grep of the spec shows only two decode_copy_words pitch assertions.",
+    "fix": "Add spec lines (pitch=192 at [1,85,1,80] via --last; first word 0x00200000 at d3=9), or tag those numbers 'runner'. Mention --last for dim0 = 1."
+   }
+  ],
+  "confirmed": [
+   "1. PITCH/SLICE at d3 in {31,32,64,65,96} x dim1 in {3,7} (shape [4,dim1,1,d3], h17, 2 compiles each): predicted pitch 64/64/128/192/192 and slice = pitch*dim1 (192,448 / 192,448 / 384,896 / 576,1344 / 576,1344), slice2 = slice. Observed exactly, 20/20. rows*pitch equals state_exec_predict.py padded_bytes at all 10 shapes (768, 1792, 1536, 3584, 2304, 5376). Also matches on h16g at [4,7,1,65], [4,3,1,96], [4,5,1,31], [4,9,1,17]. Flag word 0x8028 at all of them.",
+   "1b. Page rule at held-out dim2>1 shapes, run on the ANE (twice): [2,5,13,33] rows 130 FAIL status=0x1d; [2,8,8,33] PASS; [1,43,2,65] FAIL; [1,5,17,65] PASS; [3,1,43,45] FAIL; [3,2,21,45] PASS; [2,3,11,70] PASS; [2,3,10,70] PASS; [1,16,16,33] PASS; [1,15,17,33] PASS. Also [4,16,1,16384] PASS, [1,257,1,16] FAIL, [1,256,1,16] PASS, [1,513,1,16] FAIL, [1,257,1,32] PASS, [1,129,1,33] FAIL, [1,200,1,40] FAIL, [1,150,1,100] FAIL, [1,1000,1,3] FAIL, [5,7,1,48] PASS. 24/24 matched the predictor, and rows*pitch (pitch word at +0x2e) equalled predictor padded_bytes wherever readable (d2 = 1, 13, 43, 21, 11, 10).",
+   "2. SHORT first word = ceil(d3/8) MiB at d3 in {8,16,17,64} (plus 9) x dim1 in {2,4,16}, single-state direct: predicted 1M(0x00100000), 0x00200000, 0x00300000, 0x00800000 (and 0x00200000 at d3=9). Observed exactly, 30/30 over two reps. The '2 MiB at d3 = 9' value is true (but unasserted). Direct LONG map RB,1M,RB,RB,RB|2RB confirmed at N=2,3,4 ([4,3,1,17], [4,5,1,33], [4,7,1,65]). BUT the law fails at d3 >= 129 (see findings).",
+   "3a. Block framing: decode_block_trailers.py chain_ok=1 and exit 0 on all 6 varied programs, twice each: gen_states 3 0 1 (no-input, 7 blocks), gen_states_nd 5 4 4 1 1 1 1 direct noupd (6 blocks), 3 4 4 1 1 1 1 add conv=1 (8 blocks), same with lut=sigmoid (8 blocks), gen_states 0 5 51 (packed layout, 51 blocks, 5 full + 46 [934a,934a,9442,1341,1440]), gen_states 7 1 1 on h16g (15 blocks, one 6-member full trailer). Also gen_states_nd 53 4 33 1 3 gives 107 blocks = 53x[9442,1440] + 53x[9344,9442,1340,1440] + 1 full trailer (h17); h16g full trailer 6 members with 9442@+0x18 and end@+0x3c. Edge: chain_ok false positive at dims equal to tag values (finding).",
+   "3b. Pre-frame window [1][(class+1)<<16|1][0x10001][d3][d2][d1] at dim1 in {2,5,33}, d3=3, N=3: predicted 1,20001,10001,3,1,2 / 1,40001,10001,3,1,5 / 1,50001,10001,3,1,21. Observed exactly on h17 and h16g, twice each. Also dim1 = 1,3,9,64 (1,10001,.../1,30001/1,50001/1,50001,...,40), dim0 in {1,4,8}, N in {1,2,7,53}, and d2 in {2,3,7} (d3,d2,d1 slots exact). It misses at dim1 = 16 (5 words, 8001, no d1) and in compute-framed next blocks (finding).",
+   "4. 0x9344 stateless: gen_states 0 4 2 -> predicted 2, observed 2; gen_states 0 2 7 -> 2, observed 2 (twice; also (3,3)->3, (7,3)->3, (1,5)->1). No-input raw count K+2: gen_states 3 0 1 -> 5, observed 5 (special=1); gen_states 5 0 1 -> 7, observed 7; also N=1 -> 2, N=2 -> 4, N=4 -> 6. Stateful K+max(1,min(in,out)): (3,4,2)->5, (2,2,7)->4, (3,1,0)->4, (6,3,5)->9, (1,5,1)->2, (10,2,2)->12, all exact, twice.",
+   "5. BAR pool dtype independence (twice each): uint8 53 states+plain in runs (exit 0, 'step 0:'); uint8 54 compile exit 1 'unable to allocate free BAR' and run lane 'ANECCompile() FAILED'; bool 54 noin runs; bool 55 noin fails BAR; also uint8 54 noin runs / 55 noin fails; bool 53 runs / 54 fails; int16 53 runs / 54 noin runs / 55 noin fails; noupd uint8 53 runs / 54 fails; noupd+noin bool 54 runs / 55 fails (BAR message confirmed). int16 and uint8 N=1 run; fp32 and int32 N=1 fail (compile status=0x1 rc=1).",
+   "6. Page state table: pitch = 64/64/64/64/192/192/64 for [4,64,1,1], [4,65,1,1], [1,300,1,31], [1,260,1,31], [1,85,1,80], [1,86,1,80], [4,128,1,32] (read via 'decode_copy_words.py --last' for the d0=1 rows), and run results exactly as stated: PASS, FAIL (status=0x1d : statusType=0x9: Program Inference error), PASS, FAIL, PASS, FAIL, PASS. 14/14 over two reps. Rows column 256/260/300/260/85/86/512 correct. Spec counts '100 probes, 214 assertions' re-counted from the .spec: 100 run, 214 want_* lines."
+  ]
+ }
+]

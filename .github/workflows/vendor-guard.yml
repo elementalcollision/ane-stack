@@ -28,3 +28,9 @@ jobs:
 
       - name: guard regression test
         run: bash tests/vendor-guard.bats.sh
+
+      - name: evidence harness regression test (fake milc, no hardware)
+        run: bash tests/evidence-harness.sh
+
+      - name: published spec datapoints match the spec
+        run: python3 scripts/spec_to_json.py --check docs/data/ane-h17-2026-10-22/spec_datapoints.json

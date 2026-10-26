@@ -1,0 +1,607 @@
+{
+ "C1": [
+  {
+   "id": "C1",
+   "verdict": "partially_upheld",
+   "severity": "high",
+   "reason": "The L-SCHED half holds: H69 and H81 call it open/unclaimed, but the repo shows it claimed and in active use right up to the handoff. The L-RUN half is overstated, because the handoff's 'other agents' reading is defensible.",
+   "evidence": "docs/lanes/OWNERSHIP.md:18 reads '| **L-SCHED** | dave (initiator) | 2026-10-21 | SCHED-1 blocked (finding delivered) -> SCHED-2 -> SCHED-3 -> SCHED-4 |', and :20 reads 'Unclaimed: **L-LINT**' (only L-LINT). `git log --grep='lane/sched'` returns 28 commits. Most recent are 052e485 and a7e4cf5 at 2026-10-22 09:02, about 1h43m before the handoff commit 9c52422 at 10:45. The L-SCHED agent was active in the same session window: a7e4cf5's body asks L-Probe to 'add a second finding for the state<> budget', and d3b581d at 09:07 does exactly that. No release/unclaim commit exists (`git log -i --grep='releas|unclaim'` finds nothing relevant), and OWNERSHIP.md was last touched in aeb561d on 2026-10-21. docs/adr/0003-mil-sched-crate.md:3 is 'Status: accepted (2026-10-21)'.",
+   "correction": "Fix the L-SCHED claim: it is claimed in OWNERSHIP.md:18 and was not abandoned. 'Open: L-SCHED' would steer a successor into starting work on a lane another agent holds, which breaks convention 1 ('A lane owns files, not features'). The 'L-RUN (other agents)' part should not count against the handoff. OWNERSHIP.md labels five lanes 'dave (initiator)' (L-TOOL/TEST/PROBE/RUN/SCHED). All 80 commits share the git author 'Dave Graham', so authorship cannot tell agents apart. RUN-2-state-lifecycle.md:171 treats 'L-PROBE ... claimed by dave' as distinct from the L-RUN agent. Mitigation: H91 tells the successor to cat OWNERSHIP.md in the first 10 minutes, so the contradiction is discoverable. That lowers the harm but does not make the handoff statement correct."
+  },
+  {
+   "id": "C1",
+   "verdict": "upheld",
+   "severity": "high",
+   "reason": "H69 says 'Open: L-SCHED, L-LINT' and H81 calls L-SCHED 'unclaimed'. OWNERSHIP.md lists L-SCHED as claimed, so the handoff contradicts the doc it tells the reader to trust. The L-RUN half of the finding is weaker (see correction).",
+   "evidence": "HANDOFF H69: 'Current claims: L-TOOL, L-TEST, L-PROBE (me/dave), L-IR + L-RUN (other agents). Open: L-SCHED, L-LINT.' H81: 'L-SCHED (the differentiator, unclaimed)'. docs/lanes/OWNERSHIP.md:17 L-RUN | dave (initiator) | RUN-2 done -> RUN-1 done -> RUN-3 -> RUN-4. OWNERSHIP.md:18 L-SCHED | dave (initiator) | 2026-10-21 | SCHED-1 blocked (finding delivered) -> SCHED-2 -> SCHED-3 -> SCHED-4. OWNERSHIP.md:20 'Unclaimed: **L-LINT**' (only L-LINT). `git log --grep='lane/sched' | wc -l` = 28. Latest are 052e485 (09:02) and a7e4cf5 on 2026-10-22, under two hours before the handoff commit (10:45). docs/adr/0003-mil-sched-crate.md:3 'Status: accepted (2026-10-21)'. OWNERSHIP.md:14 gives L-IR as 'another model'.",
+   "correction": "Core claim holds: L-SCHED is claimed, active as of the handoff day, and has an accepted ADR. The L-RUN part is overstated. OWNERSHIP uses 'dave (initiator)' for six lanes, including the three the handoff author calls 'me/dave'. 'Other agents' for L-RUN may just mean a different agent session. It is still inconsistent with OWNERSHIP, which distinguishes L-IR ('another model') from L-RUN ('dave (initiator)') while the handoff lumps them together."
+  }
+ ],
+ "C2": [
+  {
+   "id": "C2",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "The omission is real: the handoff pitches L-SCHED as a fresh differentiator and never mentions the blocked placement half or the large body of delivered SCHED-1 work. But the claim that 'a successor would redo it' is overstated, because the handoff's own pointer (BUILD_PLAN SCHED-1) opens on the block.",
+   "evidence": "docs/BUILD_PLAN.md:206 (the SCHED-1 header) reads 'partially unblocked (L-SCHED) — cost half usable on macOS 27.x; placement half still blocked', and the 'Blocked on: MLComputePlan produces no usable cost on macOS 26.7.1' blockquote follows within a few lines. Placement stays 0/10 on both OS versions; the cost half is differentiated only on 27.0, and the M4-vs-M5 confound is flagged as open. `ls docs/evidence/SCHED-1-*.md` gives 4 files: macos27-availability, macos27-result, positive-control, vs-lint-disagreement. `ls vendor/mil_spec/crates` shows no mil_sched; ADR-0003:8-13 says the crate is 'not yet added'. The handoff text at H81 says only 'Start at docs/BUILD_PLAN.md §Phase 2, SCHED-1' and does not mention the block.",
+   "correction": "The handoff should state that SCHED-1's placement half is blocked, that the cost half is usable only on macOS 27.x, and that the delivered findings live in 4 evidence files. Because it sends the reader to the section that opens with the block, this is an omission and not a misdirection. A successor who reads the pointer will not redo the work. Medium rather than high."
+  },
+  {
+   "id": "C2",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "The handoff omits that SCHED-1 is partially unblocked with four delivered evidence files and that placement is still blocked. The omission is real. 'A successor would redo it' is overstated: the BUILD_PLAN section H81 points to states the status in its first line.",
+   "evidence": "HANDOFF H81: 'Start at docs/BUILD_PLAN.md §Phase 2, SCHED-1' with no mention of blocked status, evidence or ADR. docs/evidence/SCHED-1-*.md has exactly 4 files: macos27-availability, macos27-result, positive-control, vs-lint-disagreement. BUILD_PLAN.md:203 'SCHED-1 -- partially unblocked (L-SCHED) -- cost half usable on macOS 27.x; placement half still blocked'. BUILD_PLAN.md ~L229-231 and ~L240-246: placement is 'unchanged, and bad'; MLComputePlan 'places nothing on the ANE on either OS version'; cost differentiates only on 27.0. vendor/mil_spec/crates has no mil_sched; ADR-0003 says 'the crate is not yet added'.",
+   "correction": "Omission of blocked/partial status, the four evidence files and the existing ADR-0003 is accurate. The pointer H81 gives (BUILD_PLAN SCHED-1) leads straight to the blocked/partial status header, so the 'redo' risk is mainly the 'unclaimed' framing (C1) and the unqualified '84%/65% gap is the target' (C35). Severity medium."
+  }
+ ],
+ "C3": [
+  {
+   "id": "C3",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The dependency facts are right, but the handoff does list RUN-4 last (priority 5) and points to BUILD_PLAN for item IDs. The 'no supported checkpoint' blocker belongs to RUN-3, not RUN-4, so the finding conflates the two. The SCHED-3 dependency is a plan-level ordering and is not obviously technical.",
+   "evidence": "docs/BUILD_PLAN.md RUN-4 entry: '**Depends on:** RUN-2, SCHED-3'. RUN-3 entry: '**Depends on:** RUN-2, SCHED-2'. SCHED-3 'Depends on: SCHED-1, L-RUN'. RUN-2 is marked done (patch 0013). The checkpoint blocker is in docs/adr/0002-deploy-lane-closed.md A.5 item 1 ('No supported checkpoint exists on this Mac') and applies to a real-checkpoint decode (RUN-3). RUN-4's accept criterion is a '2-layer MLP', which needs no checkpoint. BORROW-1 depends on RUN-4.",
+   "correction": "The handoff should add 'per BUILD_PLAN, depends on RUN-2 (done) and SCHED-3 (not started)'. Do not attribute the checkpoint blocker to RUN-4. Not a wrong-path risk, since RUN-4 is already last in the priority list."
+  },
+  {
+   "id": "C3",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "Dependencies are as stated, and the handoff omits them. The cited 'documented blockers (no supported checkpoint)' belong to RUN-3, not RUN-4, so that part is stretched.",
+   "evidence": "BUILD_PLAN.md:329 RUN-3 'Depends on: RUN-2, SCHED-2'. BUILD_PLAN.md:340 RUN-4 'Depends on: RUN-2, SCHED-3'. BUILD_PLAN.md:293 SCHED-3 'Depends on: SCHED-1, L-RUN'. RUN-2 is done (BUILD_PLAN.md:~317). OWNERSHIP.md:17 sequences 'RUN-3 -> RUN-4'. The checkpoint blocker is in docs/evidence/A5-scale-deploy-passes.md:68 and docs/evidence/ADR-0002-A5-scale-deploy.md:68-72 ('none on this Mac'). It is framed against ADR-0002 A.5 and the real-checkpoint decode (RUN-3). RUN-4's accept criterion is a 2-layer MLP and needs no checkpoint. HANDOFF H83 gives no dependency.",
+   "correction": "Valid that H83 omits RUN-4's SCHED-3 dependency and the skipped RUN-3. The 'documented blockers' wording is wrong for RUN-4: SCHED-3 is the only unmet dependency, and the checkpoint gap blocks RUN-3. H90 also points the reader to BUILD_PLAN for item IDs and dependencies. Severity low."
+  }
+ ],
+ "C4": [
+  {
+   "id": "C4",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The factual core checks out: the 'graph' on-chip training test fails on this host and the handoff says 'proved'. But the same sentence says 'on the lane that can't deploy', which tells the reader it was not reproduced here, and the BUILD_PLAN text it paraphrases says 'Upstream demonstrated'.",
+   "evidence": "docs/evidence/RUN-2-state-lifecycle.md:185-198 (§9) lists 6 pre-existing `cargo test -p mil_infer --lib` failures, including 'graph::tests::ane_onchip_backprop_training_exec', verified by re-running on the unmodified tree. docs/evidence/RUN-1-loader-errors.md:99-100 repeats this. docs/ENGINEERING.md:49 lists 'on-chip execution via the HWX lane' among upstream claims 'that did not survive contact with hardware'. vendor/mil_spec/README.md:303 and graph.rs:1662 are the origin of the claim. docs/BUILD_PLAN.md RUN-4: 'Upstream demonstrated forward+backward+in-place-SGD through graph ... but on the lane that cannot deploy here.' The handoff does not mention the 6 failing lib tests.",
+   "correction": "'graph proved ... works' should read 'upstream's graph test claimed ... and that test fails on this host (RUN-2 §9)'. This follows from the handoff's own §2 rule ('never write a number you haven't measured'). The qualifier 'on the lane that can't deploy' limits the harm, and the successor is still told to rebuild on e5rt, so low. The more useful omission is that the 6 known lib-test failures are not mentioned."
+  },
+  {
+   "id": "C4",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "H83's 'graph proved ... works' drops the 'Upstream demonstrated' attribution BUILD_PLAN used. Repo evidence shows the corresponding test fails on this host. The finding's attribution of that failure to the closed HWX lane is inference, not recorded.",
+   "evidence": "HANDOFF H83: 'graph proved forward+backward+in-place-SGD works but on the lane that can't deploy'. BUILD_PLAN.md:333-335: 'Upstream demonstrated forward+backward+in-place-SGD through graph (MSE 0.076->0.000096 over 16 steps) but on the lane that cannot deploy here'. docs/evidence/RUN-2-state-lifecycle.md:~186-193 §9 lists `graph::tests::ane_onchip_backprop_training_exec` among 6 pre-existing `cargo test -p mil_infer --lib` failures. RUN-1-loader-errors.md:99 and :148 repeat the 6 failures. docs/ENGINEERING.md:47-50 (§3.2): 'Upstream claims that did not survive contact with hardware: on-chip execution via the HWX lane...'.",
+   "correction": "Holds: the claim is unattributed upstream, and the repo's own test of it fails here (as of 2026-10-21 evidence; I did not re-run it). The qualifier 'on the lane that can't deploy' partly signals it is not reproducible. The evidence only says 'pre-existing failures' and never ties this test's failure to the closed HWX lane, so '(closed HWX lane)' is an inference. ENGINEERING.md:47-50 does list on-chip HWX execution as a non-surviving upstream claim."
+  }
+ ],
+ "C5": [
+  {
+   "id": "C5",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "Accurate that H73 omits the OS qualification and Appendix A. But H73's rule ('never depend on the deploy lane') is exactly what ADR-0002 A.3 says still stands, and the handoff's host is the 26.7.1 box where the closure is real. The repo's README states the same unqualified wording and is itself the stale doc, so the handoff inherits it.",
+   "evidence": "docs/adr/0002-deploy-lane-closed.md:8 says the measurements are on 'Apple M5 Max, macOS 26.7.1'. A.1 (:74-92) says 'closed at the OS level is an OS-version statement, not an invariant', and the table shows LOAD_OK and EVAL_OK for an h16g artifact on 27.0. A.2 says Apple's H16 bundles load 8/8 on 27.0. A.3 (:108-130) says 'the Decision stands'. A.4 (:131-137) says the ground rule should read 'never depend on the deploy lane on 26.7.1; a 27.0 path exists and is uncharacterised'. README.md still carries the unqualified 'closed at the OS level' blockquote and ground rule 3 ('Never depend on the closed deploy lane'), so A.4's requested edit was never applied. The 27.0 results come from one M4 Pro host (A.5 item 4), with the OS-by-SoC confound unresolved.",
+   "correction": "H73 should add '(true on macOS 26.7.1; on one 27.0 M4 Pro host an h16g artifact loads and executes and Apple's H16 bundles load, see ADR-0002 Appendix A)'. 'Apple's own artifacts fail too' is false as an unscoped statement on 27.0. Operationally the rule is unchanged, so the successor is not sent down a wrong path on this host. Low."
+  },
+  {
+   "id": "C5",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "H73 gives the 26.7.1 closure with no OS qualifier, and its parenthetical '(Apple's own artifacts fail too)' is false on macOS 27.0 per ADR-0002 Appendix A. The handoff mentions no OS version anywhere. The operative instruction (target e5rt/CoreML) is still consistent with ADR A.3.",
+   "evidence": "HANDOFF H73: 'self-emitted HWX does not deploy (Apple's own artifacts fail too -- OS-level gate, not an emitter bug)'. `grep -n -i 'macos|26.7|27.0' HANDOFF` finds no OS mention. The only M4/M5 mention is the SoC delta at H59 and H6. docs/adr/0002-deploy-lane-closed.md:67-72 and A.1 (L83-86): h16g `two_layer.mil` goes from 0x170004 on 26.7.1 to LOAD_OK + EVAL_OK on 27.0. A.2 (L100): 'H16 LOAD_OK (8/8)'. A.1 (L91): '\"closed at the OS level\" is an OS-version statement, not an invariant'. A.4 (L133-136): 'never depend on the deploy lane on 26.7.1; a 27.0 path exists and is uncharacterised'. A.3 (L127-129) keeps the Decision. A.5 item 4 (L195-197) notes n=1 M4 Pro on build 26A428. Appendix A.1-A.6 exist.",
+   "correction": "No substantive correction. For fairness: the same unqualified wording is in README.md:5-8, which A.4 also says needs qualifying. The 'do not depend on it' instruction is unchanged by the appendix (A.3), so this is a staleness and qualification gap, not a wrong-direction instruction."
+  }
+ ],
+ "C6": [
+  {
+   "id": "C6",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The omission is verified: the handoff never says how to build milc, and the specs hard-code the binary path. But the handoff names the main checkout as the working directory, where milc is already built, and the failure is loud and self-explanatory. The README documents the fix. The count of evidence specs is also slightly off.",
+   "evidence": "`grep -n 'cargo\\|build' HANDOFF-2025-10-22.md` finds no build instruction. docs/spec/ane-port-limits-h17.spec has 24 invocations of vendor/mil_spec/target/release/milc (header requires only `require_cmd cargo` and python3). `grep -c` over docs/evidence/*.spec shows 6 specs invoking it (0001, 0002, 0004, 0005-milc-run, 0006-milc-json, 0007), not 5, plus shape-flex-matrix.spec (2). README.md:30 gives `cargo build --release -p milc`. vendor/mil_spec/Cargo.toml has a root [package] plus [workspace] members including crates/milc, so a bare build covers the root package only. vendor/mil_spec/target is gitignored (vendor/mil_spec/.gitignore:1). The main checkout already has <repo>/vendor/mil_spec/target/release/milc (7.9M, mode 755). scripts/evidence-check.sh only converts missing `require_cmd` tools into SKIP; a missing binary run via `run` produces a want_out/want_rc FAIL.",
+   "correction": "Add a one-line build step (`cd vendor/mil_spec && cargo build --release -p milc`) to §2 or §6. Impact is limited to a fresh clone or worktree; in the stated cwd the binary already exists, and the FAIL message names the missing path. Not high. The reviewer's 'FAIL not SKIP' is correct."
+  },
+  {
+   "id": "C6",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "The omission is verified: the handoff has no build instruction. A fresh checkout or worktree has no milc, and plain `cargo build --release` does not produce it. Severity is overstated because the canonical checkout the handoff names (H88) already has a prebuilt milc, and README.md documents the build.",
+   "evidence": "`grep -n cargo HANDOFF-2025-10-22.md` returns nothing. vendor/mil_spec/Cargo.toml has [workspace] members including \".\" and crates/milc, a root [package] mil_spec, and no default-members, so a bare `cargo build` builds the root package only. The README.md:30 build line is `cargo build --release -p milc`. In this worktree: libmil_spec.rlib mtime 10:49:36, milc 10:51:09, i.e. two separate builds (.gitignore ignores vendor/mil_spec/target/). Specs invoking the binary: docs/spec/ane-port-limits-h17.spec (lines 17-96, ~17 `run` lines). Evidence specs: 0001, 0002, 0004, 0005-milc-run-mlmodelc, 0006-milc-json-diagnostics and 0007 (via `./target/release/milc` after `cd`). The only `require_cmd` in the master spec is cargo/python3 (L6-7), so a missing binary is a command-not-found `run` that fails its `want_*`, i.e. FAIL not SKIP. Main checkout <repo>/vendor/mil_spec/target/release/milc exists (mtime Oct 21 13:21).",
+   "correction": "Technical claims hold (also not a hardware SKIP). Two fixes: (1) 6 evidence specs invoke milc (5 with the literal `vendor/mil_spec/target/release/milc` path, 0007 via `./target/release/milc`), not 5. (2) In the checkout H88 tells the reader to `cd` into, the gitignored binary is already built, so the failure hits fresh clones (H5 gives the GitHub URL) and worktrees. That is medium, not high. A one-line build step in H20-24 or H87-95 would fix it."
+  }
+ ],
+ "C7": [
+  {
+   "id": "C7",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The mechanical fact is right (--all globs docs/evidence/*.spec only, so the master spec is excluded), but the handoff already lists the master spec as its own must-pass command in §2, and the script defines --all as the docs/evidence set. The H93 comment is imprecise, not wrong.",
+   "evidence": "scripts/evidence-check.sh:4-5 comment '--all # every *.spec in docs/evidence/'; the --all branch does specs=(\"$root\"/docs/evidence/*.spec), and --list also uses docs/evidence/*.spec. `ls docs/evidence/*.spec | wc -l` gives 8. docs/spec/ane-port-limits-h17.spec and docs/spec/shape-flex-matrix.spec are outside the glob. HANDOFF H21 separately runs `./scripts/evidence-check.sh docs/spec/ane-port-limits-h17.spec  # the master spec — must pass`. `grep evidence-check .github` finds nothing; CI does not run it.",
+   "correction": "H93's comment should say 'docs/evidence/*.spec only; also run docs/spec/*.spec explicitly (master spec, shape-flex-matrix)'. A successor following §2 would still run the master spec. Low."
+  },
+  {
+   "id": "C7",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "`--all` globs only docs/evidence/*.spec, so it never runs the master spec or shape-flex-matrix.spec. The H93 comment 'run the whole evidence suite' is loose. H21 already lists the master spec as a separate command, which limits the harm.",
+   "evidence": "scripts/evidence-check.sh:7 '--all # every *.spec in docs/evidence/'. scripts/evidence-check.sh:146-147 `shopt -s nullglob; specs=(\"$root\"/docs/evidence/*.spec)`. `ls docs/evidence/*.spec | wc -l` = 8. docs/spec/ane-port-limits-h17.spec and docs/spec/shape-flex-matrix.spec exist and are outside the glob. HANDOFF H21 runs the master spec explicitly. H93: `./scripts/evidence-check.sh --all # run the whole evidence suite`. BUILD_PLAN.md TEST-1 describes `docs/evidence/*.spec`.",
+   "correction": "Accurate, but the 'whole suite' wording is arguably scoped to docs/evidence/, and H21 covers the master spec. The finding's medium severity is high; low fits. A fix is `--all` plus `docs/spec/*.spec`, or a note."
+  }
+ ],
+ "C8": [
+  {
+   "id": "C8",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "reason": "Only the filename-year mismatch and the loose path notation are real. The 'HEAD: b5ccc3a' point is not an error: a document cannot embed the hash of the commit that adds it, and b5ccc3a is the last work commit it describes.",
+   "evidence": "`git log -3`: 9c52422 (handoff commit) is directly after b5ccc3a, and the handoff commit touches only HANDOFF-2025-10-22.md. The filename says 2025 while H1 says 'HANDOFF — 22 October 2026' and the commit date is 2026-10-22, so the filename is a typo. `ls artifacts` fails (no such dir), but docs/spec/ane-port-limits-h17.md:7 uses the identical notation 'artifacts/ane-descriptor-economy', H94 gives `ori artifact list`, and a local tool on PATH exists. 'docs/adr/0002' at H73 resolves to docs/adr/0002-deploy-lane-closed.md.",
+   "correction": "Rename the file to 2026, and optionally write 'ori artifact ane-descriptor-economy (not a repo path)'. Drop the 'At HEAD' objection."
+  },
+  {
+   "id": "C8",
+   "verdict": "upheld",
+   "severity": "nit",
+   "reason": "All cosmetic points check out. None changes what a successor does.",
+   "evidence": "`git rev-parse --short HEAD` = 9c52422. H6 says b5ccc3a, the parent. A commit cannot cite its own hash, so 'at HEAD' really means 'code HEAD before this handoff'. File name HANDOFF-2025-10-22.md vs H1 '22 October 2026'. The commit message says only 'dated 22-October', not 2026; the commit date is 2026-10-22. `ls artifacts` fails: no such directory. `git ls-files | grep artifact` returns only scripts/mk-evidence-artifacts.sh. docs/spec/ane-port-limits-h17.md:8-10 says 'Open the saved HTML from the workspace artifacts dir'. `ori` is at a local tool on PATH and .gitignore ignores .ori/. docs/adr/ has a single 0002-* file, so 'docs/adr/0002' is unambiguous.",
+   "correction": "Minor: 'commit says 2026' is imprecise (the commit message has no year). 'artifacts/ane-descriptor-economy' is not a tracked repo path and a fresh clone will not have it. The handoff gives the `ori artifact list` hint at H94."
+  }
+ ],
+ "C35": [
+  {
+   "id": "C35",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "H81 correctly attributes the figure to 'Upstream' and mirrors BUILD_PLAN's own wording; the finding rightly notes it drops 'estimated' and says nothing of the repo's later evidence that this metric is not reproducible here. Calling it a mis-citation overstates it.",
+   "evidence": "vendor/mil_spec/README.md:147-149 reads 'the plan places 84% of ops on the ANE (535 of 634, 65% of estimated cost; milc plan output)' for SmolLM2-135M. docs/BUILD_PLAN.md:198-201 says '84% of ops on the ANE but only 65% of estimated cost ... A real scheduler attacks that gap', so 'the gap is the target' is BUILD_PLAN's framing. docs/evidence/SCHED-1-macos27-result.md §2-3 shows MLComputePlan placing 0/10 on the ANE and returning a flat 0.25 cost on 26.7.1, with 'Placement ... unchanged' on 27.0. Upstream's number was not measured on this host or any stated SoC/OS.",
+   "correction": "Add 'estimated' and note that SCHED-1 found MLComputePlan unusable as a measurement source on this host, so the 84%/65% figure is upstream's and unreproduced here. Same root omission as C2; low."
+  },
+  {
+   "id": "C35",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "The 84%/65% figure is upstream's, labelled 'Upstream measured' in the handoff. It is MLComputePlan estimated cost with no SoC or OS stated. The repo's own evidence shows it does not reproduce locally, and 'the gap is the target' is BUILD_PLAN's inference.",
+   "evidence": "vendor/mil_spec/README.md:146-150: 'Measured on SmolLM2-135M fp16 (--shard 8 --head-shards 4, seq 5)... places 84% of ops on the ANE (535 of 634, 65% of estimated cost; milc plan output)'. No SoC or OS given. BUILD_PLAN.md:198-201 repeats it as 'measured truth from upstream' and says 'A real scheduler attacks that gap'. BUILD_PLAN.md ~L213-218: both Apple models plan 100% cpu with 0.00 cost on 26.7.1; one flat 0.25 for every op. BUILD_PLAN ~L231-233: MLComputePlan 'places nothing on the ANE on either OS version'. HANDOFF H81 drops 'estimated' and H18 says 'Never write a number you haven't measured on this machine'.",
+   "correction": "Accurate. The attribution to upstream is explicit in the handoff, so the H18 conflict is only in the letter. It is low because the framing is inherited from BUILD_PLAN. The real issue is that a figure the local hosts cannot reproduce is presented as the scheduler's motivating target."
+  }
+ ],
+ "C38": [
+  {
+   "id": "C38",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The staleness is real but sits in repo bookkeeping, not in handoff assertions. The only handoff-level gap is that it doesn't say whether the departing agent's lanes are released or transferred.",
+   "evidence": "docs/lanes/OWNERSHIP.md:16 reads 'L-PROBE | dave (initiator) | ... PROBE-1 (re-probe dialect on h17) -> PROBE-2 -> PROBE-3' with no check marks, while docs/BUILD_PLAN.md marks PROBE-1/2/3 '✅ done'. OWNERSHIP.md was last edited 2026-10-21 (aeb561d). BUILD_PLAN.md:273 still says '~52' for the state<> ports, and the A5 file was corrected to ~53 in 052e485. The handoff H4 and H69 say it is from lane/probe+tool+test, 'Current claims: L-TOOL, L-TEST, L-PROBE (me/dave)', and give open L-PROBE threads in §5. It does not say 'I release L-PROBE'.",
+   "correction": "Update the L-PROBE row to PROBE-1/2/3 done and state in the handoff whether L-TOOL, L-TEST and L-PROBE transfer to the successor. The ~52 vs 53/54 figure is a BUILD_PLAN problem outside the handoff's remit. Low."
+  },
+  {
+   "id": "C38",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "All three bookkeeping points are verified. They are small, and the handoff does not address them.",
+   "evidence": "docs/lanes/OWNERSHIP.md:16: L-PROBE | 'PROBE-1 (re-probe dialect on h17) -> PROBE-2 -> PROBE-3' with no check marks (L-TOOL, L-IR, L-TEST and L-RUN rows have them). BUILD_PLAN.md ~L124-155 marks PROBE-1/2/3 done. The post-claim work (port limits, descriptor economy) is not an item in the row. H69 lists L-TOOL, L-TEST, L-PROBE as 'Current claims (me/dave)' with no release or transfer statement. BUILD_PLAN.md:273 SCHED-2 box says 'independent state<> inout ports (~52)'. docs/spec/ane-port-limits-h17.md:23 and :97 give 53 compile, 54 fail.",
+   "correction": "The '~52' is tilde-qualified (a rounded earlier estimate), so that point is a nit. The OWNERSHIP staleness and the unstated lane hand-over are real but low."
+  }
+ ],
+ "C39": [
+  {
+   "id": "C39",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "reason": "The headline objection is refuted: the handoff's description of NetworkJITShapesPath is copied from the repo's own docs, and the compile-time option does not contradict 'unprobed runtime re-binding'. The secondary point about the untracked /tmp/p3model is true but is a property of the repo, not a claim the handoff makes.",
+   "evidence": "docs/spec/shape-flex-matrix.md:120 reads 'Does e5rt's NetworkJITShapesPath mechanism re-bind flexible shapes at runtime? Unprobed', and :126 reads 'Probe NetworkJITShapesPath ... for runtime shape re-binding on e5rt — the only untested mechanism'. BUILD_PLAN PROBE-3 and vendor ANE_FRONTEND_SPEC.md:80 ('NetworkJITShapesPath mechanism (unprobed)') say the same. crates/mil_infer/src/anec.rs:366-367 only sets the key to the MIL's directory on every compile, which says nothing about whether that is a runtime rebind path. /tmp/p3model appears only at docs/spec/shape-flex-matrix.spec:48 and shape-flex-matrix.md:28,141-143, with no generator anywhere in the repo. The spec's setup is conditional (`if [ ! -d /tmp/p3/c_range.mlpackage ]`) and /tmp/p3model currently exists on this host (config.json plus model.safetensors).",
+   "correction": "Drop the mischaracterisation claim. Optionally note that follow-up #4 (ShapeRange segfault) needs a /tmp/p3model checkpoint that is not generated by the repo and may vanish when /tmp is cleaned."
+  },
+  {
+   "id": "C39",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "reason": "H82's description matches the repo's own PROBE-3 write-up nearly verbatim, so there is no handoff-versus-repo inaccuracy. The anec.rs observation is true but does not contradict 'unprobed'. The /tmp/p3model point is true but is about the spec, not the handoff.",
+   "evidence": "H82: 'NetworkJITShapesPath (runtime shape re-binding on e5rt -- the one unprobed shape mechanism)'. docs/spec/shape-flex-matrix.md:126-127 'Probe NetworkJITShapesPath ... for runtime shape re-binding on e5rt -- the only untested mechanism'. shape-flex-matrix.md:120 'Unprobed -- the spec lists it as the documented path; we have not driven it'. BUILD_PLAN PROBE-3 says 'needs the unprobed JIT-shapes path'. vendor/mil_spec/ANE_FRONTEND_SPEC.md:79-80 'Dynamic positions belong to the NetworkJITShapesPath mechanism (unprobed)'. vendor/mil_spec/crates/mil_infer/src/anec.rs:366-367 sets NetworkJITShapesPath/Name to the MIL's dir/name unconditionally in input_dict. docs/spec/shape-flex-matrix.spec:48-49 does `milc convert /tmp/p3model` then `require_artifact /tmp/p3/c_range.mlpackage`. `grep -rn p3model` finds only shape-flex-matrix.spec/.md and no generator.",
+   "correction": "The first half is unsupported as a handoff error: the always-set compile key is plumbing, and whether it enables runtime rebinding is exactly the unprobed question. The second half is correct: shape-flex-matrix.spec depends on an untracked /tmp/p3model with no generator. The handoff does not mention that spec."
+  }
+ ],
+ "C30": [
+  {
+   "id": "C30",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "Core fact holds but is narrower than the finding states. The one wrong sentence is H34 ('evidence harness ... all in CI'): neither workflow references evidence-check.sh or any .spec. H26 is accurate and itemised (it names exactly vendor-guard.yml and hw-skip-discipline.yml). H18 ('the spec harness should catch it') makes no CI claim and is an aspiration backed by H21/H97, which tell the successor to run the spec by hand. The hw_gate sub-points are true but not claimed otherwise by the handoff.",
+   "evidence": "CI: grep of .github/workflows/*.yml shows no evidence-check/.spec. The only cargo test is hw-skip-discipline.yml:33 and :55 (-p mil_infer --test ops_e2e under shadowed xcrun). vendor-guard.yml runs vendor-guard.sh --verify, an inline patch loop, and tests/vendor-guard.bats.sh. Repo-doc origin: docs/evidence/0008-evidence-harness.md:76-77 says the harness 'runs in CI', so the repo doc is also stale and the handoff copied it. hw_gate: 29 call sites outside the definition at vendor/mil_spec/crates/mil_compile/src/lib.rs:179. Silent early-returns remain at mil_infer/tests/anec.rs:36 and :49, mil_infer/tests/e5rt.rs:37, and mil_onnx/tests/common/mod.rs:386. lib.rs:187 states the eprintln! is captured unless --nocapture, and docs/evidence/0009-test-hw-gate.md:57 uses --nocapture. The specs need milc binaries and ANE hardware, so they cannot run on hosted runners, which explains the absence.",
+   "correction": "Narrow to H34: the evidence harness is not in CI (H26 and H18 are not wrong on this). 'Loud SKIP' is loud only under --nocapture, which CI uses. A few legacy hardware tests (anec.rs, e5rt.rs:37, mil_onnx common) still silent-return, so 'hw_gate everywhere' would be an overstatement, though the handoff does not say that. Also fix docs/evidence/0008:76-77."
+  },
+  {
+   "id": "C30",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "The core of the finding holds. Neither workflow runs the evidence harness, and H34 says it is 'all in CI'. But H26 does not say that, so the 'H26/H34' attribution is wrong. H26 names only the two workflows, and that is accurate. The overstatement is H34's clause plus H18's reliance on 'the spec harness should catch it'. 'Should' is hedged language, and H21/H97 do tell the successor to run the spec manually.",
+   "evidence": "H34 reads: 'Vendored-tree guard + evidence harness (scripts/evidence-check.sh) + hardware-skip discipline (mil_compile::hw_gate) all in CI.' H26 reads: 'CI runs vendor-guard.yml (tree matches manifest + patches apply) and hw-skip-discipline.yml ... on every push' - accurate.\n\nCI contents: `grep -rn 'evidence-check\\|\\.spec' .github/` returns nothing. vendor-guard.yml runs vendor-guard.sh --verify, a clone-and-patch loop, and tests/vendor-guard.bats.sh. hw-skip-discipline.yml runs `cargo test ... -p mil_infer --test ops_e2e` twice, once under the xcrun shadow and once with MIL_REQUIRE_HW=1. Those are the only cargo test invocations.\n\nThe overstatement has an origin in docs/evidence/0008-evidence-harness.md:77, which says the harness turns evidence into 'an assertion that runs in CI'. No workflow does this.\n\nSilent early returns exist. vendor/mil_spec/crates/mil_infer/tests/anec.rs:36-37 and 49-50 print an eprintln and `return;` with no hw_gate. mil_infer/tests/e5rt.rs:37-38 (ane_executes_add) does the same. Other e5rt.rs tests go through compile_two_layer, which does call hw_gate (e5rt.rs:128).\n\nhw_gate: `grep -rn hw_gate --include='*.rs'` gives 32 matches in 12 files, including the definition and docs in mil_compile/src/lib.rs. So roughly 29 call sites, which fits '~30'. lib.rs:187 confirms 'eprintln! is captured by cargo unless --nocapture'.",
+   "correction": "Narrow the finding to H34 and H18. H26 is accurate. Say that scripts/evidence-check.sh is not run in CI, and that hw_gate is exercised in CI only through ops_e2e.\n\nAlso worth adding, though not in the finding: `evidence-check.sh --all` covers only docs/evidence/*.spec (evidence-check.sh:6,147). The master spec docs/spec/ane-port-limits-h17.spec and shape-flex-matrix.spec are not in that glob. So H93's 'run the whole evidence suite' omits the specs H21 calls 'must pass'."
+  }
+ ],
+ "C31": [
+  {
+   "id": "C31",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "True that only the direct-HWX claim has a recorded measurement (ADR-0002). --cpu and rope appear only as one-line statements with no evidence file. But the handoff sentence is lifted from the repo's own docs/ENGINEERING.md 3.2, so the handoff mirrors the project's recorded position rather than inventing it. Neither claim affects the work (ADR-0002 says the plan does not depend on coyote). The 'count is stale' sub-point is weak: 'three' is a named enumeration, not a total, and patch 0015 concerns a self-contradiction inside upstream's ANE_FRONTEND_SPEC.md, not a README claim.",
+   "evidence": "docs/ENGINEERING.md:49-50 lists 'on-chip execution via the HWX lane, `--cpu` fallback for non-organism programs, the `rope` builtin'. docs/adr/0002-deploy-lane-closed.md:52 mentions coyote's `--cpu` only as 'except --cpu organism programs'. grep for rope and --cpu in docs/, PATCHES.md, patches/ and vendor/mil_spec/*.md finds nothing else; the vendored mil_spec README line 101 makes only the HWX-emitter claim. NOTICE:19-21 says coyote is not vendored, and FORK.md:25 calls coyote 'the upstream consumer', so 'upstream' loosely includes it. PATCHES.md row 0015 is a spec-doc contradiction.",
+   "correction": "Keep: two of the three claims lack any evidence file, which is awkward under the handoff's own 'Evidence, not documentation' rule, and they are coyote-side, not vendored-README, claims. Drop: the 'stale count' argument and any implication that the handoff misleads a successor. The wording is inherited from ENGINEERING.md 3.2."
+  },
+  {
+   "id": "C31",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The main point is accurate: only direct-HWX deploy has a recorded measurement. `--cpu` and `rope` are one-line assertions with no evidence file. The 'three is stale' sub-claim is weak. Patch 0015 fixes a self-contradiction in ANE_FRONTEND_SPEC.md, which is a spec file and not a README claim. That does not make H18's 'three README claims' count wrong.",
+   "evidence": "The H18 quote is exact: 'Three upstream README claims did not survive contact with hardware (direct-HWX deploy, `--cpu` fallback, the `rope` builtin).'\n\ndocs/ENGINEERING.md:48-51 lists the same three, and :50 is the line carrying `--cpu`/`rope`. It is followed by 'Every claim we carry forward must have an evidence file.'\n\ndocs/adr/0002-deploy-lane-closed.md:52 reads: 'Upstream `coyote run` cannot execute here (except `--cpu` organism programs)'. That is a statement with no measurement behind it.\n\n`grep -rn -i 'rope\\|--cpu'` over the repo, excluding vendored .rs files, finds only those places. No docs/evidence file mentions either. docs/evidence/0002-deploy-lane.md and .spec cover only HWX deploy.\n\nNOTICE:19-21 says coyote is 'NOT VENDORED'.\n\nThe upstream READMEs via `gh api` confirm the origin. coyote's README has `--cpu` and the rope_cos/rope_sin natives (matching lines 74, 167, 182). mil_spec's README has no `--cpu` or `rope`.\n\nPATCHES.md 0015 is a spec-doc contradiction (ANE_FRONTEND_SPEC.md line 59 vs ~281).",
+   "correction": "Keep: two of the three examples in H18 have no recorded evidence in this repo. That conflicts with H18's own rule, ENGINEERING.md 3.2 and `Evidence, not documentation`. Both come from the non-vendored coyote.\n\nDrop or soften 'the count three is stale'. 0015 is not a README claim.\n\nThe finding misses a related problem. The HWX claim is qualified by docs/adr/0002-deploy-lane-closed.md Appendix A. A.1 says the closure is 'an OS-version statement, not an invariant' and shows h16g loading and executing on macOS 27.0. A.4 says the 'never depend on the deploy lane' rule should read 'on 26.7.1'. So even the one evidenced claim is OS-gated, and H73's unqualified 'self-emitted HWX does not deploy' is overstated."
+  }
+ ],
+ "C32": [
+  {
+   "id": "C32",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The facts check out: ENGINEERING.md DoD #3 is unmeetable as written on this host, and the handoff sends the reader to ENGINEERING.md without a caveat. But the handoff itself makes no false statement. The six failures are recorded as pre-existing in two evidence files, and PATCHES.md's test-delta uses a package subset. 'By design' is the reviewer's inference. The evidence calls them 'pre-existing' and attributes only one (constexpr_dequant_folding_and_hw_exec) to the closed lane.",
+   "evidence": "docs/ENGINEERING.md:26 ('cargo test --workspace green'). docs/evidence/RUN-2-state-lifecycle.md:183-197 ('Pre-existing failures, not introduced here') lists exactly the six named tests. docs/evidence/RUN-1-loader-errors.md:99 and :148 repeat it. vendor/mil_spec/crates/mil_infer/src/graph.rs and hwx.rs were last touched in the initial commit 792a70f, and the tests carry no #[ignore] (graph.rs:1414, 1559, 1662; hwx.rs:8326, 8448, 8723), so the failures persist at HEAD. docs/evidence/0002-deploy-lane.spec:16-17 deliberately uses constexpr_dequant_folding_and_hw_exec as evidence of 'Program load failure' (closed lane). PATCHES.md 'Test delta' scopes green to -p mil_spec/mil_lint/mil_passes/mil_verify. I did not run cargo test, per instructions.",
+   "correction": "Reword as an omission and a stale repo rule: DoD #3 in ENGINEERING.md is not satisfiable here and the handoff should list the six known failures (or point to RUN-2 section 9). 'Fail by design' and 'closed HWX lane' are inferred, with a recorded cause for only one of the six. A competent successor would find the pre-existing-failure notes in the evidence files."
+  },
+  {
+   "id": "C32",
+   "verdict": "partially_upheld",
+   "severity": "medium",
+   "reason": "The core is accurate. ENGINEERING.md makes 'cargo test --workspace green' a definition-of-done item. Six mil_infer lib tests are documented as failing, and H97 sends the successor to ENGINEERING.md without any warning. The 'by design' wording and the 'closed HWX lane' cause are only partly supported. The docs call these failures 'pre-existing', not by design, and a cause is recorded for only one of the six. I could not re-run the tests, so I could not confirm they still fail at HEAD.",
+   "evidence": "docs/ENGINEERING.md:26 reads: '3. **`cargo test --workspace` green** (on the patched tree).'\n\ndocs/evidence/RUN-2-state-lifecycle.md:183-198 (§9 'Pre-existing failures') lists exactly the six named tests at lines 190-195. They are graph::tests::{graph_fuses_conv_chain_and_conv_silu, ane_onchip_backprop_training_exec, graph_scheduler_rms_q8_swiglu_exec} and hwx::tests::{constexpr_dequant_folding_and_hw_exec, numeric_parity_emitted_vs_anec_vs_cpu_ref, roundtrip_compile_and_decompile_hwx}. docs/evidence/RUN-1-loader-errors.md:99-100 repeats '37 passed, 6 failed'.\n\nThe handoff has no warning. A grep of HANDOFF-2025-10-22.md finds no mention of failing tests. H97 says only 'Read docs/ENGINEERING.md before your first commit.'\n\nOnly one cause is recorded. docs/evidence/0002-deploy-lane.spec:16-17 re-runs constexpr_dequant_folding_and_hw_exec and expects 'Program load failure'. Source reading adds a little more: hwx.rs calls EspressoProgram::load_precompiled at 8412 and 8627-8693, inside constexpr and numeric_parity. roundtrip_compile_and_decompile_hwx (hwx.rs:8723) has no load_precompiled call at all. So its failure cause is not documented as the closed lane. The graph_* causes are also unrecorded.\n\nSeparate blockers also exist. vendor/mil_spec/crates/mil_infer/examples/e5_mut.rs:53-56 and examples/gate0.rs:102-105 build `CompileCfg {cache_dir, force_recompile}` without the `profiling` field that e5rt.rs:98 requires. RUN-1:148-149 and 0007:63-65 record these as pre-existing build failures. `cargo test --workspace` builds examples, so a literal workspace run would fail before reaching tests.",
+   "correction": "Say: 'cargo test --workspace cannot be green on this tree today.' The reasons are six documented pre-existing mil_infer lib failures, at least one tied to the closed deploy lane, and two example files that no longer compile. Replace 'by design' with 'pre-existing, cause recorded for only 1 of 6'. Note that the lists come from earlier commits and were not re-run at HEAD."
+  }
+ ],
+ "C33": [
+  {
+   "id": "C33",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The implementation limits and the patch-header discrepancy are real, but H37 is a one-line feature summary that matches the patch title and BUILD_PLAN IR-4's accept criterion ('deliberately bounded loop construct with unrolling'). It does not claim nesting or loops over dependent bodies. The slice_update 'no hardware evidence' point is about the repo's IR-2 status, not any wording in the handoff, which claims no hardware evidence for it.",
+   "evidence": "patches/0010-ir-for-loop.patch header lists 'Tests: single loop, nested loops, loop over state writes'. vendor/mil_spec/tests/ir.rs:405-440 has only four tests: for_loop_unrolls, for_loop_var_substituted, for_loop_empty_range_rejected, for_loop_output_refs_last_iteration. The same four are listed in docs/evidence/0010-ir-for-loop.md. Static reading of unroll_loops/unroll_line in the patch: the body is passed to unroll_line with no recursion, so an inner `for` is not unrolled. Only the LHS is suffixed `_<iter>`, so a later body line that refers to an earlier body-defined name keeps the unsuffixed name. docs/evidence/0007-ir-slice-update.md says 'No hardware needed — IR validation is compile-time only'. RUN-2 evidence says its fixture MIL is hand-written text, not Block. BUILD_PLAN IR-2 accept (line 101-102) asks for compile and run. Block::slice_update (src/lib.rs:1120-1145) emits only x/begin/end/update, while RUN-2 section 3 measured that the ANE needs the full arg list; whether ane_lower fills that in was not checked. I did not run cargo.",
+   "correction": "Keep as a low note: patch 0010's header advertises nested and state-write tests that do not exist, and nesting or dependent bodies appear unsupported (by static reading, not executed). The IR-2 'compile-time only' point is a repo-status gap against BUILD_PLAN's accept criterion, not an error in H37."
+  },
+  {
+   "id": "C33",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The patch-0010 header does name tests that were never written, and reading the code shows the loop body is handled narrowly. But H37 is a headline-level summary that matches the patch's own title. Nesting and intra-body dependency are established by code reading, not by running anything. The 'state-write loops' point is 'untested', not shown to be impossible. The IR-2 'no hardware evidence' point needs a qualifier.",
+   "evidence": "H37 reads: 'bounded `for` loops fully unrolled at compile time'. The patch title is 'ir: bounded `for` loops, fully unrolled at compile time'.\n\npatches/0010-ir-for-loop.patch header: 'Tests: single loop, nested loops, loop over state writes.' The patch adds exactly four tests (patch tail, and vendor/mil_spec/tests/ir.rs:405-440): for_loop_unrolls, for_loop_var_substituted, for_loop_empty_range_rejected, for_loop_output_refs_last_iteration. docs/evidence/0010-ir-for-loop.md lists the same four. No nested or state-write test exists, so the header overclaims.\n\nvendor/mil_spec/src/ir.rs:137-142: the body lines go straight to unroll_line, with no recursive call to unroll_loops. A nested `for` line is not unrolled. parse_for_loop only counts brace depth to find the end of the body. unroll_line suffixes only the LHS of `name = ...`, not RHS references, so a body line that uses an earlier body-defined name would not match the suffixed definition. `write_state(...)` lines have no `=`, so nothing in them is suffixed. The IR also allows one read_state per state (ir.rs:1033-1048).\n\ndocs/evidence/0007-ir-slice-update.md says 'No hardware needed — IR validation is compile-time only.' But the MIL slice_update op does run on hardware in the RUN-2 text fixture (docs/evidence/RUN-2-state-lifecycle.md; RUN-1:100, '9 passed' under MIL_REQUIRE_HW=1). What lacks hardware evidence is the Block::slice_update emission path from the IR.",
+   "correction": "Keep: 'patch 0010 header cites nested and state-write loop tests that do not exist; the implementation supports only flat, literal-bound loops with independent LHS-suffixed bodies.' Soften 'no state-write loops' to 'untested'. Qualify the IR-2 point: the MIL op has hardware evidence via RUN-2, while the IR-to-MIL emission is validated only at compile time."
+  }
+ ],
+ "C34": [
+  {
+   "id": "C34",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "reason": "H33's sentence is accurate in its stated scope: the parenthetical says agents assert on failures structurally, and all three of check/run/plan emit the {ok,command,error} envelope on failure. The 'plan success is not an envelope' point is documented in the patch's own evidence as intended. The gguf observation is true by code reading, but it is a regression side-effect of patch 0006 outside H33's claim.",
+   "evidence": "docs/evidence/0006-milc-json-diagnostics.md says 'milc plan --json keeps its existing op-table success output (already structured); it gains the error envelope' and 'Only check/run/plan are JSON-enabled'. docs/evidence/0006-milc-json-diagnostics.spec asserts the three failing envelopes. In vendor/mil_spec/crates/milc/src/main.rs, strip_json_flag at :115-117 removes every '--json' token before dispatch (:128-130), so cmd_gguf's own `\"--json\"` arm at :1084 is never reached; milc gguf --json therefore silently loses its JSON output. Not executed.",
+   "correction": "H33 is fine as written (failure envelopes; success is JSON for plan, envelope for check/run). The separate, real issue worth tracking is that patch 0006's global --json strip disables upstream's own `milc gguf --json`, which is not mentioned in the evidence file."
+  },
+  {
+   "id": "C34",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Both parts hold. Patch 0006's own evidence says plan success output is left as the pre-existing op-table, not an {ok,command,...} envelope. The global `--json` strip does make cmd_gguf's own `--json` handling dead, so a documented upstream flag silently stops producing JSON.",
+   "evidence": "H33 reads: '`milc --json check|run|plan` emits machine-readable envelopes (agents assert on failures structurally).'\n\ndocs/evidence/0006-milc-json-diagnostics.md says: '`milc plan --json` keeps its existing op-table success output (already structured); it gains the error envelope.' Its example shows the success output as `{ \"units\": ..., \"ops\": [...] }` with no ok/command keys.\n\nIn vendor/mil_spec/crates/milc/src/main.rs, emit_ok is called only in cmd_run (~1753) and cmd_check (~2282). cmd_plan (2035-2255) has no emit_ok.\n\nmain.rs:115-117 defines strip_json_flag, and main() applies it at ~129-130 before dispatch. cmd_gguf (doc comment at :1075, 'milc gguf <file> [--json] ...') still has its own `\"--json\" => json = true` arm at :1084 and prints via print_gguf_json when set. After the strip, that arm can never fire, and cmd_gguf takes no json parameter.\n\nThe evidence claim 'other subcommands still print text' is wrong for gguf, whose upstream behaviour was JSON under --json.",
+   "correction": "Refine H33 to: 'run/check emit {ok,command,...} envelopes on success and failure; plan emits an envelope only on failure (success is the pre-existing op-table JSON); a global --json strip regressed `milc gguf --json`.' The gguf regression is unrecorded in evidence 0006."
+  }
+ ],
+ "C40": [
+  {
+   "id": "C40",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "reason": "Numbers are roughly right but the point is about commit hygiene, not a handoff inaccuracy. The subject-line convention is followed in 29 of the last 30 commits. The only exception is the handoff commit itself, which is a document commit rather than lane work. Bodies are long and measurement-heavy, which is the spirit of 'what failed before + how verified'. Work-item IDs are missing mostly in the author's own lane/probe run.",
+   "evidence": "git log --format='%h %s' -30 shows 29/30 subjects start with 'lane/<name>:'; only 9c52422 starts with 'handoff:'. Scanning commit bodies for work-item IDs (TOOL/TEST/IR/PROBE/RUN/SCHED/LINT-n, A.5): the ten lane/probe commits 725596f through b5ccc3a have none. Counting IDs, about 11 of 30 hit under the strict ID formats and about 16 of 30 if 'A.5' (ADR-0002 appendix) counts, so 'a third' is definition-dependent. All commits except 3 to 5 tiny sync commits (e.g. a6f0c95, 96dbf3b, 17abc42) have multi-line bodies.",
+   "correction": "Fair note, not a handoff error: the probe-lane commits omit work-item IDs, and the handoff commit uses a non-lane prefix. The 'roughly a third' figure is soft (about 37% to 53% depending on whether A.5 counts as an ID)."
+  },
+  {
+   "id": "C40",
+   "verdict": "upheld",
+   "severity": "nit",
+   "reason": "The facts hold. Strictly counted, about a third of the last 30 commits carry a BUILD_PLAN work-item ID, and the handoff commit breaks the prefix rule. This is an observation about repo practice, not an inaccuracy in the handoff. H75 transcribes ENGINEERING.md §4 faithfully and does not claim the convention is followed.",
+   "evidence": "docs/ENGINEERING.md:90-95 (§4) gives the convention: prefix `lane/<name>: <what>`, body of 'what failed before... how it was verified', and 'Reference the work item ID from docs/BUILD_PLAN.md'. H75 matches it.\n\nI scanned `git log -30` subjects and bodies. 29 of 30 use the `lane/<name>:` prefix. 9c52422 uses `handoff:`, and its body has no failed-before, verified or work-item section. Its only ID-like token is 'RUN-4', mentioned as an open thread.\n\nCommits with a BUILD_PLAN-style ID (SCHED-n, PROBE-n, RUN-n): 10 of 29 excluding the handoff, which is 34%. If ADR-0002 'A.5' is counted as an ID, which BUILD_PLAN does not list as an item (`grep A\\.5 docs/BUILD_PLAN.md` returns nothing), the figure is about 14 of 29, or 48%.\n\nAll 10 `lane/probe` commits (725596f, d3b581d, ba506b2, 2c42284, c7273c1, c0a3bdf, c33fb77, fb4c0c0, 74da72d, b5ccc3a) carry no work-item ID. The handoff's author is the L-PROBE agent. Several bodies describe findings rather than 'what failed before'.",
+   "correction": "Fine as stated, but scope it: 'roughly a third carry a BUILD_PLAN item ID, and none of the lane/probe commits do.' That is a note about practice, not an error in H75, so it needs no handoff change. Possible follow-up: add the ID to future probe commits, or tell the successor that the convention is aspirational."
+  }
+ ],
+ "C25": [
+  {
+   "id": "C25",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Every factual element holds. Eight files under vendor/mil_spec are neither upstream nor created by any numbered patch. H71's recommended `apply-patches.sh --rebuild` would delete them, and a stated executable spec depends on six of them. Lens B lowers the severity from high. The damage is loud in the main checkout and recoverable from git, and the handoff never claims the tree is pure. It only says vendored tree == manifest (H23), which is true. The real fault is that H71 states the patches-only rule and recommends a destructive command without mentioning that prior lanes added probe examples straight into vendor/, and that includes the next probe work H82 implies.",
+   "evidence": "(1) I listed upstream via `gh api repos/savageAZfck/mil_spec/git/trees/20f097f...?recursive=1` (431 blobs) and compared it with `find vendor/mil_spec` (442 files). Eleven files exist only in vendor. Three come from patches (dp3.rs and deploy_probe.rs from 0012, milc/tests/run_cli.rs from 0005). The other eight are exactly cml_exec, e5_dual_path, e5exec, mk_minflex, predseg, probe_run2_state, seg4 and shape_flex_e5rt (all .rs). (2) No patch creates them. `grep -l \"examples/<name>\" patches/*.patch` finds only probe_run2_state, in patches 0013 (comment at L20 and L251) and 0015, and neither has a `+++ b/crates/mil_infer/examples/probe_run2_state.rs` header. (3) `git log --diff-filter=A` adds them in b85b6fd (cml_exec, e5exec, mk_minflex, predseg, seg4, shape_flex_e5rt), 26447d2 (probe_run2_state) and d4579a7 (e5_dual_path). vendor/manifest.sha256 lists all eight (L306, 329, 333, 355, 364, 365, 369, 371). Manifest resyncs are a6f0c95 ('sync manifest for the e5_dual_path probe example') and e7d97f1. (4) scripts/apply-patches.sh:80 is `rsync -a --delete --exclude target --exclude 'manifest.sha256' \"$work/up/\" \"$vendor/\"`, which deletes any vendor file absent from pristine plus patches. (5) docs/spec/shape-flex-matrix.spec:8 and :47 build mk_minflex, cml_exec, shape_flex_e5rt, e5exec, seg4 and predseg from vendor/mil_spec. (6) FORK.md:60-62 says 'nothing we authored goes under vendor/mil_spec/ ... and scripts/vendor-guard.sh enforces it', but vendor-guard.sh:28-45 only compares against the committed manifest. .github/workflows/vendor-guard.yml:3 claims the tree 'always equals pristine upstream + patches'. (7) Mitigation: on a main checkout, `vendor-guard.sh --generate` refuses the now-dirty tree (L55-63), so `--rebuild` exits non-zero and `git checkout -- vendor/mil_spec` restores the files. Repo docs also disagree about where probes live: ENGINEERING.md:84 and OWNERSHIP.md:65,75 place probe_*.rs under crates/mil_infer/examples/, which is vendor-relative."
+  },
+  {
+   "id": "C25",
+   "verdict": "upheld",
+   "severity": "high",
+   "reason": "The 8 files are in vendor/mil_spec, are in the manifest, and are produced by no patch. Only the 7 `Only in vendor` hits below are strictly absent from the patches. `probe_run2_state.rs` is named in patches 0013 and 0015 prose, but no patch creates it. `--rebuild` would delete all 8 and break the shape-flex spec. The invariant it breaks is stated by the repo itself, so a green guard is misleading.",
+   "evidence": "I cloned upstream at 20f097f into the scratchpad and applied all 17 patches with `patch -p1 --forward`. All applied with no FAIL. `diff -rq <pristine+patches> vendor/mil_spec` printed exactly 8 lines, all `Only in vendor/mil_spec/crates/mil_infer/examples`: cml_exec, e5_dual_path, e5exec, mk_minflex, predseg, probe_run2_state, seg4, shape_flex_e5rt. A grep of every `^+++ ` line in patches/*.patch finds none of these paths (only dp3.rs and deploy_probe.rs, created by 0012). `git log --follow` gives the adding commits: b85b6fd (6 files, no manifest change in that commit's stat), 26447d2, d4579a7. Manifest sync commits: a6f0c95 (adds e5_dual_path) and e7d97f1 (+6 lines). vendor/manifest.sha256 lists all 8 (lines 306, 329, 333, 355, 364, 365, 369, 371), and `vendor-guard.sh --verify` printed `OK: vendor tree matches baseline (442 files)`. scripts/apply-patches.sh:~70 runs `rsync -a --delete --exclude target ... \"$work/up/\" \"$vendor/\"`. docs/spec/shape-flex-matrix.spec:8 runs `cargo build ... --example mk_minflex --example cml_exec --example shape_flex_e5rt --example e5exec --example seg4`, and line 47 builds predseg. The repo states the broken invariant itself: FORK.md:60-62 says nothing we authored goes under vendor/mil_spec/ and that vendor-guard enforces it; .github/workflows/vendor-guard.yml:3 says 'always equals pristine upstream + patches/'. H71 tells the successor to run `--rebuild`. Deleted files are git-recoverable, so the damage is recoverable."
+  }
+ ],
+ "C26": [
+  {
+   "id": "C26",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "correction": "Both mechanical observations are true. But (a) is a worktree-only script defect, not an error in the handoff. The handoff targets the main checkout, where the guard works. (b) H71 mirrors apply-patches.sh's own documented usage and does not claim the steps run in one pass. The fair version is that the procedure is compressed and omits the committed-diff method, not that it is wrong.",
+   "reason": "(a) is true, but the handoff names <repo>, a main checkout where .git is a directory. 'The --generate guard refuses a dirty one' is therefore correct there. (b) is true: --rebuild ends by calling --generate, which refuses a dirty tree. A not-yet-committed change cannot flow through rebuild and generate in one step. Git history shows separate manifest-sync commits, although vendor-guard.sh and evidence 0006 say to commit patch and manifest together. H71 does not say 'together'. The missing 'derive the patch from a committed diff against pristine plus lower patches' method is real, but it lives in PATCHES.md and evidence 0006, and the handoff points the successor at ENGINEERING.md and OWNERSHIP.md instead. A competent successor hits a loud error, not silent corruption.",
+   "evidence": "`ls -la .git` in this worktree shows a plain 86-byte file. scripts/vendor-guard.sh:55 is `if [ -d \"$root/.git\" ]; then`, so the dirty-tree check is skipped in a linked worktree. scripts/apply-patches.sh:81 runs `\"$root/scripts/vendor-guard.sh\" --generate` as the last step of --rebuild. apply-patches.sh:4-12 documents 'Use it whenever you add a patch'. `git show --stat ff4bbf8` ('lane/sched: sync manifest for patch 0016') changes only vendor/manifest.sha256, and the patch itself landed earlier in aeb561d. 17abc42 is a manifest-only commit after 6409cf6/41317ed. vendor-guard.sh:88 and docs/evidence/0006-double-patch-and-stacking.md:77 say 'commit patch + manifest together'. PATCHES.md ('Method that does not recur: edit the tree, commit, then git diff HEAD~1 ...') and evidence 0006 'Process change (permanent)' steps 1-7 hold the full method. HANDOFF H71 and H97 do not cite either."
+  },
+  {
+   "id": "C26",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "All checkable parts hold. (a) The dirty-tree guard is skipped in a linked worktree. (b) `--rebuild` ends with `--generate`, which cannot work for a new patch unless the vendored tree was committed first. H71 omits that ordering. The finding slightly conflates two different documented methods, but its substance is right.",
+   "evidence": "(a) scripts/vendor-guard.sh:55-63 wraps the `git status --porcelain` refusal in `if [ -d \"$root/.git\" ]`. In this worktree `.git` is a file: `ls -ld .git` gives `-rw-r--r-- ... .git`, and its contents are `gitdir: <repo>/.git/worktrees/review-handoff-doc-953eea`. So `-d` is false and the guard is silently skipped. (b) scripts/apply-patches.sh --rebuild ends with `\"$root/scripts/vendor-guard.sh\" --generate` after the rsync. A freshly patched tree differs from HEAD, so in a main checkout the guard exits 1. Git history shows the real practice is separate commits: ff4bbf8 'sync manifest for patch 0016', 17abc42 'sync manifest for patch 0017', 41317ed, and e7d97f1. PATCHES.md:45-51 says to 'edit the tree, commit, then git diff HEAD~1 ... into patches/ ... confirm with apply-patches.sh --check'. docs/evidence/0006-double-patch-and-stacking.md:71-79 says to apply lower patches to a fresh pristine clone, make the change there, diff against the pre-change tree, verify the full list, then rebuild and regenerate the manifest. The two methods differ from each other, and neither appears in the handoff. vendor-guard.sh:83-84 says to 'commit the patch AND the regenerated manifest together', which the guard blocks unless the vendored tree was committed first."
+  }
+ ],
+ "C27": [
+  {
+   "id": "C27",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "correction": "The counts and the MIT-election point are right, but they describe staleness in FORK.md and inconsistent marker practice, not a wrong statement in the handoff. The handoff's directive (keep NOTICE, FORK.md and FORK headers; add a FORK comment and a PATCHES entry) is the conservative project policy, and FORK.md:3 and LEGAL.md make the same Apache 4(b) claim. The genuine small gaps are the loose gloss 'that's what the numbered patches are' (FORK.md and LEGAL.md say FORK.md plus in-file comments) and the omission that every touched file also needs a FORK.md modified-files row.",
+   "reason": "I reproduced '14 of 23' and the five-row table. The handoff never claims the markers or the FORK.md table are complete. It tells successors what to keep and what to add. Following it more strictly than predecessors did cannot mislead anyone or cause harm, and keeping Apache-style notices under an MIT election is harmless. The legal nuance is correct: FORK.md:12 and NOTICE:15 elect MIT. But the handoff only mirrors FORK.md:3 ('Required by Apache-2.0 §4(b)'), so it adds no new error. LEGAL.md:19-21 says the change notice is done by 'FORK.md + in-file FORK(ane-stack) comments', not by patches/.",
+   "evidence": "`cat patches/*.patch | grep '^+++ '` gives 23 distinct files. `grep -c 'FORK(ane-stack)'` on each file under vendor/mil_spec gives 0 for 14 of them: ANE_FRONTEND_SPEC.md, src/lib.rs, crates/mil_infer/src/e5rt.rs, crates/mil_infer/tests/e5rt.rs, crates/milc/tests/run_cli.rs, 4 mil_convert tests, ops_e2e, units_e2e, ane_numerics, lora_e2e and pipeline. FORK.md:48-54 has 5 table rows (patches 0001-0005), while FORK.md:42 says 'Every file we change gets an entry here'. FORK.md:12 is 'this fork elects **MIT**'. NOTICE:15 repeats the election. LEGAL.md:19-21 reads 'carry a change notice on modified files if you rely on Apache-2.0 (FORK.md + in-file FORK(ane-stack) comments do this)'. HANDOFF H14 and H71."
+  },
+  {
+   "id": "C27",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "The numbers are right: 14 of 23 patched files have no marker, and the FORK.md table has 5 rows. But H14 and H71 are not strictly wrong. H14 does name the in-file FORK(ane-stack) headers as the thing to keep intact, so the finding's 'inaccurate' label is too strong. The real defects are that the repo does not follow its own FORK-comment rule and that the patches-as-notices phrasing is loose. Only H14's loose 'that's what the patches are' wording is wrong. The MIT election makes §4(b) conditional; the repo's own LEGAL.md says so. The finding is an accurate observation but a policy and repo-hygiene issue more than a handoff error.",
+   "correction": "Say H14 conflates the numbered patches with in-file change notices. The in-file FORK comments are the notices, and patches/ only lets reviewers reconstruct the diff, per FORK.md:66-68. H14 also states §4(b) as a hard requirement although the fork elects MIT. Drop 'inaccurate' for H71: the rule is stated correctly and the repo falls short of it.",
+   "evidence": "A per-file `grep -c 'FORK(ane-stack)'` over the 23 unique files in patches/*.patch `+++` headers gives 0 for 14 files: ANE_FRONTEND_SPEC.md, src/lib.rs, mil_infer/src/e5rt.rs, mil_infer/tests/e5rt.rs, milc/tests/run_cli.rs, mil_infer/tests/ops_e2e.rs, units_e2e.rs, mil_verify/tests/{ane_numerics,lora_e2e,pipeline}.rs, and mil_convert/tests/{ane_kv_probe,enum_shapes_e2e,sharded_e2e,surgery_e2e}.rs. The other 9 files have at least 1 marker each. FORK.md:48-54 has 5 table rows, covering patches 0001-0005. FORK.md:12 says 'this fork elects MIT'. NOTICE:15 says 'elects the MIT licence'. docs/LEGAL.md:7 says 'elects MIT' and :11-12 says 'carry a change notice on modified files if you rely on Apache-2.0'. FORK.md:3 still says the file is 'Required by Apache-2.0 §4(b)'. HANDOFF H14 reads 'Apache §4(b) requires change notices ... that's what the numbered patches in patches/ are.'"
+  }
+ ],
+ "C28": [
+  {
+   "id": "C28",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "correction": "The repo facts are accurate, so H72 is an over-absolute compression. But H72 is scoped by its own clause 'write extensions alongside it', H71 right above it says any vendored change goes through a patch, and H69/H90 send the successor to OWNERSHIP.md, where the clarification sits. Read together, the intended meaning is 'never hand-edit; corrections go via patch'. The real omission is that the pending code-table amendment (ADR-0002 A.6) is not listed as an open thread.",
+   "reason": "H72 is nearly verbatim the headline of OWNERSHIP.md:79-80, which the same file qualifies at lines 82-89. Patch 0015 does edit that file. ADR-0002 A.6 assigns a pending amendment of the spec's code table to L-PROBE. A successor who reads only H72 might not do that amendment, or might not know the patch route exists. But the handoff's own reading list covers OWNERSHIP.md, so a competent successor will find the clarification. There is no wrong action a literal reading forces, because the alternative to 'edit' (extensions in docs/spec) is the default safe path.",
+   "evidence": "docs/lanes/OWNERSHIP.md:79-80 ('does not edit upstream's copy in vendor/') and :82-89 ('Clarification (2026-10-21): ... no hand-edits ... A correction ... goes through the normal patch mechanism ... (patch 0015 does exactly this ...)'). patches/0015-spec-write-state-contradiction.patch:33-36 touches ANE_FRONTEND_SPEC.md. docs/adr/0002-deploy-lane-closed.md:206-208 reads 'the spec's code table is L-PROBE's to amend'. `grep -n '0015\\|clarif' HANDOFF-2025-10-22.md` finds nothing. HANDOFF H69, H71, H72, H90."
+  },
+  {
+   "id": "C28",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "The facts hold. OWNERSHIP.md's clarification routes measurable corrections through the patch mechanism. Patch 0015 edits ANE_FRONTEND_SPEC.md. ADR-0002 A.6 leaves a spec amendment to L-PROBE. H72's 'Never edit' leaves out the corrections path. I rate it low rather than medium. OWNERSHIP.md:82-83 itself reads the same phrase as 'no hand-edits', H71 immediately above already says all vendor changes are numbered patches, and the successor is told to read OWNERSHIP.md.",
+   "evidence": "HANDOFF H72: '**Never edit upstream's vendor/mil_spec/ANE_FRONTEND_SPEC.md** — write extensions alongside it in docs/spec/.' docs/lanes/OWNERSHIP.md:79-80 has the unconditional wording. OWNERSHIP.md:82-89 reads: 'Clarification (2026-10-21): extensions vs corrections ... \"Does not edit upstream's copy\" means no hand-edits ... A correction to an upstream claim that is measurably wrong ... goes through the normal patch mechanism ... (patch 0015 does exactly this ...)'. patches/0015-spec-write-state-contradiction.patch has `+++ b/ANE_FRONTEND_SPEC.md`, and PATCHES.md's 0015 row says 'Both bullets now state one rule'. docs/adr/0002-deploy-lane-closed.md:206-208 reads: 'ANE_FRONTEND_SPEC.md's 0x1X0004 family is 26.x-specific ... the spec's code table is L-PROBE's to amend.' The ADR does not say whether the amendment goes through a patch or a docs/spec note."
+  }
+ ],
+ "C29": [
+  {
+   "id": "C29",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "correction": "Only 0012 (probe examples) and 0015 (doc-only) truly lack a regression test, and those are inherently hard to test. The finding's naming of 0004 and 0009 is wrong. 0004 has an executable spec, and 0009 is covered by the hw-skip-discipline CI workflow plus its evidence file. 'Each with an evidence file' is correct for all 17. The 'no executable .spec for 0008-0017' point is true but is not something H31 claims, and evidence-number collisions are not a handoff claim at all.",
+   "reason": "Roughly 15 of 17 patches have a regression test somewhere. 0001's is in 0002, 0003 is itself a conformance fixture, 0004 has a spec, and 0009 has CI. The handoff sentence repeats FORK.md rule 3, so it is slightly overstated for two patches. The 4 numbering collisions are real, but PATCHES.md's Evidence section maps each patch to the right file, and the handoff does not rely on numbering.",
+   "evidence": "Counting added `#[test]` lines per patch: 0001=0, 0003=0, 0004=0, 0012=0, 0015=0. 0009's single hit is inside a `/// ```ignore` doc comment (patch lines 65-72). docs/evidence/0004-milc-run-dispatch.spec exists and runs `milc run /tmp/ir_fixed.mlpackage`. .github/workflows/hw-skip-discipline.yml asserts SKIP lines and the MIL_REQUIRE_HW=1 failure. PATCHES.md:12 says 0012 is 'Examples only, no library change' and :24 says 0015 is 'Doc-only'. PATCHES.md Evidence section (L47-63) maps 0001-0017 to evidence files, with 0011 pointing to docs/spec/ane-frontend-h17.md and 0012 to docs/evidence/0010-deploy-gate-codes.md. `ls docs/evidence/*.spec` gives only 0001, 0002, 0004, 0005 (x2), 0006 (x2) and 0007. Prefix collisions: 0005-{milc-run-mlmodelc,vendor-guard}, 0006-{double-patch-and-stacking,milc-json-diagnostics}, 0008-{evidence-harness,ir-state-contract}, 0010-{deploy-gate-codes,ir-for-loop}. FORK.md:70."
+  },
+  {
+   "id": "C29",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "H31's 'each with a regression test' is overstated, but the finding's list is partly wrong. Patches 0012 and 0015 have no regression test of any kind. Both are non-behavioural (examples only, doc only), and the patches say so. 0004 and 0009 do have regression coverage outside their own diffs. The prose-only evidence for 0008-0017 and the 4 evidence-number collisions are correct. H31 only promises an 'evidence file', not a spec, so the prose-only point does not contradict H31 as written.",
+   "correction": "Remove 0004 and 0009 from the 'no test' list. 0004 has the executable docs/evidence/0004-milc-run-dispatch.spec, which asserts `milc run` works on a plain package. 0009's regression is the CI workflow .github/workflows/hw-skip-discipline.yml, which shadows xcrun and asserts SKIP lines plus a hard failure under MIL_REQUIRE_HW=1. 0001's test lives in patch 0002 and its spec, and 0003 corrects a conformance fixture. The genuinely test-less patches are 0012 and 0015.",
+   "evidence": "I counted added `#[test]`/fn lines per patch: 0001=0, 0003=0, 0004=0, 0009=0 real (the one hit is inside a ```ignore doc comment at patches/0009:65), 0012=0 (two example `main`s), 0015=0. Every other patch adds 1 to 9 tests. patches/0012 states 'No library code changed — examples only'. PATCHES.md describes 0015 as 'Doc-only'. `find . -name '*.spec'` shows evidence specs only for 0001, 0002 (deploy-lane), 0004, 0005 (x2), 0006 (x2) and 0007, plus docs/spec/{ane-port-limits-h17,shape-flex-matrix}.spec. `grep` of all specs for 0008-0017 or patches/ finds only `apply-patches.sh --check 0001..0006`. The collisions are confirmed in docs/evidence/: 0005-milc-run-mlmodelc + 0005-vendor-guard, 0006-double-patch-and-stacking + 0006-milc-json-diagnostics, 0008-evidence-harness + 0008-ir-state-contract, and 0010-deploy-gate-codes + 0010-ir-for-loop. PATCHES.md also maps 0012 to evidence 0010-deploy-gate-codes.md and 0011 to docs/spec/ane-frontend-h17.md. FORK.md:70 says 'Every patch carries a regression test.'"
+  }
+ ],
+ "C36": [
+  {
+   "id": "C36",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "correction": "All the listed facts are true, but 'load-bearing material never mentioned' overstates it. A handoff need not enumerate ancillary files, and README.md points at LEGAL.md in its opening paragraph and layout. README staleness, the NOTICE placeholder and the missing LICENSE are repo defects, not handoff defects. The one item with real handoff relevance is that H14 stresses attribution as a hard requirement while NOTICE still has an unfilled copyright holder.",
+   "reason": "I verified every cited fact. But a competent successor following the handoff's orientation list (BUILD_PLAN, OWNERSHIP, ENGINEERING, the spec) will meet README, which links NOTICE, FORK.md and LEGAL.md. The handoff's quick-start (`evidence-check.sh --all`, existing specs as examples) is enough to 'add to' the spec harness without reading docs/evidence/SPEC.md first. Omitting these files would mislead no one.",
+   "evidence": "`ls scripts tests` shows mk-evidence-artifacts.sh and tests/vendor-guard.bats.sh, which the handoff does not cite (`grep -n 'mk-evidence\\|bats\\|SPEC.md\\|adr/0003\\|LEGAL\\|LICENSE' HANDOFF-2025-10-22.md` gives only the L72 ANE_FRONTEND_SPEC hit). docs/evidence/SPEC.md and docs/adr/0003-mil-sched-crate.md exist. README.md Status table reads 'Patches | 4, all re-applying cleanly'. NOTICE:2 reads 'Copyright 2026 <operator>'. `ls -a | grep -i licen` finds nothing at the top level (only vendor/mil_spec/LICENSE-APACHE and LICENSE-MIT exist). README.md L4-5 and the Layout block reference `docs/LEGAL.md`. docs/LEGAL.md covers the private-framework and DMCA posture."
+  },
+  {
+   "id": "C36",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Every factual item checks out, and none of the named items appear in the handoff. 'Load-bearing' is a judgement call. The strongest cases are docs/evidence/SPEC.md, which H97's 'add to it' needs for the .spec format, and tests/vendor-guard.bats.sh, which is a CI step. Omissions are not errors in what the handoff says, so this stays low.",
+   "evidence": "grep -c on HANDOFF-2025-10-22.md gives 0 for mk-evidence-artifacts, vendor-guard.bats, LEGAL, evidence/SPEC, adr/0003, adr/0001 and adr/0004. The files exist: scripts/mk-evidence-artifacts.sh, tests/vendor-guard.bats.sh, docs/evidence/SPEC.md (defines the .spec format), docs/adr/0003-mil-sched-crate.md, and docs/LEGAL.md (lines 20-33 cover private frameworks and DMCA §1201). .github/workflows/vendor-guard.yml:30 runs `bash tests/vendor-guard.bats.sh`. docs/ENGINEERING.md has no grep hits for the spec format, mk-evidence, LEGAL or bats. docs/evidence/0004-milc-run-dispatch.spec uses `setup ./scripts/mk-evidence-artifacts.sh ir_fixed`. README.md:19 reads '| Patches | 4, all re-applying cleanly ...' against 17 in the handoff. NOTICE:2 reads 'Copyright 2026 <operator>'. `ls -a` of the repo root shows no LICENSE file (only vendor/mil_spec/LICENSE-MIT and LICENSE-APACHE). HANDOFF H5 says the repo is public."
+  }
+ ],
+ "C37": [
+  {
+   "id": "C37",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "correction": "The factual claim is correct for FORK.md:19 and ADR-0001:28-29 (upstream has ~102 commits and the pinned commit has a parent). But the handoff makes no statement about upstream history, so this is a defect in FORK.md and ADR-0001, not in the handoff. It has no effect on a successor.",
+   "reason": "Verified against GitHub. The only knock-on effect is the wording that 'no history was lost by stripping .git'. The pinned sha remains fetchable, so reproducibility is intact.",
+   "evidence": "`gh api repos/savageAZfck/mil_spec/commits?per_page=1 -i` returns a Link header with rel=\"last\" at page=102, so about 102 commits on main. `gh api repos/savageAZfck/mil_spec/commits/20f097f...` returns parents [61d30ac0feb30f06ccaab946fafda2fa53c9d54a] ('graph: support real_div via Recip + ANE mul'). The repo's created_at is 2026-10-02 and pushed_at 2026-10-19, before the vendoring date of 2026-10-21. FORK.md:19-21 says 'Upstream history contained a single commit'. docs/adr/0001-vendor-not-fork.md:28-29 says 'The upstream history is a single commit'. `grep -n -i 'single commit\\|history' HANDOFF-2025-10-22.md` finds nothing."
+  },
+  {
+   "id": "C37",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "FORK.md and ADR-0001 do say upstream history was a single commit. It is false: the pinned commit has a parent and 102 commits of history. The handoff itself does not repeat this claim, so it only matters as a repo-doc inaccuracy the successor will inherit.",
+   "evidence": "FORK.md:19 reads 'Upstream history contained a single commit, so no history was lost by stripping .git.' docs/adr/0001-vendor-not-fork.md:28-29 reads 'The upstream history is a single commit'. `gh api repos/savageAZfck/mil_spec/commits/20f097fb...` returns parents [61d30ac0feb30f06ccaab946fafda2fa53c9d54a] and date 2026-10-19. `gh api 'repos/savageAZfck/mil_spec/commits?per_page=1&sha=main' -i` gives a Link header with rel=\"last\" at page=102. `git rev-list --count HEAD` in my full clone checked out at 20f097f printed 102."
+  }
+ ],
+ "C41": [
+  {
+   "id": "C41",
+   "verdict": "partially_upheld",
+   "severity": "nit",
+   "correction": "True but trivial. Cloning pristine upstream is inherent to the label 'apply to pristine upstream' in H22 and to the vendor-guard CI's purpose, so the network dependency is implicit. It matters only if the upstream repo or sha disappears, and the in-repo vendor tree still keeps builds and tests independent of it. Only patch verification and rebuild need the network.",
+   "reason": "Both code paths clone from GitHub on every run. H22 does not state the network requirement. A successor running `--check` offline would get an immediate, obvious git clone failure, not a silent wrong result.",
+   "evidence": "scripts/apply-patches.sh:18 sets url=\"https://github.com/savageAZfck/mil_spec.git\", and `git clone --quiet \"$url\"` runs at L48 (--check) and L68 (--rebuild). .github/workflows/vendor-guard.yml step 2 runs `git clone --quiet https://github.com/savageAZfck/mil_spec.git` and checks out 20f097fb.... The sha is currently reachable: `gh api repos/savageAZfck/mil_spec/commits/20f097f...` succeeds. HANDOFF H22 and H26. FORK.md:26-28."
+  },
+  {
+   "id": "C41",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Correct, and a genuine omission, but minor. Both the CI job and apply-patches.sh clone upstream from GitHub on every run, and H22 does not mention the network requirement. The committed vendor tree keeps builds reproducible offline, as FORK.md:27-28 intends. Only the patch-applicability check and rebuild need the network.",
+   "evidence": "scripts/apply-patches.sh sets url=\"https://github.com/savageAZfck/mil_spec.git\" and sha=20f097fb... Both --check and --rebuild run `git clone --quiet \"$url\" \"$work/up\"` followed by `git checkout --quiet \"$sha\"`. .github/workflows/vendor-guard.yml (step 'patches apply cleanly to pristine upstream') runs `git clone --quiet https://github.com/savageAZfck/mil_spec.git` and then checks out 20f097fb.... HANDOFF H22 reads only '# all 17 patches apply to pristine upstream, in order'."
+  }
+ ],
+ "C14": [
+  {
+   "id": "C14",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Confirmed. H55 states region 'dim1 x 1 MiB (+0x48, x4 slots)' and 'fully decoded', but that layout exists only in single-state programs and the LAST 0x9365 record of a multi-state program. Every earlier record carries one extra 4-byte word (a copy of dim1 x 1 MiB) at +0x44 and so has +0x48 = 1 MiB regardless of dim1. The spec only asserts the 1-state case, so it passes while the claim fails on realistic (multi-state) binaries.",
+   "evidence": "(1) `python3 -I scripts/decode_9365.py /tmp/pl_d53c/pl_d53.macho` (spec's own 53-state binary, spec L91) prints `dim0=4 dim1=4 stride=16 region=1048576`. `/tmp/pl_swc/pl_sw.macho` (spec L110) prints the same. The 1-state `/tmp/pl_decc/pl_dec.macho` (spec L105) prints region=4194304. decode_9365.py:34-44 takes the FIRST 0x9365 and reads +0x48. (2) Histogram of u32 at +0x48 over all 0x9365 records (own probe, scratchpad refute-descriptor-economy-0/r.py using mtool.find): 53-state h17 = {0x100000: 52, 0x400000: 1}; the same on h16g. 2-state (gen_states.py 2 1 1) = rec0 0x100000, rec1 0x400000. 3-state [4,8] (gen_shape_n.py 3 4 8) = {0x100000: 2, 0x800000: 1}, so the last record scales with dim1 but the others stay at 1 MiB. (3) Hex dump at +0x40: rec 0 and rec 51 of pl_d53 are `3e 80 62 01 | 00 00 40 00 | 00 00 10 00 | 00 00 40 00`. rec 52 and the 1-state pl_dec are `3c 80 42 01 | 00 00 10 00 | 00 00 40 00 | 00 00 40 00`. That is a 4-byte insertion; the shape-class byte also differs, 0x62 vs 0x42. (4) The spec only asserts the 1-state case: ane-port-limits-h17.spec:105-106. The writeup's decode table (ane-port-limits-h17.md:204-215, 'across 10 state shapes') used single-state shapes only.",
+   "correction": "Say the 0x9365 field map (dim1/dim0/stride/region at +0x0a/+0x0e/+0x1c/+0x48) is decoded for single-state programs and the final record only. State that non-final records in multi-state programs use a layout 4 bytes longer, with dim1 x 1 MiB at +0x44 and a constant 1 MiB at +0x48. Make decode_9365.py take a record index or read the last record."
+  },
+  {
+   "id": "C14",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Reproduced on the spec's own 53-state binary. decode_9365.py reads only the first 0x9365 record, which in a multi-state program is the longer layout. In that layout +0x48 holds a constant 1 MiB. The dim1 x 1 MiB value appears only in the last record, which is the same layout as a single-state program. dim0, dim1 and stride at +0x0e, +0x0a and +0x1c hold in every record, so only the region part and the 'fully decoded' claim fail. Lens B: the writeup derived the map from single-state shapes (md L201) and the spec asserts only N=1 (spec L105-106), so the claim was never wrong for the case it was measured on. But H55 says 'fully decoded' and presents it per state, and the 53-state program is the document's main subject.",
+   "evidence": "Scratch dir SCR=<wd>/refute-descriptor-economy-1\n- `python3 scripts/decode_9365.py /tmp/pl_d53c/pl_d53.macho` prints `dim0=4 dim1=4 stride=16 region=1048576`. The spec compiles that binary at spec L91. The single-state /tmp/pl_decc/pl_dec.macho prints region=4194304 (spec L105-106).\n- Per-record dump of the 53-state binary (my rec.py and cmp.py in SCR): the 53 records are 0-51 and 52. Records 0-51 have the bytes `3e80 6201 0000 4000 0000 1000 0000...`, an extra 4-byte field, with u32@+0x48 = 1048576. Record 52 has `3c80 4201 0000 1000 0000 4000...` with u32@+0x48 = 4194304. Inter-record delta is 384 bytes for the long layout and 392 for the last.\n- Fresh compiles with gen_shape_n.py, h17. N=2 dim0=4 dim1=8: rec0 +0x48 = 1048576, rec1 = 8388608. N=3 dim0=32 dim1=8: 1048576, 1048576, 8388608. N=1 dim1=8: 8388608, and decode_9365 prints region=8388608.\n- Related, and the same mechanism: `python3 vendor/mil_spec/... mtool.py cmp9361 /tmp/pl_d1c/pl_d1.macho /tmp/pl_d53c/pl_d53.macho` (scratchpad/hw/mtool.py) gives 'B records identical to A[0]: 1/53'. In the 53-state program 0x9361 record 0 has the single-state layout and records 1-52 have a 4-byte-shorter layout (`4510 0098 1000 0000 4a01...`).",
+   "correction": "State that the 0x9365 region field (+0x48 = dim1 x 1 MiB, x4 slots) holds for single-state programs and for the last record only. Say the first N-1 records use a 4-byte-longer layout whose +0x48 is a constant 1 MiB. Replace 'fully decoded' with 'decoded for N=1; the multi-state layout split is undecoded'."
+  }
+ ],
+ "C16": [
+  {
+   "id": "C16",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Confirmed, and the 0x934a part is stronger than the finding says. The handoff's literal wording is scoped ('same counts, same slot model, same 54 cap'), and those do hold. But 'the only delta ... one extra 0x934a per program ... fixed' is not true in general: the h17-vs-h16g delta ranges from 0 to +32 depending on program I/O structure. Record contents differ in essentially every record, and the 'portable M4->M5' conclusion rests on cross-compiles run on the one M5 host.",
+   "evidence": "(1) Header: pl_m4/pl_mm.macho (h16g) cpusubtype 0x7; pl_m5/pl_mm.macho (h17) cpusubtype 0x9. (2) Body diffs over the same 53-state program (own probe, first N bytes of each record): 0x9361 53/53 records differ, usually at +0x20 and +0x5a, and rec 0 has +0x20 0x10 vs 0x20. 0x9365 53/53 differ at +0x24 (0x10 vs 0x20). 0x9344 54/54 differ; the 52 ordinary records differ at +0x24 and +0x38, with +0x24 0x31 on h16g vs 0x21 on h17. 0x9442 differs in 106/107 over 0x20 bytes (only rec 0 matches in that window) and 107/107 over 0x40 bytes. (3) 0x934a counts, h17 vs h16g (decoded with scripts/count_desc_records.py): gen_states 53 1 1 gives 2 vs 1 (spec L96-97); gen_states 53 32 32 gives 64 vs 32 (pl_siocc/pl_sio.macho vs a fresh h16g compile); gen_states_width 53 256 gives 0 vs 0; gen_states 0 1 2 gives 4 vs 2; gen_states 0 2 4 gives 8 vs 4; gen_states 52 1 50 gives 0 vs 0. So there is no 'one extra per program'. (4) Slot decode is the same on both: `decode_slot_word.py` gives records=54 slots=28 fullcopies=26 on pl_m4 and pl_m5. (5) No M4-hardware evidence: the spec runs `milc ane compile --arch h16g` on this M5 Max host (spec L96-101; sw_vers 26.7.1 / Mac17,7). The only M4 host in the repo is <macos27-host> (docs/evidence/A5-item4-no-second-host.md), and nothing shows the state-count model run there.",
+   "correction": "State the delta as 'record counts, slot decode and the 54-state failure match across --arch h16g/h17; record bytes differ everywhere; the 0x934a count differs by an I/O-structure-dependent amount (0 to +32 observed), not +1 per program'. Mark it as cross-compile evidence on an M5 host, not M4 hardware. Incidental, outside this finding: pl_sio.macho (53 states + 32 in + 32 out, compiles) has 85 x 0x9344 records, more than 54. The +1 header looks like one record per plain input (gen_states 0 2 4 gives 2), which undercuts 'WHY 54 = raw 0x9344 record count' (H57, H53)."
+  },
+  {
+   "id": "C16",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "The core claim holds. 'One extra 0x934a per program, fixed' is false outside the single (N,1,1) program family that the spec compiles on both arches. Across the programs I compiled on both arches, h17 has twice the h16g count of 0x934a records, so the delta is 0, 1, 4 or 32 depending on plain I/O. Other counts match across arches, which supports 'same counts, same slot model, same cap'. Two parts are weaker. Byte-level content differing between arches is expected, since cpusubtype differs and ADR 0002 already notes the compiler's embedded command line, so lens B treats that as low materiality. One of the finding's byte examples is misattributed. The 'portable' wording is an inference from compile-only evidence on one M5 host.",
+   "evidence": "SCR as in C14. All compiles used `milc ane compile ... --arch h16g|h17` on this host, an Apple M5 Max per `sysctl machdep.cpu.brand_string`.\n- 0x934a count as h16g -> h17:\n  - (53,1,1) from the spec's /tmp/pl_m4 and /tmp/pl_m5: 1 -> 2.\n  - (5,1,1): 1 -> 2.\n  - (5,4,4): 4 -> 8.\n  - (53,32,32): 32 -> 64. The spec's own plain-I/O program shows 64 on h17 in /tmp/pl_siocc.\n  - (53 states, gen_states_width 256): 0 -> 0.\n  - (52,1,50): 0 -> 0.\n- Counts 0x9344, 0x9361, 0x9365 and 0x9442 are identical across arches in w256, m52 and sio, e.g. sio 85/53/53/138 on both. decode_slot_word.py gives records=54 slots=28 fullcopies=26 on both h16g and h17, and the slot words are identical.\n- Content differs. Mach-O cpusubtype is 0x7 (h16g) vs 0x9 (h17). 0x9361 has one differing byte, +0x20, 0x10 -> 0x20, in 53/53 records. 0x9365 differs at +0x24, 0x10 -> 0x20, in 53/53. 0x9442 differs at +0x20, 0x31 -> 0x21, in 107/107. 0x9344 differs in many bytes because the extra embedded 0x934a shifts the layout.\n- The finding's '0x9344 +0x24 0x31->0x21' is misattributed. In 0x9344 record 0 the byte at +0x24 is 0x40 vs 0x42. The 0x31 vs 0x21 byte is at 0x9442 +0x20 and in the embedded 0x1440 child payload.\n- The spec asserts only the (53,1,1) pair (spec L96-97).\n- No M4 run of these probes exists. The M4 Pro host in docs/evidence is a macOS 27.0 deploy-lane host (PROBE-2-macos27-result.md L12).",
+   "correction": "Replace 'one extra 0x934a per program, fixed' with 'on h17 the 0x934a count is 2x the h16g count; both are 0 for some programs, and the count scales with plain I/O (1/2, 4/8, 32/64). For (53,1,1) the delta is one.' Qualify 'portable M4->M5' as 'record counts and the 54-state failure reproduce when ANECCompile targets h16g on an M5 host'. Drop 'identical' as a statement about contents."
+  }
+ ],
+ "C17": [
+  {
+   "id": "C17",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Confirmed. H80's premise, a constant 0x21 payload on 0x934a/0x1340/0x1341/0x1440 across all shapes, is false. The payload byte after the `00 22` marker varies by child, by record position, by program structure and by arch. 0x934a children have no 0x21 byte at all. The repo has no evidence file or doc for the 0x21 claim.",
+   "evidence": "Own probe (scratchpad refute-descriptor-economy-0/kids.py): scan the first 0x50 bytes of every 0x9344 record for child tags followed by `00 22` and histogram the next byte. h17 pl_m5 (53 states): 0x1340 {0x21: 1, 0xc1: 53}; 0x1341 {0x21: 1}; 0x1440 {0x21: 54}. h16g pl_m4: 0x1340 {0x21: 1, 0xc1: 53}; 0x1440 {0x31: 54}. h17 gen_states_width 53 256 (pl_w256): 0x1440 {0xe1: 1, 0x21: 53}. The h16g compile of the same program: 0x1440 {0xf1: 1, 0x31: 53}. Every single-state shape tried on h17 ([4,4], [1,4], [4,16], [4,1], [32,8]) gives 0x1340 {0x21, 0xc1} and 0x1440 {0xe1, 0x21}. So the byte is shape-independent but not constant: 0x21, 0xc1, 0xe1 on h17 and 0x31, 0xf1 on h16g. Raw: pl_m5 0x9344 rec 0 `40 13 00 22 21 ... 40 14 00 22 21`; rec 1 `40 13 00 22 c1`; pl_m4 rec 0 `40 14 00 22 31`. The 0x934a child form is `4a 93 00 3e 00 00 00 00` (payload 0x3e, not 0x21). `grep -rIn '0x21\\b|constant payload|(33)' docs scripts` finds only HANDOFF H80.",
+   "correction": "Drop 'constant payload 0x21 (33)'. Replace with: the low nibble is always 1; the high nibble differs by child, header vs per-state record, and arch (bit 4 set on h16g for 0x1440: 0x21->0x31, 0xe1->0xf1). The 'why 33?' question has no basis."
+  },
+  {
+   "id": "C17",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "The premise 'constant 0x21 across all shapes' is false. The low payload byte of the embedded children varies by child type, by record position, by arch, and by program structure. It looks like a packed flags byte whose low nibble is always 1 and whose high nibble varies (2, 3, c, e, f). Lens B: the claim does hold for two cases, the 0x1341 child, and the 0x1440 child in 0x9344 records of the (N,1,1) family on h17. The handoff calls the thread 'minor' and a successor would find the variation within minutes, so I rate it low, not medium.",
+   "evidence": "SCR/children2.py, a scan of the 0x1340, 0x1341, 0x1440 and 0x934a children inside each 0x9344 record (payload low byte -> count):\n- /tmp/pl_m5 (h17, 53,1,1): 0x1340 {0x21:1, 0xc1:53}; 0x1341 {0x21:1}; 0x1440 {0x21:54}; 0x934a child payload 0 (word 0x3e00), so it does not carry 0x21 at all.\n- /tmp/pl_m4 (h16g, same program): 0x1440 {0x31:54}, other children identical to h17.\n- sio h17: 0x1440 {0x21:85}; sio h16g: 0x1440 {0x31:85}.\n- w256 h17: 0x1440 {0xe1:1, 0x21:53}. n1_4_8 and n3_32_8 (h17): 0x1440 {0xe1:1, 0x21:N}. So even on h17 the header record's 0x1440 payload is 0x21 or 0xe1 depending on program structure.\n- Embedded 0x1440 inside 0x9442 records: 0xe1 on h17 vs 0xf1 on h16g (raw dump, 0x9442 rec1).",
+   "correction": "Rewrite thread 2 as: the embedded children's payload low byte takes values 0x21, 0x31, 0xc1, 0xe1 and 0xf1, depending on child type, record position (header vs state), arch (h16g 0x31 vs h17 0x21 for 0x1440) and program structure. It is probably a packed flags byte, and 0x934a carries 0. 'Why 33' is the wrong question."
+  }
+ ],
+ "C18": [
+  {
+   "id": "C18",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Confirmed. The frontend does have a combined in+out cap that H41 ('NOT frontend ... accepts 200+ io ports') omits. 'Accepts 200+' is technically true (200 total is accepted), but the cap is exactly 255 declared ports, and the writeup and spec never state it. The finding's own examples reproduce. The cap also makes the execution-time formula's 'floor of 63' unreachable for in>=193, and it contradicts the writeup's 'in=4000, out=1 passes'.",
+   "evidence": "`python3 -I scripts/gen_mix_ports.py I O > f.mil; milc ane validate f.mil --arch h17`: 128/128 gives `status=0x1 rc=1 error: MaxLiveInLiveOutExceeded`; 127/128 gives status=0x0; 128/127 gives status=0x0; 100/100 gives status=0x0; 1/255 rejected and 1/254 accepted; 255/1 rejected and 254/1 accepted; 200/55 accepted and 200/56 rejected; 4000/1 rejected. `milc ane compile` also rejects 128/128 with the same error and accepts 127/128, writing a 999424-byte macho. The threshold is I+O >= 256, independent of the I/O split. docs/evidence/reconciliation-two-port-limits.md:24-27 and :49 already record 'in=out=128 ... MaxLiveInLiveOutExceeded'. The writeup's frontend table (ane-port-limits-h17.md:43-45) only covers totals up to 200. ane-port-limits-h17.md:72 ('in=4000, out=1 passes') is contradicted by the 4000/1 validate rejection above. The quoted text sits at H41 (H39 is only the section heading).",
+   "correction": "Add: 'the frontend rejects declared in+out >= 256 with MaxLiveInLiveOutExceeded (255 accepted); the execution cap out_cap = max(63, 127-in) therefore applies only for in <= 192'. Remove or fix the in=4000 claim."
+  },
+  {
+   "id": "C18",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Facts verified. The ANECCompile/ANECValidate frontend rejects total in+out >= 256 with MaxLiveInLiveOutExceeded, and the repo already records a 128-port failure with that code. 'Accepts 200+' is literally true (200 to 255 accepted), but 'NOT frontend' is categorical and omits a reproducible, in-repo counterexample. Severity is inflated to medium in the finding. For runnable programs the exec cap on live ports is lower than the frontend cap. Live in=200/out=1 and live 192/63 fail at execute_sync, while 255 total is accepted by the frontend. So the omitted frontend cap never binds before the exec cap in practice.",
+   "evidence": "SCR; `milc ane validate|compile --arch h17` on gen_mix_ports.py output.\n- validate: 100/100 (200 ports) status=0; 127/128 (255) status=0; 128/128 (256) -> `error: MaxLiveInLiveOutExceeded`; 1/255 status=0 (compile of 127/128 also status 0, macho written); 1/255 as 1 in + 255 out is rejected with the same error at 256 total (1/256, 256/1 and 130/130 all rejected).\n- compile 128/128 -> status=0x1 MaxLiveInLiveOutExceeded; compile 127/128 -> status=0x0 with macho written.\n- docs/evidence/reconciliation-two-port-limits.md L26-28 and L55 record 128 failing with MaxLiveInLiveOutExceeded and say there are two distinct ANECCompile budgets. The handoff does not carry this over.\n- The frontend cap also applies on the e5rt run lane for live ports: gen_live.py 193/63, 255/1 and 256/1 give `E5RT ... ANECCompile() FAILED` (e5_compiler_compile). Dead inputs are pruned: gen_mix_ports 4000/1 and 256/1 pass `milc ane run`.\n- Live ports fail at execute_sync well below the frontend cap: gen_live 200/1 and 192/63 give 'Program Inference error' (earlier probe outputs: scratchpad/hw/live_100_27 pass, live_100_28 fail).",
+   "correction": "Write: 'The ANECCompile frontend accepts up to 255 live in+out ports and rejects 256+ with MaxLiveInLiveOutExceeded (see docs/evidence/reconciliation-two-port-limits.md). The binding io cap for runnable programs is the lower execution-time cap.' Drop the bare 'NOT frontend'."
+  }
+ ],
+ "C19": [
+  {
+   "id": "C19",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Confirmed. H63's 'executable assertions for all of it' is overstated. The spec (118 lines) asserts compile/run outcomes, 0x9344 counts, one 0x934a count, one 1-state 0x9365 decode, slot counts and one pair of 0x9361 bodies. Most of the descriptor-economy model has no assertion. One unasserted claim, 0x9361 byte-identical 'across counts', is actually false. Two of the finding's listed items are partly covered: bytes via the width-independence test, and the slot formula indirectly via counts.",
+   "evidence": "ane-port-limits-h17.spec read in full (L1-118). Not asserted: (a) the 63 floor above in=64: only in=64 is tested (L32-37), and 64 is exactly the knee, 127-64=63; (b) __data = outputs + 2 x states: comment only (L75-78), with no segment-count assertion; (c) per-state 0x9344/0x9361/0x9365 triple: only 0x9344 (L87-92) and 0x934a (L96) are counted; (d) stride saturation, x4 region slots, dim1 scaling: only the single [4,4] case at L105-106; (e) 0x9361 identity: cmp_9361.py (L117-118) compares two 1-state programs differing only in dim0, first record, 0x52 bytes; (f) h16g slot model: only the 0x934a count and the 54-state failure (L96-101); (g) 0x9442 and 'vmsize grows linearly': no assertion; (h) consts and tiny-state 'ruled out' probes: none. Partly covered: bytes via width 4/64/256 (L63-73) and slot counts (L110-111). The unasserted 0x9361 claim is false: `mtool.py cmp9361 pl_a4/pa4.macho pl_d53c/pl_d53.macho 0x52` reports 0/53 records identical to the 1-state record, differing from +0x22 onward. Within pl_d53 the first 0x22 bytes are identical across all 53 records but the 0x52-byte bodies are 53 distinct values. H56 and commit 74da72d claim 'byte-identical on all shapes and all state counts'.",
+   "correction": "Say what the spec does assert (the pass/fail boundaries, the 0x9344/0x934a counts, the 1-state decode, the slot counts). List the rest as measured-but-unasserted. Correct 0x9361: only the first 0x22 bytes are a fixed template, and the body differs between 1-state and >=2-state programs."
+  },
+  {
+   "id": "C19",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "Every item the finding lists is unasserted by the spec, and the 0x9361 identity claim is also false for most records, not merely untested. Lens B: 'all of it' reads as loose rhetoric, and the spec does cover the headline numbers (53/54, the io boundary points, N+1 at N=1 and 53, 0x934a 1 vs 2, the 54 failure on h16g, one decode, the slot counts). But H18 says 'if a claim ... is wrong, the spec harness should catch it'. The spec header also claims it asserts the whole model. Several errors found here (C14 region, C16 0x934a, the 0x9361 template) pass the spec precisely because they are not asserted.",
+   "evidence": "docs/spec/ane-port-limits-h17.spec (full read):\n- io: only the points 26/26, 64/64 validate, and run 1/126 ok, 1/127 fail, 64/63 ok, 64/64 fail, 32/95 ok, 32/96 fail (L17-44). No in>64 case, so the 63 floor is not asserted.\n- The __data formula is a comment only (L75-78); no assertion counts __data.\n- count_desc_records.py is invoked only for 0x9344 (L87, L91) and for 0x934a (L96). No 0x9361 or 0x9365 or 0x9442 counts, so the 'per-state triple' is unasserted.\n- The slot word: only `records=54 slots=28 fullcopies=26` (L110-111). No slot-id sequence 0x23..0x3e, no ceil(records/2) law at other N, no h16g slot model.\n- decode_9365 is asserted only for gen_states 1 1 1 (L105-106). Stride saturation (min(2*dim1+8,32)) and the x4 region slots are unasserted.\n- cmp_9361 (L117-118) compares record 0 of two N=1 programs that differ only in dim0 (gen_states_width 1 4 vs 1 8). Nothing covers 'across counts'.\n- No assertion for consts, for vmsize growth, or for 0x9442.\n- The 0x9361 identity claim in H56 is false in the wild. `mtool.py cmp9361 /tmp/pl_d1c/pl_d1.macho /tmp/pl_d53c/pl_d53.macho` gives 1/53 records identical to the single-state record, and the 53 records are 53 distinct bodies (SCR script). dim1=4 vs 8 differs at +0x0a: `mtool.py cmp9361 pl_d1.macho n1_4_8.macho` lists a diff at 0xa.\n- Side note on the unasserted 63 floor: with live inputs (gen_live.py) 80/47 passes and 80/48 and 80/63 fail (scratchpad/hw/live_80_*.out). My own live runs: 200/1 and 192/63 fail at execute_sync. That fits live_in + out <= 127 and not max(63, 127-in). The floor appears to be an artifact of gen_mix_ports leaving inputs dead.",
+   "correction": "Replace 'executable assertions for all of it' with the actual coverage: the 53/54 boundary and a subset of the io points are asserted, and so are 0x9344 = N+1 at N=1 and 53, 0x934a 1 vs 2 for (53,1,1), the 54 failure on h16g, and the 0x9365 decode and slot counts for one shape. State plainly that the rest is unasserted."
+  }
+ ],
+ "C20": [
+  {
+   "id": "C20",
+   "verdict": "partially_upheld",
+   "severity": "low",
+   "reason": "Partly right. In the repo, 'consts' and the 'tiny states [1,1,1,1]' probe have no generator and no spec line, and no repo generator takes dim1 as a parameter. But the 'bytes' and 'io' exclusions are spec-backed, and the repo's own reconciliation doc records a different-shape data point. The conclusion itself holds under independent probes. So 'not backed by reproducible evidence' is true for consts and dim1 only.",
+   "evidence": "Spec backs segments (L79-83: 52 states + 50 out compiles), io (L60-61: 53 states + 32 in + 32 out), and bytes by dim0 (L65-73: width 4/64 fail at 54, 256 passes at 53; a 64x byte range). gen_states.py fixes [4,4,1,1] and gen_states_width.py fixes [w,4,1,1]; neither varies dim1. No script or spec line adds '60 unused consts': gen_states.py has 6 fixed consts, and commit ba506b2's body says only gen_states_width.py was added and the spec 'asserts the boundary + width-independence'. The `[1,1,1,1]` row at md:255 has no generator, since gen_states_width 54 1 gives [1,4,1,1]. Counter-evidence: docs/evidence/reconciliation-two-port-limits.md:34-43 records 53 pass/54 fail from examples/gen_ceiling.rs states mode, which uses d=32, a [4,32] shape (gen_ceiling.rs 'let d = 32usize'). It is a different program form, recorded but not asserted. My own probes with the scratchpad gen_shape_n.py (53 -> status=0x0 rc=0; 54 -> 'unable to allocate free BAR' rc=22) for shapes [4,1], [1,4], [4,16] and [64,32] all show the same boundary.",
+   "correction": "Rewrite as 'segments, io and bytes-via-dim0 are spec-asserted; consts and the dim1/tiny-state probes were ad hoc and are not reproducible from the repo (the 53/54 boundary also holds on [4,1], [1,4], [4,16], [64,32] and the [4,32] gen_ceiling form)'. Add a dim1 generator or spec line if 'all ruled out' is to stay."
+  },
+  {
+   "id": "C20",
+   "verdict": "upheld",
+   "severity": "medium",
+   "reason": "The finding's stated gaps are real: no repo generator varies dim1, none adds consts, and the writeup's knob table records only ad hoc runs (md L254-258). My probes agree with its guess that the conclusion is probably right for bytes, dim1 and consts. The 'segments' leg of 'all ruled out' is also unsupported, which is worse than the finding says. The cited 154-vs-109 contrast counts __data sections, not segments. The real data-bearing segment count is N+1 for N>=27, so it is 53 for 52 states + 50 outs and 54 for 53 states. Both are consistent with a 54-segment ceiling. Lens B: the practical rule '<=53 states' survives every probe, so the operational advice is not misleading. The mechanistic story ('not segments', 'WHY 54 resolved') is not established.",
+   "evidence": "SCR; h17 compiles.\n- dim1 sweep with scratchpad/hw/gen_shape_n.py (not in repo): dim0=4, dim1 in {1,16,64}: N=53 status=0, N=54 `unable to allocate free BAR`. So bytes and dim1 do not move the boundary.\n- consts: gen_states.py + 60 unused int32 consts: N=53 status=0, N=54 BAR error. fp16 consts gave InvalidMILProgram, and unused consts are probably dead-code-eliminated, so this is a weak probe. Repo generators: gen_states_width.py varies dim0 only; no generator adds consts.\n- Segments vs sections (analyze.py, scratchpad/hw): 53 states + 1 out is 107 __data sections in 54 __FVMLIB segments (one segment has nsects=54). 52 states + 50 outs is 154 sections in 53 segments. 53 states + 32/32 is 138 sections in 54 segments.\n- gen_states N,1,1: sections/segments are 21/21 at N=10, 41/41 at N=20, 53/53 at N=26, then 55/28 at N=27, 57/29 at N=28, 61/31 at N=30, 81/41 at N=40.\n- 0 states: 53 outs -> 53 segments, 54 outs -> 54 segments, 55 outs -> 55 sections packed into 1 segment, 56 outs likewise. So the compiler packs once sections would exceed 54, and 54 data-bearing segments appears even with zero states.\n- No compiled program has more than 54 data-bearing segments.",
+   "correction": "Qualify 'all ruled out' as: segment counts are only established as 'sections', not segments; bytes, io and consts are supported by ad hoc runs that are not in the repo. Add the generator needed for dim1 and consts, or soften the claim. Note that the data-bearing segment count (N+1 once sections exceed 54) coincides with the 54 cap and has not been excluded as the real mechanism."
+  }
+ ],
+ "C22": [
+  {
+   "id": "C22",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Confirmed on all three sub-claims. H52's 'Per state: 1x 0x9344 + 1x 0x9361 + 1x 0x9365' holds for the [4,4,1,1]-like shapes the writeup measured but not for dim0=1, dim1=16 or dim1=1. The state-count boundary is shape-independent, as the finding notes.",
+   "evidence": "Single-state h17 compiles via the scratchpad gen_shape.py plus analyze.py (true __text counts): [4,4,1,1] gives 0x9344=2, 0x9361=1, 0x9365=1, 0x9442=2. [1,4,1,1] gives 0x9344=2, 0x9361=2, no 0x9365. [4,16,1,1] gives 0x9360=1, 0x9364=1, no 0x9361/0x9365. [4,1,1,1] gives only 0x9344=2 and 0x9442=2, no copy records. [4,12], [4,24], [8,8], [2,4], [32,8], [4,8] each give 1 x 0x9361 + 1 x 0x9365, and decode_9365 matches the writeup's stride formula, e.g. [4,12] stride=32 and [4,8] stride=24. Boundary: 53 passes and 54 fails with 'unable to allocate free BAR' for [4,1], [1,4], [4,16], [64,32].",
+   "correction": "Qualify H52 as 'for shapes with dim0>=2 and 2<=dim1<=~12/24 other than 16'. Note the alternative record families 0x9360/0x9364 (dim1=16) and the 2 x 0x9361 form (dim0=1)."
+  },
+  {
+   "id": "C22",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Verified. The triple 1x0x9344 + 1x0x9361 + 1x0x9365 holds only for 1<dim0 and for dim1 in some range, including 4 and 64 in my runs. 0x9344 = N+1 holds for every shape I tried. The 54-state boundary is shape-independent in the 3 dim1 values I ran. Lens B: the handoff's headline mechanics (N+1, the 54 cap) do not depend on the triple, so this is a refinement. It is still relevant because realistic KV-cache shapes could hit the other variants.",
+   "evidence": "SCR; gen_shape_n.py on h17, count_desc_records.py counts at N=5:\n- [4,4]: 0x9344=6, 0x9361=5, 0x9365=5, 0x9442=10.\n- dim0=1 ([1,4]): 0x9344=6, 0x9361=10, 0x9365=0.\n- dim1=1 ([4,1]): 0x9344=6; 0x9361, 0x9365, 0x9360 and 0x9364 all 0.\n- dim1=16 ([4,16]): 0x9344=6, 0x9361=0, 0x9365=0, 0x9360=5, 0x9364=5.\n- At N=53: dim1=1 gives 54/0/0/0/0; dim1=16 gives 54/0/0/53/53 (0x9344/0x9361/0x9365/0x9360/0x9364); dim1=64 gives 54/53/53/0/0. N=54 fails with free BAR at dim1 1, 16 and 64.",
+   "correction": "Say: 'for dim0>1 and most dim1 values, one 0x9361 and one 0x9365 per state; dim0=1 gives two 0x9361 and no 0x9365; dim1=16 gives 0x9360/0x9364; dim1=1 gives no copy records. 0x9344 = N+1 and the 54 cap are shape-independent in the shapes tried.'"
+  }
+ ],
+ "C23": [
+  {
+   "id": "C23",
+   "verdict": "upheld",
+   "severity": "nit",
+   "reason": "All four terminology points check out. They are cosmetic, except that the sections-vs-segments confusion hides the fact that the count of __FVMLIB segments is 54 for 53 states.",
+   "evidence": "(a) analyze.py on pl_d53.macho: `__data_sections=107 (in __FVMLIB segs: 54)`; pl_siocc: 138 sections in 54 segments; pl_m52: 154 sections in 53 segments. So '__data segments = outputs + 2 x states' (H51) counts sections, not segments. (b) gen_states.py:31-43 returns upd{i} for every state plus the y{j}; the formula's 'outputs' is the plain y outputs only. 53 states + 1 out gives 107 sections, and 53 states + 32 plain out gives 138 sections (pl_sio). (c) H54 says 'slots each holding 2 records'; the writeup (md:184, 187-193) says 'up to two' with 28 slots, 26 full and 2 singletons (decode_slot_word.py gives records=54 slots=28 fullcopies=26). (d) ane-port-limits-h17.spec:23 reads '# --- Finding 2: execution cap ...' and :46 reads '# --- Finding 2: the state<> budget ...'; the writeup calls the execution cap Finding 1.",
+   "correction": "Say '__data sections', define 'outputs' as plain outputs, use 'up to 2 records per slot', and relabel spec L23 as Finding 1."
+  },
+  {
+   "id": "C23",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "All four terminology points are verified. The sections/segments conflation is not purely cosmetic, because the 'segments ruled out' argument (see C20) rests on section counts. I therefore rate it low, not nit. The other three points are real but nit-level.",
+   "evidence": "SCR.\n- Sections vs segments: analyze.py on /tmp/pl_d53c/pl_d53.macho shows __data_sections=107 in 54 __FVMLIB segments. mtool.py segs shows one segment with nsects=54 and 53 with nsects=1. The writeup says 'the number of __FVMLIB.__data segments is exactly outputs+2*states' (md L105-106).\n- 'outputs' means plain outputs only. gen_states.py returns the upd{i} for every state plus the y{j}, so (53,1,1) returns 54 values. Counting all returned values would give 54+106 = 160, not 107; the formula only works with plain outputs = 1.\n- 'slots each holding 2 records' is loose. `decode_slot_word.py` gives slots=28 fullcopies=26, so two slots are singletons. The writeup says 'up to two' (md L184), while the handoff H54 says 'each holding 2 records'.\n- Spec labelling: spec L23 is `# --- Finding 2: execution cap ...` and spec L46 is `# --- Finding 2: the state<> budget ...`. The writeup numbers the io execution cap as Finding 1 (md L18), and spec L16 is `Finding 1: the frontend does NOT reject`.",
+   "correction": "Use '__data sections' and 'plain outputs (excluding state-update returns)', and 'slots hold up to 2 records'. Renumber the spec section headers to match the writeup."
+  }
+ ],
+ "C24": [
+  {
+   "id": "C24",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Each sub-claim checks out. The writeup H92 calls 'fully written up' has stale or contradictory passages, and open questions Q1 and Q3 are not in the handoff's open threads (H77-83).",
+   "evidence": "(1) Slot word 'not yet decoded': ane-port-limits-h17.md:165-168, plus :222-224 ('still the encoded slot field whose bit layout is undecoded'), while :170-197 and Open Q2 (:349-350) say it is decoded. (2) md:155-157 says the '+1' header is 'present only when at least one state exists', and the md:150 table gives 0 for 0 states. But 0-state programs have 0x9344 records: `gen_states.py 0 1 1` gives 1, `gen_states.py 0 1 2` gives 1, `gen_states.py 0 2 4` gives 2, `gen_mix_ports.py 1 1` gives 1 (count_desc_records.py, h17). (3) Provenance md:30 says macOS 26.7.1 (25G91); this host (`sw_vers`) is 26.7.1 build 25G241. Other repo docs for the same host also say 25G241 (docs/evidence/SCHED-1-macos27-availability.md:5, PROBE-2-macos27-result.md:11). The 25G91 line is word-for-word the same as docs/evidence/0010-deploy-gate-codes.md:4, which suggests it was copied. The md:35 date reads 2026-10-21, but `git log` shows the file was first committed 2026-10-22 08:59 (725596f). (4) Open Q1 (md:338-341, where each budget lives in aned) and Q3 (md:351-352, arch/dtype/shape/stripe dependence) do not appear in HANDOFF H77-83; Q3's arch part is now partly answered by the M4->M5 section. H92 reads 'the current frontier, fully written up'.",
+   "correction": "Fix the stale paragraphs (md:165-168, 222-224, 155-157), update the provenance build and date, and carry Q1/Q3 into the handoff's open threads."
+  },
+  {
+   "id": "C24",
+   "verdict": "upheld",
+   "severity": "low",
+   "reason": "Verified. The writeup is the stale document and the handoff §3 states the later, correct versions. But H92 tells the successor to read the writeup as 'fully written up', and it contradicts itself. Lens B: the provenance build mismatch is minor, since the repo mixes 25G91 and 25G241 across docs on the same M5 Max host.",
+   "evidence": "- Slot word 'not decoded' at docs/spec/ane-port-limits-h17.md L165-168 ('exact bit layout is not yet decoded') and L222-224 ('still the encoded slot field whose bit layout is undecoded'). It is 'decoded' at md L170-197 and md L342-350.\n- md L150 says 0x9344 is 0 at 0 states, and md L155-156 says the +1 header is present only when at least one state exists. SCR compiles contradict this: `gen_states.py 0 1 1` gives `0x9344 records: 1` (slots=1, fullcopies=0). `gen_states.py 0 1 126` also gives 1 record. The handoff's N+1 is consistent with that.\n- Provenance md L30 says 25G91. `sw_vers` reports 25G241. docs/evidence/SCHED-1-macos27-availability.md L5 and PROBE-2-macos27-result.md L11 record 25G241, while docs/evidence/0010-deploy-gate-codes.md L4 and SCHED-1-positive-control.md L8 record 25G91, so the repo mixes both builds.\n- Open Q1 (md L338-341, where each budget lives in aned) and Q3 (md L351-352, budgets across arch/dtype/shape/stripe) do not appear in handoff §5 (H77-83). Q3 is partly answered by the M4-M5 section and by my arch compiles.",
+   "correction": "Fix the writeup: remove the 'not yet decoded' paragraphs, change the 0-state row to 1 and drop 'only when at least one state exists', update the provenance build or mark it per-probe, and carry Q1/Q3 (or mark them resolved) in the handoff."
+  }
+ ]
+}

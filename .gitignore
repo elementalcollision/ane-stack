@@ -6,3 +6,6 @@ target/
 *.orig
 .ori/
 .DS_Store
+
+# python bytecode from running scripts/*.py
+__pycache__/
