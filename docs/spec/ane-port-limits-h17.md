@@ -33,7 +33,7 @@
 | Generators | `gen_live_ports.py` (every input live), `gen_mix_ports.py` (inputs beyond `out` are dead), `gen_dup_returns.py`, `gen_states.py`, `gen_states_width.py`, `gen_states_nd.py` (4-D state, `add`/`direct` update source, `noupd`, `in=0`, `conv=K`, `lut=…`; BLOBFILE weights with `blob=K blobdir=DIR [bpath=abs\|rel\|mp] [bshare]`, weight size with `wch=C`), `gen_state_dtype.py` |
 | Decoders | `count_desc_records.py`, `decode_slot_ordinals.py`, `hwx_layout.py`, `decode_block_trailers.py` (block framing and trailers), `decode_copy_records.py`, `decode_copy_words.py` (word-level copy-record view), `state_exec_predict.py` |
 | Method | Four hardware runners re-measured each law family (the io runner alone made 3,886 `milc` calls; the others compiled ~900, ~1,300 and ~1,900 artifacts). Every boundary was run at least twice with 0 flips; the ANE may have been shared between runners. The decisive points were re-run by the orchestrator. A second round tested held-out points against this text (the corrections are listed at the end). |
-| Spec | 123 probes, 272 assertions, PASS in ~35 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
+| Spec | 124 probes, 274 assertions, PASS in ~35 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
 | Datapoints | `docs/data/ane-h17-2026-10-22/`: the spec as structured JSON (CI drift-checked), the runners' raw measurement logs (3,908 io-call rows, 2,281 state-cap rows, held-out batches, copy-record and trailer sweeps, a 44-row state-dtype table), the runner-only generators, and the review/claim audit trail; scrubbed of private paths and host details |
 | Date | 2026-10-22; BLOBFILE-weights addendum (§4) 2026-10-26, same host and OS build |
 
@@ -286,7 +286,9 @@ Every row is asserted. The following gave the same result but have no spec line
 - **Correction:** the earlier "rejected in every spelling" came from the fuzzer's
   file, not the compiler. The fuzzer (`fuzz.rs`, `weight_blob`) writes 64 zero
   bytes and then raw fp16, with no record. Such a file is rejected with
-  `Cannot retrieve file blob properties` (asserted).
+  `Cannot retrieve file blob properties` (asserted). Patch 0019 fixes the
+  fuzzer and corrects upstream's `ANE_FRONTEND_SPEC.md`. Its tests run in the
+  spec on hardware.
 - **Path spelling:**
   - An absolute path works.
   - `@model_path/…` works and resolves against the MIL's directory.
@@ -659,7 +661,7 @@ For one `main` on h17, macOS 26.7.1:
 | `0x9365` stride `min(2·dim1 + 8, 32)` | **wrong** | `8·min(⌈log2 dim1⌉, 4)`, saturating at dim1 = 9 | 6 |
 | Region `dim1 × 1 MiB` "vmsize reservation, ×4 slots" | reinterpreted | `rowbits << 16` for d3 ≤ 8; LONG/SHORT layouts | 6 |
 | M4 → M5 "identical, the only delta one `0x934a`" | incomplete | same compile-time counts and laws; arch bytes differ in `0x1440`, copy-record tails and block headers | 8 |
-| "`const`+BLOBFILE is rejected on h17" (so BLOBFILE weights were "untested"); also `ane-frontend-h17.md` and upstream's fuzzer findings | **wrong** (2026-10-26) | a blob v2 `weight.bin` is accepted on both lanes; the rejection came from the fuzzer's header-less blob. BLOBFILE weights take no BAR id | 4 |
+| "`const`+BLOBFILE is rejected on h17" (so BLOBFILE weights were "untested"); also `ane-frontend-h17.md` and upstream's fuzzer findings (corrected by patch 0019) | **wrong** (2026-10-26) | a blob v2 `weight.bin` is accepted on both lanes; the rejection came from the fuzzer's header-less blob. BLOBFILE weights take no BAR id | 4 |
 | Spec "executable assertions for all of it" | was false | the pass side was vacuous; every headline law now has a line that fails under the old claim | — |
 
 **Second-pass corrections (re-evaluation of this rewrite, same day).** The

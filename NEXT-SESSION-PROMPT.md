@@ -27,7 +27,7 @@ The project reverse-engineers the Apple Neural Engine's resource model on an M5 
 ## Where things stand
 - **`main` is current.** PR #1 was merged on 2026-10-26 as `816a642`, with CI green.
   `main` has:
-  - the re-measured spec and the writeup (now 123 probes and 272 assertions, with
+  - the re-measured spec and the writeup (now 124 probes and 274 assertions, with
     the 2026-10-26 BLOBFILE addendum)
   - the visual companion
   - the public datapoints in `docs/data/ane-h17-2026-10-22/`
@@ -62,8 +62,8 @@ Pass `--arch h17` to `milc ane validate|compile`, which default to h16g.
 ## Work queue (highest value first)
 1. **Done 2026-10-26: BLOBFILE weights take no BAR id** (writeup §4; real models keep 53/54
    states). Follow-ups:
-   - a vendor patch fixing the fuzzer's header-less `weight_blob` and upstream's
-     "BLOBFILE rejected" claim
+   - patch 0019 fixed the fuzzer's header-less `weight_blob` and upstream's
+     "BLOBFILE rejected" claim (0018 stays reserved for the example files)
    - weights not yet measured: CoreML lane, matmul, palettized, hundreds of tensors
 2. **Port caps per function and per lane:** multi-function programs and the CoreML lane.
 3. **State semantics:**

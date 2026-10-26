@@ -135,7 +135,7 @@ opened.
 | `reject_int_compute` | RejectOk | RejectOk (n=14) | none | int32/bool tensor math still rejected |
 | `reject_dyn_slice` | RejectOk | RejectOk (n=9) | none | dynamic `begin`/`end` still rejected |
 | `reject_zero_extent` | RejectOk | RejectOk (n=9) | none | `begin == end` still rejected |
-| `blobfile_probe` | RejectOk | RejectOk (n=11) | none | rejected, but because of the fuzzer's blob, not BLOBFILE itself. **Corrected 2026-10-26:** `fuzz.rs` `weight_blob` writes 64 zero bytes + raw fp16 with no `0xDEADBEEF` record; a blob v2 `weight.bin` is accepted on h17 and h16g (`ane-port-limits-h17.md` §4, asserted in its spec) |
+| `blobfile_probe` | RejectOk | RejectOk (n=11) | none | rejected, but because of the fuzzer's blob, not BLOBFILE itself. **Corrected 2026-10-26:** `fuzz.rs` `weight_blob` writes 64 zero bytes + raw fp16 with no `0xDEADBEEF` record; a blob v2 `weight.bin` is accepted on h17 and h16g (`ane-port-limits-h17.md` §4, asserted in its spec). Patch 0019 fixes the fuzzer, so the family is now a Valid probe |
 | `reject_gelu` | RejectOk | RejectOk (n=13) | none | `gelu` still rejected in all spellings despite spec matrix listing OK |
 | `ew_chain` | AcceptOk | AcceptOk (n=42) | none | |
 | `matmul` | AcceptOk | AcceptOk (n=43) | none | |

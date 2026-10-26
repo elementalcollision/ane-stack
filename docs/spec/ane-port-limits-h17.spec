@@ -257,6 +257,13 @@ run  rm -rf /tmp/pl_bbh && mkdir -p /tmp/pl_bbh && python3 scripts/gen_states_nd
 want_rc      1
 want_out     Cannot retrieve file blob properties
 
+# the vendored fuzzer's blobfile_probe now writes blob v2 and is a Valid probe
+# (patch 0019). Its tests fail without the patch (header (0,0), Reject, and
+# InvalidMILProgram on h17); MIL_REQUIRE_HW=1 turns a missing framework into a FAIL
+run  cd vendor/mil_spec && MIL_REQUIRE_HW=1 cargo test -q -p mil_infer --lib blobfile_tests 2>&1
+want_rc      0
+want_out_re  ^test result: ok\. 3 passed; 0 failed;
+
 # a bare relative path resolves against the CWD, not the MIL's directory
 # (only @model_path/ resolves against the MIL's directory)
 run  rm -rf /tmp/pl_bbr && mkdir -p /tmp/pl_bbr && python3 scripts/gen_states_nd.py 3 4 8 1 1 1 1 direct blob=1 bpath=rel blobdir=/tmp/pl_bbr > /tmp/pl_bbr/m.mil && vendor/mil_spec/target/release/milc ane validate /tmp/pl_bbr/m.mil --arch h17 2>&1
