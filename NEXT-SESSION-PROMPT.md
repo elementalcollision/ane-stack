@@ -69,14 +69,21 @@ every subagent prompt that touches the host.**
   Don't pull or switch branches in the main checkout; other sessions use it.
 - **The port-caps work (call it "PC"; it used to be "work item 2") is PAUSED by me.**
   Resume it only when I say so.
-  - **Where it is:** uncommitted, never pushed, on local branch `lane/probe-port-caps-scope`
-    (based on `e1b2824`).
+  - **Where it is:** one local WIP commit, `3fe1337`, on local branch
+    `lane/probe-port-caps-scope`, on top of `e1b2824`. It was saved on 2026-11-23 and has
+    never been pushed.
     - Find its worktree with `git worktree list`. It is under the main checkout's
       `.claude/worktrees/`.
-    - Inspect it read-only: `git -C <path> status` and `git -C <path> diff --stat`.
-    - **If it is missing, stop and ask me.** Don't search for it outside the repo.
-    - Never run `git clean`, `git checkout .`, `git worktree remove` or `git worktree prune`
-      on it.
+    - Inspect it read-only: `git -C <path> log --oneline -2` and
+      `git -C <path> show --stat HEAD`. The commit message lists what's unfinished.
+    - **Never run the master spec from that branch.** §10f, the heavy CoreML lane, is still
+      inside it.
+    - The branch's upstream is `origin/main`. When I say push, push explicitly:
+      `git push -u origin lane/probe-port-caps-scope`.
+    - **If the worktree or the commit is missing, stop and ask me.** Don't search for it
+      outside the repo.
+    - Never run `git clean`, `git checkout .`, `git reset --hard`, `git worktree remove` or
+      `git worktree prune` on it.
   - **What's in it:**
     - new `scripts/gen_multi_fn.py`
     - new `examples/gen_ports_pkg.rs`, plus `examples/Cargo.toml`
@@ -140,8 +147,8 @@ Queue numbers refer only to this list. Only item 1 is paused; every hardware ste
 items 2–8 still follows "Safety".
 1. **PC wrap-up — only when I say resume.** My chosen plan is a **draft PR with no hardware
    runs**:
-   - First, make a local WIP commit on `lane/probe-port-caps-scope` (don't push yet), then
-     rebase it onto Step 0's branch.
+   - First, rebase the WIP commit `3fe1337` onto Step 0's branch. Squash or reword it before
+     the PR.
    - Move §10f (the CoreML lane) out of the master spec into
      `docs/spec/opt-in/coreml-lane-h17.spec`.
    - Fill in the writeup:
