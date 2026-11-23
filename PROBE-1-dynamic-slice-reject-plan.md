@@ -46,7 +46,7 @@
 
 ```bash
 # From repo root (where milc binary is built)
-cd /Users/dave/Claude_Primary/ane_stack
+cd ane-stack   # your checkout
 
 # 1. Ensure milc is built with the vendored tree
 cargo build --release -p milc --manifest-path vendor/mil_spec/Cargo.toml
