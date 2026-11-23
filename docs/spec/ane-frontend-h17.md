@@ -38,7 +38,7 @@ Identical to upstream `milc ane fuzz` on `h16g`:
 ## Command
 
 ```bash
-cd /Users/dave/Claude_Primary/ane_stack
+cd ane-stack   # your checkout
 cargo build --release -p milc
 ./target/release/milc ane fuzz --arch h17 --iters 500 --seed 31337 -o /tmp/ane_h17_probe_31337
 ```
