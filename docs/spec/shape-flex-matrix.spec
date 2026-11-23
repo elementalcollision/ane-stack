@@ -3,6 +3,8 @@
 # volatile details (paths, µs). Regenerates its own minimal models and artifacts.
 require_cmd  cargo
 require_cmd  xcrun
+require_cmd  python3
+require_file scripts/gen_p3model.py
 
 # --- build the probes and the minimal models (self-bootstrapping) ---
 setup  cd vendor/mil_spec && cargo build --release -p mil_infer --example mk_minflex --example cml_exec --example shape_flex_e5rt --example e5exec --example seg4 >/dev/null 2>&1
@@ -43,9 +45,12 @@ want_out  EXEC_OK
 
 # --- Matrix A headline: ShapeRange on cpu+ane is a hard crash, not a clean -14 ---
 # The converted LLM range variant segfaults at Model::load on `all` and `ane`.
-# Regenerate the converted decoder package if absent.
+# Regenerate the checkpoint and the converted decoder package every run (predseg
+# hard-codes /tmp/p3/c_range.mlpackage). The 2026-10-21 /tmp/p3model was never
+# committed; scripts/gen_p3model.py rebuilds a tiny 2-layer Qwen3 with the shapes
+# predseg feeds (hidden 16, head_dim 8, 2048-entry KV mask). Added 2026-11-23.
 setup  cd vendor/mil_spec && cargo build --release -p mil_infer --example predseg >/dev/null 2>&1
-setup  if [ ! -d /tmp/p3/c_range.mlpackage ]; then cd vendor/mil_spec && ./target/release/milc convert /tmp/p3model -o /tmp/p3/c_range.mlpackage --seq-range 1..4 >/dev/null 2>&1; fi
+setup  rm -rf /tmp/p3model /tmp/p3/c_range.mlpackage && python3 scripts/gen_p3model.py /tmp/p3model && cd vendor/mil_spec && ./target/release/milc convert /tmp/p3model -o /tmp/p3/c_range.mlpackage --seq-range 1..4 >/dev/null 2>&1
 require_artifact /tmp/p3/c_range.mlpackage
 
 # a clean load prints [stage] loaded and rc=0; a crash exits rc>=128 (SIGSEGV=139
