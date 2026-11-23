@@ -63,8 +63,10 @@ every subagent prompt that touches the host.**
   `docs/data/ane-h17-2026-10-22/spec_datapoints.json` mirrors it, including its SHA-256,
   so **any** spec edit, even a comment, needs the JSON regenerated. CI checks it.
 - **The host OS has changed.** This M5 Max now runs **macOS 26.7.3 (25G342)**. Every number
-  in the writeup and spec was measured on **26.7.1 (25G241)**, and nothing has been re-run
-  on 25G342 yet.
+  in the writeup and spec was measured on **26.7.1 (25G241)**. Step 0 re-ran the evidence on
+  25G342 on 2026-11-23 (branch `lane/rebaseline-25g342`): the master spec passes unchanged,
+  and `--all --require-all` gives 9 of 10. The tenth, `shape-flex-matrix`, fails only on its
+  three `predseg` lines, because `/tmp/p3model` is gone from the host (queue item 5).
 - **Git:** work in your own worktree. Run `git fetch origin` and branch from `origin/main`.
   Don't pull or switch branches in the main checkout; other sessions use it.
 - **The port-caps work (call it "PC"; it used to be "work item 2") is PAUSED by me.**
@@ -114,6 +116,12 @@ every subagent prompt that touches the host.**
   4. `docs/data/ane-h17-2026-10-22/README.md`, only when you need raw data
 
 ## Step 0: re-baseline on 25G342 (pre-authorised; its own branch and PR)
+**Done 2026-11-23** on branch `lane/rebaseline-25g342`. The harness, `spec_to_json --check`
+and the master spec passed; `--all --require-all` gave 9 of 10, with `shape-flex-matrix`
+failing only for its missing `/tmp/p3model` fixture. By my decision the gap is recorded
+rather than blocking the PR. Rebase PC onto this branch when it resumes. The original instructions
+follow, for the record.
+
 Do this first, before anything else in the queue. Run the steps **one at a time, in this
 order**, and stop at the first failure or anything odd on the system: a stall, or a
 process that won't exit. Don't repeat it in a loop.
@@ -197,7 +205,8 @@ items 2–8 still follows "Safety".
      (0018 is reserved for it)
    - the weak assertions in `docs/evidence/0002`, `0004`, `0005` and `0006`
      (`bash tests/evidence-harness.sh --lint …` lists them)
-   - a generator for `/tmp/p3model`, which `shape-flex` needs
+   - a generator for `/tmp/p3model`, which `shape-flex` needs. The file is gone from the host
+     (found 2026-11-23), so until this lands `--all --require-all` can't pass here.
    - run specs that clear or validate their `<stem>.compiled` cache in `setup`
    - a fuzzer patch so `gelu` uses a valid mode
    - `milc run` reportedly doesn't feed inputs named `x0`..`x9`. Reproduce it before fixing;

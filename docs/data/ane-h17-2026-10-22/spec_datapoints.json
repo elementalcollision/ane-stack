@@ -1,6 +1,6 @@
 {
  "source": "docs/spec/ane-port-limits-h17.spec",
- "source_sha256": "8013099e6873b6b24c1809fdd599ee55d56b1228e3706a1ae4f0d28da9f84925",
+ "source_sha256": "c4651ba6a80e00a357777ce704ad5e78036c2944c25d2c2a13cde83f82390c6d",
  "probes": 124,
  "assertions": 274,
  "requires": [
@@ -85,7 +85,7 @@
   {
    "index": 0,
    "section": null,
-   "comment": "provenance of this run (informational; the laws below were measured on Mac17,7 / macOS 26.7.1 25G241 — re-check them on any other build)",
+   "comment": "provenance of this run (informational; the laws below were measured on Mac17,7 / macOS 26.7.1 25G241 — re-check them on any other build) 2026-11-23: this spec re-verified unchanged on the same Mac under macOS 26.7.3 25G342 (PASS, no assertion edited); the numbers stay 25G241's.",
    "run": "sysctl -n hw.model && sw_vers -productVersion && sw_vers -buildVersion",
    "wants": [
     {

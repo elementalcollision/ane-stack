@@ -40,6 +40,8 @@ require_artifact vendor/mil_spec/target/release/milc
 
 # provenance of this run (informational; the laws below were measured on
 # Mac17,7 / macOS 26.7.1 25G241 — re-check them on any other build)
+# 2026-11-23: this spec re-verified unchanged on the same Mac under macOS
+# 26.7.3 25G342 (PASS, no assertion edited); the numbers stay 25G241's.
 run  sysctl -n hw.model && sw_vers -productVersion && sw_vers -buildVersion
 want_rc      0
 

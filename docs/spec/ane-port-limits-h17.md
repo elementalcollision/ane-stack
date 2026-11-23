@@ -36,6 +36,7 @@
 | Spec | 124 probes, 274 assertions, PASS in ~35 s; `require_hw`-gated; builds milc itself; passes from an empty temp directory (self-contained) |
 | Datapoints | `docs/data/ane-h17-2026-10-22/`: the spec as structured JSON (CI drift-checked), the runners' raw measurement logs (3,908 io-call rows, 2,281 state-cap rows, held-out batches, copy-record and trailer sweeps, a 44-row state-dtype table), the runner-only generators, and the review/claim audit trail; scrubbed of private paths and host details |
 | Date | 2026-10-22; BLOBFILE-weights addendum (§4) 2026-10-26, same host and OS build |
+| Re-verified | 2026-11-23, same Mac on macOS 26.7.3 (25G342): this spec passes unchanged, with no assertion or law edited, so every number here is still the one measured on 25G241. `./scripts/evidence-check.sh --all --require-all` gave 9 of 10. The tenth, `shape-flex-matrix`, could not run its three `predseg` checks because its `/tmp/p3model` fixture is gone and nothing in the repo regenerates it; its six other checks pass. |
 
 Reading a run result:
 - **Pass:** `milc ane run` exits 0 and prints a line starting `step 0: <time>`.
