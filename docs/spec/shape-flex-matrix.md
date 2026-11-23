@@ -13,6 +13,7 @@
 | Probes | `crates/mil_infer/examples/{seg4,cml_exec,shape_flex_e5rt,e5exec,mk_minflex}.rs` |
 | Models | (a) converted tiny-Qwen3 decoder, (b) minimal 1-op `add(x,x)` |
 | Date | 2026-10-21 |
+| Re-verified | 2026-11-23, same Mac on macOS 26.7.3 (25G342), **in part**. The six model (b) checks in `shape-flex-matrix.spec` pass. Its three model (a) `predseg` checks did not run: `/tmp/p3model` is gone from the host and nothing in the repo regenerates it, so the `predseg` crash verdicts are **not re-verified** on 25G342. |
 
 Two execution lanes are measured. They are **not the same path**:
 
