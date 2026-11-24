@@ -11,9 +11,9 @@
 | macOS | 26.7.1 (25G91) |
 | coremlc | 3600.25.1 |
 | Probes | `crates/mil_infer/examples/{seg4,cml_exec,shape_flex_e5rt,e5exec,mk_minflex}.rs` |
-| Models | (a) converted tiny-Qwen3 decoder, (b) minimal 1-op `add(x,x)` |
+| Models | (a) converted tiny-Qwen3 decoder, (b) minimal 1-op `add(x,x)`. Model (a)'s 2026-10-21 checkpoint was never committed and is lost, so Matrix A was measured on it; since 2026-11-23 `scripts/gen_p3model.py` rebuilds a 2-layer stand-in with the same interface. |
 | Date | 2026-10-21 |
-| Re-verified | 2026-11-23, same Mac on macOS 26.7.3 (25G342), **in part**. The six model (b) checks in `shape-flex-matrix.spec` pass. Its three model (a) `predseg` checks did not run: `/tmp/p3model` is gone from the host and nothing in the repo regenerates it, so the `predseg` crash verdicts are **not re-verified** on 25G342. |
+| Re-verified | 2026-11-23, same Mac on macOS 26.7.3 (25G342), **in part**. The six model (b) checks in `shape-flex-matrix.spec` pass. Its three model (a) `predseg` checks did not run: `/tmp/p3model` is gone from the host and nothing in the repo regenerates it, so the `predseg` crash verdicts are **not re-verified** on 25G342. Since 2026-11-23 `scripts/gen_p3model.py` rebuilds the checkpoint and the spec regenerates it every run. On 25G342 the rebuilt model passes the CPU control (`predseg cpu`, rc 0); the two Neural Engine checks (`predseg ane`, `predseg all`) have not been run yet. If they don't crash, that alone won't show OS drift, because the rebuild may differ from the lost original. |
 
 Two execution lanes are measured. They are **not the same path**:
 
@@ -134,11 +134,15 @@ is listed only to show the shape mechanism is not what blocks the e5rt lane here
 
 ## Reproduce
 
+`docs/spec/shape-flex-matrix.spec` runs all of this. It SKIPs on any chip but an
+M5 Max, where these verdicts were measured.
+
 ```console
 cargo build --release -p mil_infer --example mk_minflex --example seg4 \
     --example cml_exec --example shape_flex_e5rt --example e5exec
 
-# Matrix A (converted decoder)
+# Matrix A (converted decoder); first rebuild the checkpoint
+python3 ../../scripts/gen_p3model.py /tmp/p3model
 milc convert /tmp/p3model -o /tmp/p3/a_fixed.mlpackage --seq 4
 milc convert /tmp/p3model -o /tmp/p3/b_enum.mlpackage --seq-lens 1,4
 milc convert /tmp/p3model -o /tmp/p3/c_range.mlpackage --seq-range 1..4

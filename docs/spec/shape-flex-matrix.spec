@@ -5,6 +5,11 @@ require_cmd  cargo
 require_cmd  xcrun
 require_cmd  python3
 require_file scripts/gen_p3model.py
+# Every verdict here was measured on an M5 Max (h17). On another chip the crash
+# lines can rightly come out differently (the h16g baseline is a clean -14), so
+# SKIP there instead of reporting a false FAIL or PASS. Widen this only after
+# measuring another chip. Added 2026-11-24.
+require_hw   sysctl -n machdep.cpu.brand_string | grep -q '^Apple M5 Max'
 
 # --- build the probes and the minimal models (self-bootstrapping) ---
 setup  cd vendor/mil_spec && cargo build --release -p mil_infer --example mk_minflex --example cml_exec --example shape_flex_e5rt --example e5exec --example seg4 >/dev/null 2>&1
