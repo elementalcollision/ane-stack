@@ -67,6 +67,8 @@ every subagent prompt that touches the host.**
   25G342 on 2026-11-23 (branch `lane/rebaseline-25g342`): the master spec passes unchanged,
   and `--all --require-all` gives 9 of 10. The tenth, `shape-flex-matrix`, fails only on its
   three `predseg` lines, because `/tmp/p3model` is gone from the host (queue item 5).
+  A generator now rebuilds it (`scripts/gen_p3model.py`, branch `lane/test-p3model-gen`);
+  its two Neural Engine checks wait for a hardware run when this Mac is free.
 - **Git:** work in your own worktree. Run `git fetch origin` and branch from `origin/main`.
   Don't pull or switch branches in the main checkout; other sessions use it.
 - **The port-caps work (call it "PC"; it used to be "work item 2") is PAUSED by me.**
@@ -205,8 +207,12 @@ items 2–8 still follows "Safety".
      (0018 is reserved for it)
    - the weak assertions in `docs/evidence/0002`, `0004`, `0005` and `0006`
      (`bash tests/evidence-harness.sh --lint …` lists them)
-   - a generator for `/tmp/p3model`, which `shape-flex` needs. The file is gone from the host
-     (found 2026-11-23), so until this lands `--all --require-all` can't pass here.
+   - a generator for `/tmp/p3model`, which `shape-flex` needs: **written** 2026-11-23
+     (`scripts/gen_p3model.py`, branch `lane/test-p3model-gen`), and the spec rebuilds the
+     fixture every run. The CPU check passes on 25G342. Still to do, when this Mac is free and
+     with my go-ahead (the two `predseg` Neural Engine loads are CoreML-lane): run
+     `shape-flex-matrix`, then `--all --require-all`. If `predseg ane`/`all` don't crash, report
+     it before changing any law: the rebuilt model may differ from the lost original.
    - run specs that clear or validate their `<stem>.compiled` cache in `setup`
    - a fuzzer patch so `gelu` uses a valid mode
    - `milc run` reportedly doesn't feed inputs named `x0`..`x9`. Reproduce it before fixing;
